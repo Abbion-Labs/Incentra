@@ -1,0 +1,19 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/VariableCompensation.Api/VariableCompensation.Api.csproj" />
+    <Project Path="src/VariableCompensation.Application/VariableCompensation.Application.csproj" />
+    <Project Path="src/VariableCompensation.Domain/VariableCompensation.Domain.csproj" />
+    <Project Path="src/VariableCompensation.Host/VariableCompensation.Host.csproj" />
+    <Project Path="src/VariableCompensation.Infrastructure/VariableCompensation.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/VariableCompensation.Application.Tests/VariableCompensation.Application.Tests.csproj" />
+    <Project Path="tests/VariableCompensation.Architecture.Tests/VariableCompensation.Architecture.Tests.csproj" />
+    <Project Path="tests/VariableCompensation.Domain.Tests/VariableCompensation.Domain.Tests.csproj" />
+    <Project Path="tests/VariableCompensation.Integration.Tests/VariableCompensation.Integration.Tests.csproj" />
+    <Project Path="tests/VariableCompensation.Testing.Common/VariableCompensation.Testing.Common.csproj" />
+  </Folder>
+  <Folder Name="/tests/e2e/">
+    <File Path="tests/e2e/package.json" />
+  </Folder>
+</Solution>

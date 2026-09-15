@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: vc-postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-variable_compensation}
+      POSTGRES_USER: ${POSTGRES_USER:-vc_app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vc_dev_password_change_me}
+    volumes:
+      - vc_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-vc_app} -d ${POSTGRES_DB:-variable_compensation}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: vc-pgadmin
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@local.dev}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - vc_pgadmin_data:/var/lib/pgadmin
+
+volumes:
+  vc_postgres_data:
+  vc_pgadmin_data:

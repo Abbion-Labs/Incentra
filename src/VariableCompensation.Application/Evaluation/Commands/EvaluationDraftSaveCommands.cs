@@ -1,0 +1,202 @@
+using CSharpFunctionalExtensions;
+using MediatR;
+using VariableCompensation.Application.Abstractions.Auth;
+using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Evaluation.Models;
+using VariableCompensation.Application.Evaluation.Services;
+using EvaluationEntity = VariableCompensation.Domain.Entities.Evaluation.Evaluation;
+
+namespace VariableCompensation.Application.Evaluation.Commands;
+
+public sealed record SaveEvaluationPlanningDraftCommand(
+    long Id,
+    int Version,
+    DateTime? ConversationAt,
+    string? EvaluatorComment,
+    string? ConditionsNotMetComment,
+    bool ConditionsFulfilled,
+    IReadOnlyList<EvaluationGoalItem> Goals,
+    IReadOnlyList<EvaluationConditionItem> Conditions,
+    IReadOnlyList<EvaluationCriterionItem> Criteria) : IRequest<Result<EvaluationDetailResponse>>;
+
+public sealed class SaveEvaluationPlanningDraftCommandHandler
+    : IRequestHandler<SaveEvaluationPlanningDraftCommand, Result<EvaluationDetailResponse>>
+{
+    private readonly IEvaluationRepository evaluationRepository;
+    private readonly IEvaluationLookupRepository lookupRepository;
+    private readonly EvaluationScoringService scoringService;
+    private readonly ICurrentUserService currentUserService;
+    private readonly EvaluationAccessService evaluationAccessService;
+
+    public SaveEvaluationPlanningDraftCommandHandler(
+        IEvaluationRepository evaluationRepository,
+        IEvaluationLookupRepository lookupRepository,
+        EvaluationScoringService scoringService,
+        ICurrentUserService currentUserService,
+        EvaluationAccessService evaluationAccessService)
+    {
+        this.evaluationRepository = evaluationRepository;
+        this.lookupRepository = lookupRepository;
+        this.scoringService = scoringService;
+        this.currentUserService = currentUserService;
+        this.evaluationAccessService = evaluationAccessService;
+    }
+
+    public async Task<Result<EvaluationDetailResponse>> Handle(
+        SaveEvaluationPlanningDraftCommand request,
+        CancellationToken cancellationToken)
+    {
+        var entity = await this.evaluationRepository.FindByIdForUpdateAsync(request.Id, cancellationToken);
+        var validation = await EvaluationCommandHelpers.EnsureDraftEditableAsync(
+            entity, request.Version, this.evaluationAccessService, cancellationToken);
+        if (validation.IsFailure)
+        {
+            return Result.Failure<EvaluationDetailResponse>(validation.Error);
+        }
+
+        entity = validation.Value;
+        EvaluationDraftMutator.ApplyHeader(
+            entity,
+            request.ConversationAt,
+            request.EvaluatorComment,
+            request.ConditionsNotMetComment,
+            request.ConditionsFulfilled);
+
+        var goalsResult = await EvaluationDraftMutator.ApplyGoalsAsync(
+            entity, request.Goals, this.lookupRepository, cancellationToken);
+        if (goalsResult.IsFailure)
+        {
+            return Result.Failure<EvaluationDetailResponse>(goalsResult.Error);
+        }
+
+        var conditionsResult = EvaluationDraftMutator.ApplyConditions(entity, request.Conditions);
+        if (conditionsResult.IsFailure)
+        {
+            return Result.Failure<EvaluationDetailResponse>(conditionsResult.Error);
+        }
+
+        var criteriaResult = EvaluationDraftMutator.ApplyCriteria(entity, request.Criteria);
+        if (criteriaResult.IsFailure)
+        {
+            return Result.Failure<EvaluationDetailResponse>(criteriaResult.Error);
+        }
+
+        var ratingLevels = await this.lookupRepository.GetRatingLevelsAsync(cancellationToken);
+        var descriptiveRatings = await this.lookupRepository.GetDescriptiveRatingsAsync(cancellationToken);
+        this.scoringService.Recalculate(entity, ratingLevels, descriptiveRatings);
+
+        entity.UpdatedAt = DateTime.UtcNow;
+        entity.UpdatedByUserId = this.currentUserService.UserId;
+        entity.Version++;
+
+        await this.evaluationRepository.SaveChangesAsync(cancellationToken);
+
+        var updated = await this.evaluationRepository.FindByIdAsync(entity.Id, cancellationToken);
+        return Result.Success(EvaluationMappings.ToDetail(updated!));
+    }
+}
+
+public sealed record EvaluationTrainingDraftItem(
+    string? TrainingDescription,
+    string? KnowledgeDescription,
+    string? DevelopmentDescription,
+    string? EvaluatorComment);
+
+public sealed record SaveEvaluationRatingDraftCommand(
+    long Id,
+    int Version,
+    DateTime? ConversationAt,
+    string? EvaluatorComment,
+    string? ConditionsNotMetComment,
+    bool ConditionsFulfilled,
+    IReadOnlyList<EvaluationGoalItem>? Goals,
+    IReadOnlyList<EvaluationMeasureItem>? Measures,
+    EvaluationTrainingDraftItem? Training) : IRequest<Result<EvaluationDetailResponse>>;
+
+public sealed class SaveEvaluationRatingDraftCommandHandler
+    : IRequestHandler<SaveEvaluationRatingDraftCommand, Result<EvaluationDetailResponse>>
+{
+    private readonly IEvaluationRepository evaluationRepository;
+    private readonly IEvaluationLookupRepository lookupRepository;
+    private readonly EvaluationScoringService scoringService;
+    private readonly ICurrentUserService currentUserService;
+    private readonly EvaluationAccessService evaluationAccessService;
+
+    public SaveEvaluationRatingDraftCommandHandler(
+        IEvaluationRepository evaluationRepository,
+        IEvaluationLookupRepository lookupRepository,
+        EvaluationScoringService scoringService,
+        ICurrentUserService currentUserService,
+        EvaluationAccessService evaluationAccessService)
+    {
+        this.evaluationRepository = evaluationRepository;
+        this.lookupRepository = lookupRepository;
+        this.scoringService = scoringService;
+        this.currentUserService = currentUserService;
+        this.evaluationAccessService = evaluationAccessService;
+    }
+
+    public async Task<Result<EvaluationDetailResponse>> Handle(
+        SaveEvaluationRatingDraftCommand request,
+        CancellationToken cancellationToken)
+    {
+        var entity = await this.evaluationRepository.FindByIdForUpdateAsync(request.Id, cancellationToken);
+        var validation = await EvaluationCommandHelpers.EnsureDraftEditableAsync(
+            entity, request.Version, this.evaluationAccessService, cancellationToken);
+        if (validation.IsFailure)
+        {
+            return Result.Failure<EvaluationDetailResponse>(validation.Error);
+        }
+
+        entity = validation.Value;
+        EvaluationDraftMutator.ApplyHeader(
+            entity,
+            request.ConversationAt,
+            request.EvaluatorComment,
+            request.ConditionsNotMetComment,
+            request.ConditionsFulfilled);
+
+        if (request.ConditionsFulfilled)
+        {
+            var goals = request.Goals ?? Array.Empty<EvaluationGoalItem>();
+            var measures = request.Measures ?? Array.Empty<EvaluationMeasureItem>();
+
+            var goalsResult = await EvaluationDraftMutator.ApplyGoalsAsync(
+                entity, goals, this.lookupRepository, cancellationToken);
+            if (goalsResult.IsFailure)
+            {
+                return Result.Failure<EvaluationDetailResponse>(goalsResult.Error);
+            }
+
+            var measuresResult = await EvaluationDraftMutator.ApplyMeasuresAsync(
+                entity, measures, this.lookupRepository, cancellationToken);
+            if (measuresResult.IsFailure)
+            {
+                return Result.Failure<EvaluationDetailResponse>(measuresResult.Error);
+            }
+
+            if (request.Training is not null)
+            {
+                EvaluationDraftMutator.ApplyTraining(
+                    entity,
+                    request.Training.TrainingDescription,
+                    request.Training.KnowledgeDescription,
+                    request.Training.DevelopmentDescription,
+                    request.Training.EvaluatorComment);
+            }
+        }
+
+        var ratingLevels = await this.lookupRepository.GetRatingLevelsAsync(cancellationToken);
+        var descriptiveRatings = await this.lookupRepository.GetDescriptiveRatingsAsync(cancellationToken);
+        this.scoringService.Recalculate(entity, ratingLevels, descriptiveRatings);
+
+        entity.UpdatedAt = DateTime.UtcNow;
+        entity.UpdatedByUserId = this.currentUserService.UserId;
+        entity.Version++;
+
+        await this.evaluationRepository.SaveChangesAsync(cancellationToken);
+
+        var updated = await this.evaluationRepository.FindByIdAsync(entity.Id, cancellationToken);
+        return Result.Success(EvaluationMappings.ToDetail(updated!));
+    }
+}

@@ -1,0 +1,28 @@
+# Build
+bin/
+obj/
+out/
+*.user
+*.suo
+.vs/
+.idea/
+
+# Environment
+.env
+docker/.env
+
+# Logs
+logs/
+*.log
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Node (future frontend)
+node_modules/
+dist/
+
+# Test
+TestResults/
+coverage/

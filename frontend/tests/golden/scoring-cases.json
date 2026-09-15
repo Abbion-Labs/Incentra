@@ -1,0 +1,32 @@
+[
+  {
+    "name": "weighted_goals_simple_measures",
+    "goals": [
+      { "ratingLevelId": 5, "weight": 2 },
+      { "ratingLevelId": 6, "weight": 1 }
+    ],
+    "measures": [
+      { "ratingLevelId": 5 },
+      { "ratingLevelId": 5 }
+    ],
+    "expected": {
+      "goalsAverage": 4.33,
+      "measuresAverage": 4,
+      "overallAverage": 4.17
+    }
+  },
+  {
+    "name": "not_rated_blocks_average",
+    "goals": [
+      { "ratingLevelId": 1, "weight": 1 }
+    ],
+    "measures": [
+      { "ratingLevelId": 5 }
+    ],
+    "expected": {
+      "goalsAverage": null,
+      "measuresAverage": 4,
+      "overallAverage": 4
+    }
+  }
+]

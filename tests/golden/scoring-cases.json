@@ -1,0 +1,44 @@
+[
+  {
+    "name": "weighted_goals_simple_measures",
+    "goals": [
+      { "ratingLevelId": 5, "weight": 2 },
+      { "ratingLevelId": 6, "weight": 1 }
+    ],
+    "measures": [
+      { "ratingLevelId": 5 },
+      { "ratingLevelId": 5 }
+    ],
+    "expected": {
+      "goalsAverage": 4.3333,
+      "measuresAverage": 4.0,
+      "overallAverage": 4.1666,
+      "descriptiveRatingCode": "EXCEEDS"
+    }
+  },
+  {
+    "name": "not_rated_blocks_average",
+    "goals": [
+      { "ratingLevelId": 1, "weight": 1 }
+    ],
+    "measures": [
+      { "ratingLevelId": 5 }
+    ],
+    "expected": {
+      "goalsAverage": null,
+      "measuresAverage": null,
+      "overallAverage": null,
+      "descriptiveRatingCode": null
+    }
+  },
+  {
+    "name": "goals_without_measures_incomplete",
+    "goals": [
+      { "ratingLevelId": 4, "weight": 1 }
+    ],
+    "measures": [],
+    "expected": {
+      "incomplete": true
+    }
+  }
+]

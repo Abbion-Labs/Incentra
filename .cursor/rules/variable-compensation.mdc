@@ -1,0 +1,32 @@
+---
+description: Variable Compensation app coding rules
+globs: **/*.{cs,csproj,tsx,ts}
+alwaysApply: true
+---
+
+# Variable Compensation Rules
+
+## Architecture
+- Follow Host → Api → Application → Domain ← Infrastructure
+- No business logic in controllers
+- All writes via MediatR Commands; reads via Queries
+- Domain project must not reference EF Core or ASP.NET
+
+## Naming
+- Commands: `AddEmployeeCommand`, `SubmitEvaluationCommand`
+- Handlers: `AddEmployeeCommandHandler`
+- Domain events: `EvaluationSubmitted`, `EvaluationApproved`
+
+## Evaluation module
+- `Evaluation` is the aggregate root
+- Status changes only through domain methods or dedicated handlers
+- One evaluation per employee per year/quarter (enforced in DB and domain)
+
+## Database
+- PostgreSQL via EF Core
+- Use migrations; never alter production schema manually
+- Table names: snake_case plural
+
+## Security
+- Never store plain-text passwords
+- Use JWT for API auth (when implemented)
