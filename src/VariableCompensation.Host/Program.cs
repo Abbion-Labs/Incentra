@@ -16,13 +16,23 @@ builder.Services.AddHealthChecks();
 
 var app = builder.Build();
 
-var avatarDirectory = LocalEmployeeAvatarStorage.AvatarsDirectory(app.Environment);
-Directory.CreateDirectory(avatarDirectory);
-app.UseStaticFiles(new StaticFileOptions
+var avatarStorageProvider =
+    builder.Configuration[$"{EmployeeAvatarStorageOptions.SectionName}:Provider"]
+    ?? EmployeeAvatarStorageOptions.LocalProvider;
+
+if (string.Equals(
+    avatarStorageProvider,
+    EmployeeAvatarStorageOptions.LocalProvider,
+    StringComparison.OrdinalIgnoreCase))
 {
-    FileProvider = new PhysicalFileProvider(avatarDirectory),
-    RequestPath = "/avatars",
-});
+    var avatarDirectory = LocalEmployeeAvatarStorage.AvatarsDirectory(app.Environment);
+    Directory.CreateDirectory(avatarDirectory);
+    app.UseStaticFiles(new StaticFileOptions
+    {
+        FileProvider = new PhysicalFileProvider(avatarDirectory),
+        RequestPath = "/avatars",
+    });
+}
 
 app.UseSerilogRequestLogging();
 app.MapHealthChecks("/health");

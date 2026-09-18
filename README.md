@@ -318,6 +318,23 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 
 Demo seed pri pokretanju API-ja kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
 
+## Skladištenje avatara
+
+Podrazumevani provider je lokalni filesystem (`Storage:Provider=Local`), tako da lokalni razvoj i testovi ne zahtevaju Supabase.
+
+Za deployment sa Supabase Storage postaviti sledeće environment varijable:
+
+```text
+Storage__Provider=Supabase
+Storage__Supabase__Url=https://<project-ref>.supabase.co
+Storage__Supabase__SecretKey=<server-side secret key>
+Storage__Supabase__Bucket=employee-avatars
+```
+
+Bucket mora već postojati i mora biti **public** da bi postojeći `AvatarUrl` mogao direktno da se koristi u frontendu. Upload i delete se i dalje izvršavaju isključivo kroz backend. Supabase secret key je server-side tajna i ne sme biti dostupan frontend-u.
+
+Supabase integracija je izolovana iza `IEmployeeAvatarStorage`; Application i Domain slojevi ne zavise od Supabase-a, pa se provider može kasnije ukloniti ili zameniti bez promene poslovne logike.
+
 ## Email obaveštenja
 
 Korisnici mogu uključiti email obaveštenja na stranici **Moj nalog** (`/account`). Podrazumevano su isključena (opt-in).
