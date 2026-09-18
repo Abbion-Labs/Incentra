@@ -1,3 +1,6 @@
 **
 !src/
 !src/**
+!deploy/
+!deploy/vercel/
+!deploy/vercel/backend-entrypoint.sh
