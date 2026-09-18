@@ -327,29 +327,37 @@ Obaveštenja se šalju kada:
 - **Kontrolor** — ocena je predata na pregled
 - **Ocenjivač** — ocena je odobrena ili vraćena na doradu
 
-### SMTP konfiguracija
+### Konfiguracija po okruženju
 
-U `appsettings.json` sekcija `Email`:
+`appsettings.json` sadrži samo zajednička, deployment-neutral podešavanja. Lokalni hostovi, URL-ovi i razvojni/test kredencijali nalaze se u:
 
-```json
-"Email": {
-  "Enabled": false,
-  "Host": "localhost",
-  "Port": 1025,
-  "UseSsl": false,
-  "FromAddress": "noreply@variable-compensation.local",
-  "FromName": "Variable Compensation",
-  "FrontendBaseUrl": "http://localhost:5173"
-}
+- `appsettings.Development.json` — lokalni razvoj
+- `appsettings.Testing.json` — test okruženje
+
+Deployment vrednosti se ne commituju u repozitorijum, već se prosleđuju kroz environment varijable koristeći ASP.NET Core `__` konvenciju, na primer:
+
+```text
+ConnectionStrings__DefaultConnection
+Jwt__Secret
+SalaryEncryption__Key
+Email__Host
+Email__Port
+Email__UseSsl
+Email__Username
+Email__Password
+Email__FromAddress
+Email__FrontendBaseUrl
 ```
 
-Za lokalni razvoj:
+### SMTP konfiguracija
+
+Za lokalni razvoj, `appsettings.Development.json` podrazumevano koristi SMTP na `localhost:1025` i frontend na `http://localhost:5173`.
 
 1. Pokrenite SMTP alat (npr. [Papercut](https://github.com/ChangemakerStudios/Papercut-SMTP) ili MailHog) na portu `1025`
-2. Postavite `"Enabled": true`
+2. Postavite `Email:Enabled` na `true` u razvojnoj konfiguraciji
 3. Uključite obaveštenja na nalogu kontrolora/ocenjivača
 
-Kada je `Enabled: false`, API samo loguje da bi poslao poruku (workflow i dalje uspeva).
+Kada je `Email:Enabled=false`, API samo loguje da bi poslao poruku (workflow i dalje uspeva).
 
 ## Testovi
 
