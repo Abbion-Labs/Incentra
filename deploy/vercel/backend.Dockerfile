@@ -13,5 +13,7 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 
 WORKDIR /app
 COPY --from=build /app/publish .
+COPY deploy/vercel/backend-entrypoint.sh /usr/local/bin/backend-entrypoint
+RUN chmod +x /usr/local/bin/backend-entrypoint
 
-CMD ["sh", "-c", "dotnet VariableCompensation.Host.dll --urls http://0.0.0.0:${PORT:-80}"]
+ENTRYPOINT ["/usr/local/bin/backend-entrypoint"]
