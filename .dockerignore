@@ -1,0 +1,9 @@
+.git
+.github
+.cursor
+frontend
+tests
+docs
+docker
+**/bin
+**/obj
