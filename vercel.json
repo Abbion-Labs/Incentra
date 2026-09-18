@@ -9,13 +9,18 @@
   "services": {
     "frontend": {
       "root": "frontend/",
-      "runtime": "container",
-      "entrypoint": "Dockerfile.vercel"
+      "framework": "vite",
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
     },
     "api": {
       "root": ".",
       "runtime": "container",
-      "entrypoint": "src/VariableCompensation.Host/Dockerfile.vercel"
+      "entrypoint": "deploy/vercel/backend.Dockerfile"
     }
   },
   "rewrites": [
