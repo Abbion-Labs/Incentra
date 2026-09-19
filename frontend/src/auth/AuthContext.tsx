@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { api, clearToken, ensureValidSession, setAuthTokens } from '../api/client';
+import { api, clearToken, ensureValidSession, revokeRefreshToken, setAuthTokens } from '../api/client';
 import { setSessionExpiredHandler } from './session';
 import type { AuthResponse, UserProfile } from '../api/types';
 
@@ -67,6 +67,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    revokeRefreshToken();
     clearToken();
     setUser(null);
   }, []);

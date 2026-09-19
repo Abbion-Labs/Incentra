@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.IdentityModel.Tokens;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Notifications;
@@ -21,6 +22,9 @@ public static class AuthDependencyInjection
     public static IServiceCollection AddAuthInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
         services.Configure<JwtSettings>(configuration.GetSection(JwtSettings.SectionName));
+        services.Configure<LoginRateLimitOptions>(configuration.GetSection(LoginRateLimitOptions.SectionName));
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton<ILoginAttemptLimiter, InMemoryLoginAttemptLimiter>();
         services.Configure<EmailOptions>(configuration.GetSection(EmailOptions.SectionName));
         services.Configure<Application.Notifications.EmailNotificationSettings>(
             configuration.GetSection(Application.Notifications.EmailNotificationSettings.SectionName));

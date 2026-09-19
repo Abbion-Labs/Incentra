@@ -1,13 +1,16 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using VariableCompensation.Api.Contracts.Auth;
 using VariableCompensation.Application.Auth.Commands.ChangePassword;
 using VariableCompensation.Application.Auth.Commands.Login;
+using VariableCompensation.Application.Auth.Commands.Logout;
 using VariableCompensation.Application.Auth.Commands.RefreshToken;
 using VariableCompensation.Application.Auth.Commands.RegisterUser;
 using VariableCompensation.Application.Auth.Commands.UpdateNotificationPreferences;
 using VariableCompensation.Application.Auth.Queries.GetCurrentUser;
+using VariableCompensation.Domain;
 
 namespace VariableCompensation.Api.Controllers;
 
@@ -27,7 +30,14 @@ public sealed class AuthController : ControllerBase
     public async Task<IActionResult> Login([FromBody] LoginRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(new LoginCommand(request.Email, request.Password), cancellationToken);
-        return result.IsSuccess ? this.Ok(result.Value) : this.Unauthorized(new { error = result.Error });
+        if (result.IsSuccess)
+        {
+            return this.Ok(result.Value);
+        }
+
+        return result.Error.StartsWith(ErrorCodes.TooManyLoginAttempts, StringComparison.Ordinal)
+            ? this.StatusCode(StatusCodes.Status429TooManyRequests, new { error = result.Error })
+            : this.Unauthorized(new { error = result.Error });
     }
 
     [HttpPost("register")]
@@ -53,6 +63,14 @@ public sealed class AuthController : ControllerBase
     {
         var result = await this.mediator.Send(new RefreshTokenCommand(request.RefreshToken), cancellationToken);
         return result.IsSuccess ? this.Ok(result.Value) : this.Unauthorized(new { error = result.Error });
+    }
+
+    [HttpPost("logout")]
+    [AllowAnonymous]
+    public async Task<IActionResult> Logout([FromBody] RefreshTokenRequest request, CancellationToken cancellationToken)
+    {
+        await this.mediator.Send(new LogoutCommand(request.RefreshToken), cancellationToken);
+        return this.NoContent();
     }
 
     [HttpGet("me")]

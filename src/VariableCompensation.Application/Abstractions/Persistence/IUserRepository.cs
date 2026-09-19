@@ -20,6 +20,8 @@ public interface IUserRepository
 
     Task<RefreshToken?> FindRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken);
 
+    Task DeleteExpiredRefreshTokensAsync(long userId, CancellationToken cancellationToken);
+
     Task AddUserAsync(User user, CancellationToken cancellationToken);
 
     Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken);
