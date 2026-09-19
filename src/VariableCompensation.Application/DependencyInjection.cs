@@ -18,6 +18,7 @@ public static class DependencyInjection
         services.AddScoped<EvaluationScoringService>();
         services.AddScoped<EvaluationAccessService>();
         services.AddScoped<ControllerSupervisionService>();
+        services.AddScoped<EmployeeAccessService>();
         services.AddScoped<CompensationCalculationService>();
         services.AddScoped<CompensationAccessService>();
         services.AddScoped<CompensationAnalyticsService>();

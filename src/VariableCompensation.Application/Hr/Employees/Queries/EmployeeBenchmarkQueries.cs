@@ -17,22 +17,16 @@ public sealed class GetEmployeeEvaluationBenchmarksQueryHandler
 {
     private readonly IEmployeeRepository employeeRepository;
     private readonly IEvaluationRepository evaluationRepository;
-    private readonly ICurrentUserService currentUserService;
-    private readonly ICurrentEmployeeContext currentEmployeeContext;
-    private readonly ControllerSupervisionService controllerSupervisionService;
+    private readonly EmployeeAccessService employeeAccessService;
 
     public GetEmployeeEvaluationBenchmarksQueryHandler(
         IEmployeeRepository employeeRepository,
         IEvaluationRepository evaluationRepository,
-        ICurrentUserService currentUserService,
-        ICurrentEmployeeContext currentEmployeeContext,
-        ControllerSupervisionService controllerSupervisionService)
+        EmployeeAccessService employeeAccessService)
     {
         this.employeeRepository = employeeRepository;
         this.evaluationRepository = evaluationRepository;
-        this.currentUserService = currentUserService;
-        this.currentEmployeeContext = currentEmployeeContext;
-        this.controllerSupervisionService = controllerSupervisionService;
+        this.employeeAccessService = employeeAccessService;
     }
 
     public async Task<Result<EmployeeEvaluationBenchmarksResponse>> Handle(
@@ -45,7 +39,7 @@ public sealed class GetEmployeeEvaluationBenchmarksQueryHandler
             return Result.Failure<EmployeeEvaluationBenchmarksResponse>(ErrorCodes.EmployeeNotFound);
         }
 
-        var access = await this.EnsureCanViewEmployeeAsync(employee, cancellationToken);
+        var access = await this.employeeAccessService.EnsureCanViewAsync(employee, cancellationToken);
         if (access.IsFailure)
         {
             return Result.Failure<EmployeeEvaluationBenchmarksResponse>(access.Error);
@@ -96,40 +90,5 @@ public sealed class GetEmployeeEvaluationBenchmarksQueryHandler
             Employee = HrMappings.ToResponse(employee),
             Quarters = quarters,
         };
-    }
-
-    private async Task<Result> EnsureCanViewEmployeeAsync(
-        Domain.Entities.Hr.Employee employee,
-        CancellationToken cancellationToken)
-    {
-        if (this.currentUserService.IsAdmin)
-        {
-            return Result.Success();
-        }
-
-        var currentEmployeeId = await this.currentEmployeeContext.GetEmployeeIdAsync(cancellationToken);
-        if (currentEmployeeId is null)
-        {
-            return Result.Failure(ErrorCodes.UserNotLinkedToEmployee);
-        }
-
-        if (employee.Id == currentEmployeeId)
-        {
-            return Result.Success();
-        }
-
-        if (this.currentUserService.IsInRole(RoleCodes.Evaluator) &&
-            employee.EvaluatorEmployeeId == currentEmployeeId)
-        {
-            return Result.Success();
-        }
-
-        if (this.currentUserService.IsInRole(RoleCodes.Controller) &&
-            await this.controllerSupervisionService.SupervisesEmployeeAsync(currentEmployeeId.Value, employee.Id, cancellationToken))
-        {
-            return Result.Success();
-        }
-
-        return Result.Failure(ErrorCodes.EmployeeAccessDenied);
     }
 }

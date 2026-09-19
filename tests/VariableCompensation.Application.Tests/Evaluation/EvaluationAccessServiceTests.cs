@@ -120,4 +120,16 @@ public class EvaluationAccessServiceTests
         evaluatorEmployeeId.Should().Be(2);
         controllerEmployeeId.Should().Be(3);
     }
+
+    [Fact]
+    public async Task ResolveListFiltersAsync_PayrollOnly_SeesNoEvaluations()
+    {
+        this.userService.Roles = [RoleCodes.Payroll];
+        this.employeeContext.EmployeeId = 5;
+
+        var (employeeId, _, _) =
+            await this.service.ResolveListFiltersAsync(null, null, null, CancellationToken.None);
+
+        employeeId.Should().Be(-1);
+    }
 }
