@@ -90,6 +90,7 @@
     "vn-0088": "Evaluator comment is required when conditions are not fulfilled.",
     "vn-0089": "An unexpected error occurred. Please try again. (ID: {traceId})",
     "vn-0090": "The data was modified by another user in the meantime. Please refresh and try again.",
-    "vn-0091": "A record with the same value already exists."
+    "vn-0091": "A record with the same value already exists.",
+    "vn-0092": "Too many failed sign-in attempts. Try again in {seconds} seconds."
   }
 }

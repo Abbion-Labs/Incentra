@@ -32,6 +32,20 @@ export function clearToken(): void {
   localStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
+export function revokeRefreshToken(): void {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) {
+    return;
+  }
+
+  void fetch('/api/auth/logout', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+    keepalive: true,
+  }).catch(() => undefined);
+}
+
 export async function ensureValidSession(): Promise<boolean> {
   if (getToken()) {
     return true;

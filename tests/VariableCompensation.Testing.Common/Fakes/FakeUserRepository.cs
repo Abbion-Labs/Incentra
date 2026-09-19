@@ -41,10 +41,18 @@ public sealed class FakeUserRepository : IUserRepository
     public Task<User?> FindByEmployeeIdAsync(long employeeId, CancellationToken cancellationToken) =>
         Task.FromResult(this.Users.Values.FirstOrDefault(u => u.Employee?.Id == employeeId));
 
+    public List<RefreshToken> RefreshTokens { get; } = [];
+
     public Task RevokeAllRefreshTokensAsync(long userId, CancellationToken cancellationToken) => Task.CompletedTask;
 
     public Task<RefreshToken?> FindRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken) =>
-        Task.FromResult<RefreshToken?>(null);
+        Task.FromResult(this.RefreshTokens.FirstOrDefault(rt => rt.TokenHash == tokenHash));
+
+    public Task DeleteExpiredRefreshTokensAsync(long userId, CancellationToken cancellationToken)
+    {
+        this.RefreshTokens.RemoveAll(rt => rt.UserId == userId && rt.ExpiresAt <= DateTime.UtcNow);
+        return Task.CompletedTask;
+    }
 
     public Task AddUserAsync(User user, CancellationToken cancellationToken)
     {
@@ -52,7 +60,11 @@ public sealed class FakeUserRepository : IUserRepository
         return Task.CompletedTask;
     }
 
-    public Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken) => Task.CompletedTask;
+    public Task AddRefreshTokenAsync(RefreshToken refreshToken, CancellationToken cancellationToken)
+    {
+        this.RefreshTokens.Add(refreshToken);
+        return Task.CompletedTask;
+    }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken)
     {

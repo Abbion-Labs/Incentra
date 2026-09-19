@@ -78,6 +78,11 @@ public sealed class UserRepository : IUserRepository, IRoleLookup
     public Task<RefreshToken?> FindRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken) =>
         this.context.RefreshTokens.FirstOrDefaultAsync(rt => rt.TokenHash == tokenHash, cancellationToken);
 
+    public Task DeleteExpiredRefreshTokensAsync(long userId, CancellationToken cancellationToken) =>
+        this.context.RefreshTokens
+            .Where(rt => rt.UserId == userId && rt.ExpiresAt <= DateTime.UtcNow)
+            .ExecuteDeleteAsync(cancellationToken);
+
     public async Task AddUserAsync(User user, CancellationToken cancellationToken) =>
         await this.context.Users.AddAsync(user, cancellationToken);
 

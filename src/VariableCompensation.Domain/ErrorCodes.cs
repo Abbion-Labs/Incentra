@@ -92,4 +92,5 @@ public static class ErrorCodes
     public const string UnexpectedError = "vn-0089";
     public const string ConcurrencyConflict = "vn-0090";
     public const string DuplicateValue = "vn-0091";
+    public const string TooManyLoginAttempts = "vn-0092";
 }
