@@ -49,7 +49,7 @@ public sealed class EvaluationAccessService
             return (employeeId, evaluatorEmployeeId, currentEmployeeId);
         }
 
-        return (employeeId, evaluatorEmployeeId, controllerEmployeeId);
+        return (-1, -1, -1);
     }
 
     public async Task<Result> EnsureCanViewAsync(EvaluationEntity evaluation, CancellationToken cancellationToken)

@@ -1,8 +1,11 @@
+using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Common.Models;
 using VariableCompensation.Application.Hr.Models;
+using VariableCompensation.Application.Hr.Services;
+using VariableCompensation.Domain;
 using VariableCompensation.Domain.Enums;
 
 namespace VariableCompensation.Application.Hr.Employees.Queries;
@@ -38,6 +41,24 @@ public sealed class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery
     {
         var page = request.Page < 1 ? 1 : request.Page;
         var pageSize = request.PageSize is < 1 or > 100 ? 20 : request.PageSize;
+
+        if (!this.currentUserService.IsAdmin &&
+            !this.currentUserService.IsInRole(RoleCodes.Evaluator) &&
+            !this.currentUserService.IsInRole(RoleCodes.Controller))
+        {
+            var ownEmployeeId = await this.currentEmployeeContext.GetEmployeeIdAsync(cancellationToken);
+            var own = ownEmployeeId is null
+                ? null
+                : await this.repository.FindByIdAsync(ownEmployeeId.Value, cancellationToken);
+
+            return new PagedResult<EmployeeResponse>
+            {
+                Items = own is null ? [] : [HrMappings.ToResponse(own)],
+                Page = page,
+                PageSize = pageSize,
+                TotalCount = own is null ? 0 : 1,
+            };
+        }
 
         var evaluatorEmployeeId = request.EvaluatorEmployeeId;
         long? controllerEmployeeId = null;
@@ -82,17 +103,33 @@ public sealed class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery
     }
 }
 
-public sealed record GetEmployeeByIdQuery(long Id) : IRequest<EmployeeResponse?>;
+public sealed record GetEmployeeByIdQuery(long Id) : IRequest<Result<EmployeeResponse>>;
 
-public sealed class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery, EmployeeResponse?>
+public sealed class GetEmployeeByIdQueryHandler : IRequestHandler<GetEmployeeByIdQuery, Result<EmployeeResponse>>
 {
     private readonly IEmployeeRepository repository;
+    private readonly EmployeeAccessService employeeAccessService;
 
-    public GetEmployeeByIdQueryHandler(IEmployeeRepository repository) => this.repository = repository;
+    public GetEmployeeByIdQueryHandler(IEmployeeRepository repository, EmployeeAccessService employeeAccessService)
+    {
+        this.repository = repository;
+        this.employeeAccessService = employeeAccessService;
+    }
 
-    public async Task<EmployeeResponse?> Handle(GetEmployeeByIdQuery request, CancellationToken cancellationToken)
+    public async Task<Result<EmployeeResponse>> Handle(GetEmployeeByIdQuery request, CancellationToken cancellationToken)
     {
         var entity = await this.repository.FindByIdAsync(request.Id, cancellationToken);
-        return entity is null ? null : HrMappings.ToResponse(entity);
+        if (entity is null)
+        {
+            return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeNotFound);
+        }
+
+        var access = await this.employeeAccessService.EnsureCanViewAsync(entity, cancellationToken);
+        if (access.IsFailure)
+        {
+            return Result.Failure<EmployeeResponse>(access.Error);
+        }
+
+        return HrMappings.ToResponse(entity);
     }
 }

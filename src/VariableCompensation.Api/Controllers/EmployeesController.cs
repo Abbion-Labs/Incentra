@@ -6,6 +6,7 @@ using VariableCompensation.Api.Contracts.Hr;
 using VariableCompensation.Application.Hr.Employees.Commands;
 using VariableCompensation.Application.Hr.Employees.Queries;
 using VariableCompensation.Application.Hr.EvaluatorSettings.Commands;
+using VariableCompensation.Domain;
 
 namespace VariableCompensation.Api.Controllers;
 
@@ -51,7 +52,14 @@ public sealed class EmployeesController : ControllerBase
     public async Task<IActionResult> GetById(long id, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(new GetEmployeeByIdQuery(id), cancellationToken);
-        return result is null ? this.NotFound() : this.Ok(result);
+        if (result.IsSuccess)
+        {
+            return this.Ok(result.Value);
+        }
+
+        return result.Error == ErrorCodes.EmployeeNotFound
+            ? this.NotFound(new { error = result.Error })
+            : this.BadRequest(new { error = result.Error });
     }
 
     [HttpGet("{id:long}/evaluation-benchmarks")]
