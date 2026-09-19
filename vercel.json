@@ -20,7 +20,7 @@
     "api": {
       "root": ".",
       "runtime": "container",
-      "entrypoint": "deploy/vercel/Dockerfile.vercel"
+      "entrypoint": "Dockerfile.vercel"
     }
   },
   "rewrites": [

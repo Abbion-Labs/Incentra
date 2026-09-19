@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 
 WORKDIR /repo
-COPY . .
+COPY src/ ./src/
 
 RUN dotnet restore src/VariableCompensation.Host/VariableCompensation.Host.csproj
 RUN dotnet publish src/VariableCompensation.Host/VariableCompensation.Host.csproj \
