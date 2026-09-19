@@ -3,7 +3,8 @@
   "git": {
     "deploymentEnabled": {
       "**/*": false,
-      "main": true
+      "main": true,
+      "fix/vercel-container-build-context": true
     }
   },
   "services": {
