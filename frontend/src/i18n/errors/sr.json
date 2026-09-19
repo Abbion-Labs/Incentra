@@ -87,6 +87,9 @@
     "vn-0084": "Zaposleni nema dodeljenog ocenjivača.",
     "vn-0085": "Evaluacija već postoji za zaposlenog i period.",
     "vn-0086": "Samo nacrti evaluacija mogu da se menjaju.",
-    "vn-0088": "Komentar ocenjivača je obavezan kada uslovi nisu ispunjeni."
+    "vn-0088": "Komentar ocenjivača je obavezan kada uslovi nisu ispunjeni.",
+    "vn-0089": "Došlo je do neočekivane greške. Pokušajte ponovo. (ID: {traceId})",
+    "vn-0090": "Podatak je u međuvremenu izmenjen od strane drugog korisnika. Osvežite stranicu i pokušajte ponovo.",
+    "vn-0091": "Zapis sa istom vrednošću već postoji."
   }
 }
