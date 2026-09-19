@@ -2,6 +2,7 @@ using Serilog;
 using Microsoft.AspNetCore.StaticFiles;
 using Microsoft.Extensions.FileProviders;
 using VariableCompensation.Api;
+using VariableCompensation.Host.Middleware;
 using VariableCompensation.Infrastructure;
 using VariableCompensation.Infrastructure.Storage;
 
@@ -13,6 +14,8 @@ builder.Host.UseSerilog((context, configuration) =>
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApi();
 builder.Services.AddHealthChecks();
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
 
@@ -35,6 +38,7 @@ if (string.Equals(
 }
 
 app.UseSerilogRequestLogging();
+app.UseExceptionHandler();
 app.MapHealthChecks("/health");
 app.MapApiEndpoints();
 

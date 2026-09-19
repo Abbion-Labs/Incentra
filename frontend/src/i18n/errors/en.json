@@ -87,6 +87,9 @@
     "vn-0084": "Employee has no assigned evaluator.",
     "vn-0085": "Evaluation already exists for employee and quarter.",
     "vn-0086": "Only draft evaluations can be edited.",
-    "vn-0088": "Evaluator comment is required when conditions are not fulfilled."
+    "vn-0088": "Evaluator comment is required when conditions are not fulfilled.",
+    "vn-0089": "An unexpected error occurred. Please try again. (ID: {traceId})",
+    "vn-0090": "The data was modified by another user in the meantime. Please refresh and try again.",
+    "vn-0091": "A record with the same value already exists."
   }
 }

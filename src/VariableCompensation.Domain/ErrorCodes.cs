@@ -89,4 +89,7 @@ public static class ErrorCodes
     public const string DraftOnlyEditable = "vn-0086";
     public const string UserRolesRequired = "vn-0087";
     public const string SubmitRequiresEvaluatorComment = "vn-0088";
+    public const string UnexpectedError = "vn-0089";
+    public const string ConcurrencyConflict = "vn-0090";
+    public const string DuplicateValue = "vn-0091";
 }

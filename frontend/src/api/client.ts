@@ -3,6 +3,8 @@ import { notifySessionExpired } from '../auth/session';
 const TOKEN_KEY = 'vc_access_token';
 const REFRESH_TOKEN_KEY = 'vc_refresh_token';
 const LOCALE_KEY = 'vn-locale';
+const UNEXPECTED_ERROR_CODE = 'vn-0089';
+const TRACE_ID_DISPLAY_LENGTH = 8;
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -131,6 +133,10 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, isRet
     try {
       const body = await response.json();
       rawMessage = body.error ?? body.title ?? message;
+      if (rawMessage === UNEXPECTED_ERROR_CODE) {
+        const traceId = typeof body.traceId === 'string' ? body.traceId.slice(0, TRACE_ID_DISPLAY_LENGTH) : '-';
+        rawMessage = `${rawMessage}?traceId=${encodeURIComponent(traceId)}`;
+      }
       const [rawCode, query] = rawMessage.split('?', 2);
       if (/^vn-\d{4}$/.test(rawCode)) {
         code = rawCode;
