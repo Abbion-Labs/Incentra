@@ -107,12 +107,6 @@ public sealed class EvaluationMeasureResponse
 
     public string MeasureTypeName { get; init; } = string.Empty;
 
-    public long? MeasureDescriptionId { get; init; }
-
-    public string? MeasureDescription { get; init; }
-
-    public string? CustomDescription { get; init; }
-
     public string? RatingComment { get; init; }
 
     public long RatingLevelId { get; init; }
@@ -211,13 +205,4 @@ public sealed class MeasureTypeResponse
     public string? Description { get; init; }
 
     public int SortOrder { get; init; }
-
-    public IReadOnlyList<MeasureTypeDescriptionResponse> Descriptions { get; init; } = Array.Empty<MeasureTypeDescriptionResponse>();
-}
-
-public sealed class MeasureTypeDescriptionResponse
-{
-    public long Id { get; init; }
-
-    public string Description { get; init; } = string.Empty;
 }

@@ -109,8 +109,6 @@ public sealed class ReplaceEvaluationGoalsCommandHandler : IRequestHandler<Repla
 
 public sealed record EvaluationMeasureItem(
     long MeasureTypeId,
-    long? MeasureDescriptionId,
-    string? CustomDescription,
     string? RatingComment,
     long RatingLevelId,
     int SortOrder);
@@ -159,13 +157,6 @@ public sealed class ReplaceEvaluationMeasuresCommandHandler : IRequestHandler<Re
                 return Result.Failure<EvaluationDetailResponse>($"{ErrorCodes.MeasureTypeNotFound}?id={item.MeasureTypeId}");
             }
 
-            if (item.MeasureDescriptionId is not null &&
-                !await this.lookupRepository.MeasureDescriptionExistsAsync(
-                    item.MeasureTypeId, item.MeasureDescriptionId.Value, cancellationToken))
-            {
-                return Result.Failure<EvaluationDetailResponse>(ErrorCodes.MeasureDescriptionNotFound);
-            }
-
             if (!await this.lookupRepository.RatingLevelExistsAsync(item.RatingLevelId, cancellationToken))
             {
                 return Result.Failure<EvaluationDetailResponse>($"{ErrorCodes.RatingLevelNotFound}?id={item.RatingLevelId}");
@@ -178,8 +169,6 @@ public sealed class ReplaceEvaluationMeasuresCommandHandler : IRequestHandler<Re
             entity.Measures.Add(new EvaluationMeasure
             {
                 MeasureTypeId = item.MeasureTypeId,
-                MeasureDescriptionId = item.MeasureDescriptionId,
-                CustomDescription = item.CustomDescription,
                 RatingComment = item.RatingComment,
                 RatingLevelId = item.RatingLevelId,
                 SortOrder = item.SortOrder

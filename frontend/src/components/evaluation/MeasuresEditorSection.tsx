@@ -13,8 +13,6 @@ import {
 import { getMeasureRatingComment, getMeasureTypeDescription, formatMeasureTypeName, type MeasureFormatMessage } from '../../utils/measureRatingDefaults';
 export interface MeasureDraft {
   measureTypeId: number;
-  measureDescriptionId: number | '';
-  customDescription: string;
   ratingComment: string;
   ratingLevelId: number;
   sortOrder: number;
@@ -95,58 +93,6 @@ export function MeasuresEditorSection({
 
               {description && (
                 <p className="measure-card__description">{description}</p>
-              )}
-
-              {editable && mt && mt.descriptions.length > 0 && (
-                <div className="measure-card__description-row form-row">
-                  <label htmlFor={`measure-desc-${m.measureTypeId}`}>
-                    {formatMessage({ id: 'evaluation.measureDescriptionLabel' })}
-                  </label>
-                  <select
-                    id={`measure-desc-${m.measureTypeId}`}
-                    value={m.measureDescriptionId === '' ? '' : String(m.measureDescriptionId)}
-                    onChange={(e) => {
-                      const next = [...measures];
-                      const selectedId = e.target.value ? Number(e.target.value) : '';
-                      next[idx] = {
-                        ...m,
-                        measureDescriptionId: selectedId,
-                        customDescription: selectedId === '' ? m.customDescription : '',
-                      };
-                      onMeasuresChange(next);
-                    }}
-                  >
-                    <option value="">{formatMessage({ id: 'evaluation.measureDescriptionCustom' })}</option>
-                    {mt.descriptions.map((desc) => (
-                      <option key={desc.id} value={desc.id}>{desc.description}</option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
-              {editable && (mt?.descriptions.length === 0 || m.measureDescriptionId === '') && (
-                <div className="measure-card__description-row form-row">
-                  <label htmlFor={`measure-custom-${m.measureTypeId}`}>
-                    {formatMessage({ id: 'evaluation.measureCustomDescriptionLabel' })}
-                  </label>
-                  <textarea
-                    id={`measure-custom-${m.measureTypeId}`}
-                    rows={2}
-                    value={m.customDescription}
-                    disabled={!editable}
-                    onChange={(e) => {
-                      const next = [...measures];
-                      next[idx] = { ...m, customDescription: e.target.value };
-                      onMeasuresChange(next);
-                    }}
-                  />
-                </div>
-              )}
-
-              {!editable && (m.customDescription || mt?.descriptions.find((d) => d.id === m.measureDescriptionId)?.description) && (
-                <p className="measure-card__selected-description">
-                  {m.customDescription || mt?.descriptions.find((d) => d.id === m.measureDescriptionId)?.description}
-                </p>
               )}
 
               <div className="measure-card__rating-row">

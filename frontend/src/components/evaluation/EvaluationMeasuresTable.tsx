@@ -22,13 +22,8 @@ export function EvaluationMeasuresTable({ measures, variant = 'full' }: Evaluati
   const { formatMessage } = useIntl();
 
   function measureDescriptionText(measure: EvaluationMeasure): string {
-    if (measure.customDescription?.trim()) return measure.customDescription.trim();
     const code = measureTypeCodeFromName(measure.measureTypeName);
-    if (code) {
-      const localized = getMeasureTypeDescription(code, formatMessage);
-      if (localized) return localized;
-    }
-    return measure.measureDescription?.trim() ?? '';
+    return code ? getMeasureTypeDescription(code, formatMessage) : '';
   }
 
 

@@ -65,7 +65,6 @@
     "vn-0062": "Image must be 2 MB or smaller.",
     "vn-0063": "Rating level for not rated (/) is not configured.",
     "vn-0064": "Goal description is required.",
-    "vn-0065": "Measure description not found for the given measure type.",
     "vn-0066": "Criterion description is required.",
     "vn-0067": "Condition description is required.",
     "vn-0068": "Goals, conditions and criteria are already set and cannot be changed.",

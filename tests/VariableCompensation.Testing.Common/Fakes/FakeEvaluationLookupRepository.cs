@@ -23,7 +23,7 @@ public sealed class FakeEvaluationLookupRepository : IEvaluationLookupRepository
     public Task<IReadOnlyList<DescriptiveRating>> GetDescriptiveRatingsAsync(CancellationToken cancellationToken) =>
         Task.FromResult(this.descriptiveRatings);
 
-    public Task<IReadOnlyList<MeasureType>> GetMeasureTypesAsync(bool includeDescriptions, CancellationToken cancellationToken) =>
+    public Task<IReadOnlyList<MeasureType>> GetMeasureTypesAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<MeasureType>>([
             new MeasureType { Id = 1, Code = "INITIATIVE", Name = "Inicijativa", IsActive = true },
         ]);
@@ -33,7 +33,4 @@ public sealed class FakeEvaluationLookupRepository : IEvaluationLookupRepository
 
     public Task<bool> MeasureTypeExistsAsync(long id, CancellationToken cancellationToken) =>
         Task.FromResult(id == 1);
-
-    public Task<bool> MeasureDescriptionExistsAsync(long measureTypeId, long descriptionId, CancellationToken cancellationToken) =>
-        Task.FromResult(false);
 }

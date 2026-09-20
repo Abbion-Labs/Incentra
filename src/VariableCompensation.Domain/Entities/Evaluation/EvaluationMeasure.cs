@@ -12,12 +12,6 @@ public class EvaluationMeasure
 
     public Lookup.MeasureType MeasureType { get; set; } = null!;
 
-    public long? MeasureDescriptionId { get; set; }
-
-    public Lookup.MeasureTypeDescription? MeasureDescription { get; set; }
-
-    public string? CustomDescription { get; set; }
-
     public string? RatingComment { get; set; }
 
     public long RatingLevelId { get; set; }

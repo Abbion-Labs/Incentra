@@ -70,8 +70,6 @@ export function ControllerReviewPage() {
 
         return {
           measureTypeId: m.measureTypeId,
-          measureDescriptionId: m.measureDescriptionId ?? '',
-          customDescription: m.customDescription ?? '',
           ratingComment: m.ratingComment?.trim() ? m.ratingComment : autoComment,
           ratingLevelId: m.ratingLevelId,
           sortOrder: m.sortOrder,
