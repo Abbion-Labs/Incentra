@@ -276,8 +276,6 @@
     "conversationNote": "Conversation note",
     "settingGoals": "Setting goals...",
     "unsavedChanges": "Unsaved changes",
-    "autosaving": "Autosaving...",
-    "autosaved": "Autosaved",
     "statusHistoryTitle": "Status history",
     "statusHistoryEmpty": "No status changes recorded.",
     "statusHistoryTransition": "{from} → {to}",
