@@ -1,6 +1,7 @@
 import type { EvaluationSummary } from '../api/types';
 import type { IntlFormatters } from 'react-intl';
 import { statusLabel } from './status';
+import { matchesNameSearch } from './nameSearch';
 
 export type EvaluationBucket = 'planning' | 'unrated' | 'returned' | 'submitted' | 'approved';
 
@@ -66,9 +67,7 @@ export function evaluationDisplayClass(
 }
 
 export function matchesEmployeeSearch(ev: EvaluationSummary, search: string): boolean {
-  const term = search.trim().toLowerCase();
-  if (!term) return true;
-  return ev.employeeFullName.toLowerCase().includes(term);
+  return matchesNameSearch(ev.employeeFullName, search);
 }
 
 export function filterByBucket(

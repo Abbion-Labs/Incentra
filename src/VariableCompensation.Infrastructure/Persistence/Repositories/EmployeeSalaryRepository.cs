@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Domain.Entities.Hr;
 using VariableCompensation.Infrastructure.Persistence;
 
@@ -76,10 +77,10 @@ public sealed class EmployeeSalaryRepository : IEmployeeSalaryRepository
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var term = search.Trim().ToLower();
+            var term = EmployeeNameSearch.Normalize(search)!;
             query = query.Where(s =>
-                s.Employee.FirstName.ToLower().Contains(term) ||
-                s.Employee.LastName.ToLower().Contains(term) ||
+                (s.Employee.FirstName + " " + s.Employee.LastName).ToLower().Contains(term) ||
+                (s.Employee.LastName + " " + s.Employee.FirstName).ToLower().Contains(term) ||
                 (s.Employee.OrganizationUnit != null && s.Employee.OrganizationUnit.Name.ToLower().Contains(term)));
         }
 

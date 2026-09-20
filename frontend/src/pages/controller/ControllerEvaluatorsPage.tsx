@@ -7,6 +7,7 @@ import { EmptyState } from '../../components/common/EmptyState';
 import { TableSkeleton } from '../../components/common/LoadingSkeleton';
 import { AppLayout } from '../../components/AppLayout';
 import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
+import { matchesNameSearch, normalizeSearchTerm } from '../../utils/nameSearch';
 import { EmployeeAvatar } from '../../components/employee/EmployeeAvatar';
 import { useIntl } from '../../i18n';
 
@@ -36,10 +37,10 @@ export function ControllerEvaluatorsPage() {
   }, [load]);
 
   const filtered = evaluators.filter((ev) => {
-    if (!search.trim()) return true;
-    const q = search.trim().toLowerCase();
+    const q = normalizeSearchTerm(search);
+    if (!q) return true;
     return (
-      ev.employeeFullName.toLowerCase().includes(q)
+      matchesNameSearch(ev.employeeFullName, search)
       || ev.organizationUnitName.toLowerCase().includes(q)
       || ev.jobPositionName.toLowerCase().includes(q)
     );

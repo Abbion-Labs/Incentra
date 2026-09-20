@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Evaluation.Services;
 using VariableCompensation.Domain.Entities.Hr;
 using VariableCompensation.Domain.Entities.Lookup;
@@ -171,13 +172,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
             query = query.Where(e => e.IsActive == isActive);
         }
 
-        if (!string.IsNullOrWhiteSpace(search))
-        {
-            var term = search.Trim().ToLower();
-            query = query.Where(e =>
-                e.FirstName.ToLower().Contains(term) ||
-                e.LastName.ToLower().Contains(term));
-        }
+        query = EmployeeNameSearch.Apply(query, search);
 
         if (!string.IsNullOrWhiteSpace(goalsBucket)
             && EmployeeGoalsFilter.TryParseGoalsBucket(goalsBucket, out var normalizedGoalsBucket)
@@ -215,12 +210,12 @@ public sealed class EmployeeRepository : IEmployeeRepository
             .Where(e => !this.context.EmployeeSalaries.Any(s => s.EmployeeId == e.Id && s.EffectiveTo == null))
             .AsQueryable();
 
-        if (!string.IsNullOrWhiteSpace(search))
+        var term = EmployeeNameSearch.Normalize(search);
+        if (term is not null)
         {
-            var term = search.Trim().ToLower();
             query = query.Where(e =>
-                e.FirstName.ToLower().Contains(term) ||
-                e.LastName.ToLower().Contains(term) ||
+                (e.FirstName + " " + e.LastName).ToLower().Contains(term) ||
+                (e.LastName + " " + e.FirstName).ToLower().Contains(term) ||
                 (e.OrganizationUnit != null && e.OrganizationUnit.Name.ToLower().Contains(term)));
         }
 
