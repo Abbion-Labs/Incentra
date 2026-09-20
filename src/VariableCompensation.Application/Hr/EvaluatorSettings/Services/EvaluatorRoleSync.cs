@@ -30,6 +30,7 @@ public static class EvaluatorRoleSync
         long? controllerEmployeeId,
         IEmployeeRepository employeeRepository,
         IEvaluatorSettingsRepository evaluatorSettingsRepository,
+        IUserRepository userRepository,
         CancellationToken cancellationToken)
     {
         var employee = await employeeRepository.FindByUserIdAsync(userId, cancellationToken);
@@ -57,9 +58,14 @@ public static class EvaluatorRoleSync
             return Result.Failure(ErrorCodes.EvaluatorControllerRequired);
         }
 
-        if (!await employeeRepository.ExistsAsync(controllerEmployeeId.Value, cancellationToken))
+        var controllerCheck = await ControllerRoleCheck.EnsureIsAControllerAsync(
+            controllerEmployeeId.Value,
+            employeeRepository,
+            userRepository,
+            cancellationToken);
+        if (controllerCheck.IsFailure)
         {
-            return Result.Failure(ErrorCodes.ControllerNotFound);
+            return controllerCheck;
         }
 
         await evaluatorSettingsRepository.AddAsync(

@@ -25,6 +25,9 @@ public sealed class FakeEvaluatorSettingsRepository : IEvaluatorSettingsReposito
     public Task<bool> ExistsAsync(long employeeId, CancellationToken cancellationToken) =>
         Task.FromResult(this.Store.ContainsKey(employeeId));
 
+    public Task<bool> IsControllerForAnyEvaluatorAsync(long controllerEmployeeId, CancellationToken cancellationToken) =>
+        Task.FromResult(this.Store.Values.Any(s => s.ControllerEmployeeId == controllerEmployeeId));
+
     public Task AddAsync(EvaluatorSettings entity, CancellationToken cancellationToken)
     {
         this.Store[entity.EmployeeId] = entity;

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { fetchAllPages } from '../../api/paged';
-import type { Employee, EvaluatorSettings } from '../../api/types';
+import type { AdminUser, Employee, EvaluatorSettings } from '../../api/types';
 import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { AdminPageHeader } from './components/AdminPageHeader';
@@ -59,6 +59,7 @@ export function AdminEvaluatorSettings() {
   const navigate = useNavigate();
   const [settings, setSettings] = useState<EvaluatorSettings[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -67,15 +68,17 @@ export function AdminEvaluatorSettings() {
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [items, emp] = await Promise.all([
+      const [items, emp, userList] = await Promise.all([
         api.get<EvaluatorSettings[]>('/api/evaluator-settings'),
         fetchAllPages<Employee>(
           (page, pageSize) =>
             `/api/employees?page=${page}&pageSize=${pageSize}&isActive=true`,
         ),
+        api.get<AdminUser[]>('/api/users'),
       ]);
       setSettings(items);
       setEmployees(emp);
+      setUsers(userList);
     } catch (e) {
       toast.error(
         e instanceof Error
@@ -90,6 +93,16 @@ export function AdminEvaluatorSettings() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // A controller is an account carrying the CONTROLLER role; nothing else marks one.
+  const controllerOptions = useMemo(() => {
+    const controllerEmployeeIds = new Set(
+      users
+        .filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
+        .map((u) => u.employeeId as number),
+    );
+    return employees.filter((e) => controllerEmployeeIds.has(e.id));
+  }, [employees, users]);
 
   const editingEvaluatorName = useMemo(
     () =>
@@ -193,7 +206,7 @@ export function AdminEvaluatorSettings() {
                 <option value="">
                   {formatMessage({ id: 'common.selectPlaceholder' })}
                 </option>
-                {employees.map((emp) => (
+                {controllerOptions.map((emp) => (
                   <option key={emp.id} value={emp.id}>
                     {emp.fullName}
                   </option>
