@@ -94,6 +94,7 @@
     "vn-0093": "The selected person is not set up as an evaluator. Add them to the evaluators first.",
     "vn-0094": "This account is not linked to an employee. Link it on the employee form first, then grant the evaluator role.",
     "vn-0095": "Pick a controller for the evaluator role.",
-    "vn-0096": "This evaluator still has people assigned to them. Reassign them before removing the role."
+    "vn-0096": "This evaluator still has people assigned to them. Reassign them before removing the role.",
+    "vn-0097": "People are assigned to this employee as their evaluator. Reassign them before deactivating."
   }
 }

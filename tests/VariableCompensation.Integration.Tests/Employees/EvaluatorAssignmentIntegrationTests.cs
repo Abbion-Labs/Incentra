@@ -69,6 +69,47 @@ public class EvaluatorAssignmentIntegrationTests
         await ShouldFailWithEvaluatorNotConfiguredAsync(response);
     }
 
+    [Fact]
+    public async Task EvaluatorSettings_CannotBeCreatedDirectly()
+    {
+        var client = await this.CreateAdminClientAsync();
+
+        var response = await client.PostAsJsonAsync(
+            "/api/evaluator-settings",
+            new
+            {
+                employeeId = TestEmployeeIds.Employee,
+                controllerEmployeeId = TestEmployeeIds.Controller,
+                thresholdDoesNotMeet = 2m,
+                thresholdMeets = 2.5m,
+                thresholdGood = 3.5m,
+                thresholdExceeds = 4.5m,
+                percentDoesNotMeet = 0m,
+                percentMeets = 25m,
+                percentGood = 50m,
+                percentExceeds = 100m,
+            });
+
+        // The endpoint is gone: granting the role is the only way in.
+        response.StatusCode.Should().Be(HttpStatusCode.MethodNotAllowed);
+    }
+
+    [Fact]
+    public async Task Deactivating_AnEvaluatorWithPeopleAssignedToThem_IsRejected()
+    {
+        var client = await this.CreateAdminClientAsync();
+
+        // The seeded employee reports to the seeded evaluator.
+        var payload = await this.NewEmployeeAsync(client, null);
+        var response = await client.PutAsJsonAsync(
+            $"/api/employees/{TestEmployeeIds.Evaluator}",
+            payload with { IsActive = false });
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        var body = await response.Content.ReadFromJsonAsync<JsonElement>();
+        body.GetProperty("error").GetString().Should().Be(ErrorCodes.EmployeeHasSubordinates);
+    }
+
     private static async Task ShouldFailWithEvaluatorNotConfiguredAsync(HttpResponseMessage response)
     {
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

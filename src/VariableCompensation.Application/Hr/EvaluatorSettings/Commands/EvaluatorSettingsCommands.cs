@@ -9,84 +9,33 @@ using VariableCompensation.Domain.Entities.Hr;
 
 namespace VariableCompensation.Application.Hr.EvaluatorSettings.Commands;
 
-public sealed record CreateEvaluatorSettingsCommand(
-    long EmployeeId,
-    long ControllerEmployeeId,
-    decimal ThresholdDoesNotMeet,
-    decimal ThresholdMeets,
-    decimal ThresholdGood,
-    decimal ThresholdExceeds,
-    decimal PercentDoesNotMeet,
-    decimal PercentMeets,
-    decimal PercentGood,
-    decimal PercentExceeds) : IRequest<Result<EvaluatorSettingsResponse>>;
-
-public sealed class CreateEvaluatorSettingsCommandHandler : IRequestHandler<CreateEvaluatorSettingsCommand, Result<EvaluatorSettingsResponse>>
+/// <summary>
+/// Evaluator settings are created by granting the EVALUATOR role, never on
+/// their own: a settings row without the role would be an evaluator who
+/// cannot sign in and rate anyone, which is the drift this design removes.
+/// Only the thresholds and the controller can be changed here.
+/// </summary>
+internal static class EvaluatorSettingsValidation
 {
-    private readonly IEvaluatorSettingsRepository repository;
-    private readonly IEmployeeRepository employeeRepository;
-
-    public CreateEvaluatorSettingsCommandHandler(IEvaluatorSettingsRepository repository, IEmployeeRepository employeeRepository)
+    internal static Result ThresholdsAndPercents(
+        decimal thresholdDoesNotMeet,
+        decimal thresholdMeets,
+        decimal thresholdGood,
+        decimal thresholdExceeds,
+        decimal percentDoesNotMeet,
+        decimal percentMeets,
+        decimal percentGood,
+        decimal percentExceeds)
     {
-        this.repository = repository;
-        this.employeeRepository = employeeRepository;
-    }
-
-    public async Task<Result<EvaluatorSettingsResponse>> Handle(CreateEvaluatorSettingsCommand request, CancellationToken cancellationToken)
-    {
-        var validation = ValidateThresholdsAndPercents(request);
-        if (validation.IsFailure)
-        {
-            return Result.Failure<EvaluatorSettingsResponse>(validation.Error);
-        }
-
-        if (!await this.employeeRepository.ExistsAsync(request.EmployeeId, cancellationToken))
-        {
-            return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.EvaluatorNotFound);
-        }
-
-        if (!await this.employeeRepository.ExistsAsync(request.ControllerEmployeeId, cancellationToken))
-        {
-            return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.ControllerNotFound);
-        }
-
-        if (await this.repository.ExistsAsync(request.EmployeeId, cancellationToken))
-        {
-            return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.EvaluatorSettingsExists);
-        }
-
-        var entity = new EvaluatorSettingsEntity
-        {
-            EmployeeId = request.EmployeeId,
-            ControllerEmployeeId = request.ControllerEmployeeId,
-            ThresholdDoesNotMeet = request.ThresholdDoesNotMeet,
-            ThresholdMeets = request.ThresholdMeets,
-            ThresholdGood = request.ThresholdGood,
-            ThresholdExceeds = request.ThresholdExceeds,
-            PercentDoesNotMeet = request.PercentDoesNotMeet,
-            PercentMeets = request.PercentMeets,
-            PercentGood = request.PercentGood,
-            PercentExceeds = request.PercentExceeds
-        };
-
-        await this.repository.AddAsync(entity, cancellationToken);
-        await this.repository.SaveChangesAsync(cancellationToken);
-
-        var created = await this.repository.FindByEmployeeIdAsync(request.EmployeeId, cancellationToken);
-        return Result.Success(HrMappings.ToResponse(created!));
-    }
-
-    internal static Result ValidateThresholdsAndPercents(CreateEvaluatorSettingsCommand request)
-    {
-        if (request.ThresholdDoesNotMeet >= request.ThresholdMeets ||
-            request.ThresholdMeets >= request.ThresholdGood ||
-            request.ThresholdGood >= request.ThresholdExceeds)
+        if (thresholdDoesNotMeet >= thresholdMeets ||
+            thresholdMeets >= thresholdGood ||
+            thresholdGood >= thresholdExceeds)
         {
             return Result.Failure(ErrorCodes.ThresholdOrderInvalid);
         }
 
-        if (request.PercentDoesNotMeet < 0 || request.PercentMeets < 0 ||
-            request.PercentGood < 0 || request.PercentExceeds < 0)
+        if (percentDoesNotMeet < 0 || percentMeets < 0 ||
+            percentGood < 0 || percentExceeds < 0)
         {
             return Result.Failure(ErrorCodes.PercentNegative);
         }
@@ -120,18 +69,15 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
 
     public async Task<Result<EvaluatorSettingsResponse>> Handle(UpdateEvaluatorSettingsCommand request, CancellationToken cancellationToken)
     {
-        var validation = CreateEvaluatorSettingsCommandHandler.ValidateThresholdsAndPercents(
-            new CreateEvaluatorSettingsCommand(
-                request.EmployeeId,
-                request.ControllerEmployeeId,
-                request.ThresholdDoesNotMeet,
-                request.ThresholdMeets,
-                request.ThresholdGood,
-                request.ThresholdExceeds,
-                request.PercentDoesNotMeet,
-                request.PercentMeets,
-                request.PercentGood,
-                request.PercentExceeds));
+        var validation = EvaluatorSettingsValidation.ThresholdsAndPercents(
+            request.ThresholdDoesNotMeet,
+            request.ThresholdMeets,
+            request.ThresholdGood,
+            request.ThresholdExceeds,
+            request.PercentDoesNotMeet,
+            request.PercentMeets,
+            request.PercentGood,
+            request.PercentExceeds);
 
         if (validation.IsFailure)
         {

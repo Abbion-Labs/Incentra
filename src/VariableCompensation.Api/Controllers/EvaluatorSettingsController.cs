@@ -48,29 +48,6 @@ public sealed class EvaluatorSettingsController : ControllerBase
         return result is null ? this.NotFound() : this.Ok(result);
     }
 
-    [HttpPost]
-    [Authorize(Roles = "ADMIN")]
-    public async Task<IActionResult> Create([FromBody] CreateEvaluatorSettingsRequest request, CancellationToken cancellationToken)
-    {
-        var result = await this.mediator.Send(
-            new CreateEvaluatorSettingsCommand(
-                request.EmployeeId,
-                request.ControllerEmployeeId,
-                request.ThresholdDoesNotMeet,
-                request.ThresholdMeets,
-                request.ThresholdGood,
-                request.ThresholdExceeds,
-                request.PercentDoesNotMeet,
-                request.PercentMeets,
-                request.PercentGood,
-                request.PercentExceeds),
-            cancellationToken);
-
-        return result.IsSuccess
-            ? this.CreatedAtAction(nameof(this.GetByEmployeeId), new { employeeId = result.Value.EmployeeId }, result.Value)
-            : this.BadRequest(new { error = result.Error });
-    }
-
     [HttpPut("{employeeId:long}")]
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> Update(long employeeId, [FromBody] UpdateEvaluatorSettingsRequest request, CancellationToken cancellationToken)
