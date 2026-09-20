@@ -217,8 +217,7 @@
     },
     "setPlanningBeforeRating": "Before rating, at least one goal, condition, and criterion must be set.",
     "submitToControllerTitle": "Submit to controller",
-    "submitToControllerConfirm": "Are you sure you want to submit this evaluation to controller review?"
-    ,
+    "submitToControllerConfirm": "Are you sure you want to submit this evaluation to controller review?",
     "bucket": {
       "planning": "Goal planning",
       "unrated": "Not rated",
@@ -307,7 +306,11 @@
       "noUsers": "No users.",
       "linkedEmployee": "Linked employee",
       "passwordOptionalPlaceholder": "Leave blank to keep current password",
-      "rolesHint": "Select one or more roles. The user must have at least one role."
+      "rolesHint": "Select one or more roles. The user must have at least one role.",
+      "evaluatorController": "Evaluator's controller",
+      "evaluatorControllerHint": "An evaluator reports to a controller who reviews their ratings. Thresholds start from the defaults and are changed on the Evaluators tab.",
+      "evaluatorNeedsLinkedEmployee": "This account is not linked to an employee. Link it on the employee form before granting the evaluator role.",
+      "evaluatorNotAvailableAtCreate": "The evaluator role is granted by editing the account, since it must be linked to an employee first."
     },
     "employeeForm": {
       "newEmployee": "New employee",
@@ -338,7 +341,9 @@
       "thresholdDoesNotMeet": "Threshold: does not meet",
       "thresholdMeets": "Threshold: meets",
       "thresholdGood": "Threshold: good",
-      "thresholds": "Thresholds"
+      "thresholds": "Thresholds",
+      "selectToEdit": "Pick an evaluator from the table to change their settings.",
+      "closeEditor": "Close editor"
     },
     "salaries": {
       "loadingEmployees": "Loading employees...",

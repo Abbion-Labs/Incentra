@@ -3409,6 +3409,12 @@ textarea {
   width: 100%;
 }
 
+.admin-form__static-value {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-weight: 600;
+}
+
 .admin-form__roles-label {
   display: block;
   font-size: 0.85rem;

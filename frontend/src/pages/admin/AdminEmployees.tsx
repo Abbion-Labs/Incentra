@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { fetchAllPages } from '../../api/paged';
-import type { AdminUser, EducationLevel, Employee, JobPosition, OrganizationUnit } from '../../api/types';
+import type { AdminUser, EducationLevel, Employee, EvaluatorSettings, JobPosition, OrganizationUnit } from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import {
@@ -72,19 +72,22 @@ export function AdminEmployees() {
   });
 
   const loadLookups = useCallback(async () => {
-    const [ou, jp, ed, userList, evaluatorResult] = await Promise.all([
+    const [ou, jp, ed, userList, evaluatorResult, evaluatorSettings] = await Promise.all([
       api.get<OrganizationUnit[]>('/api/organization-units'),
       api.get<JobPosition[]>('/api/job-positions'),
       api.get<EducationLevel[]>('/api/education-levels'),
       api.get<AdminUser[]>('/api/users'),
       fetchAllPages<Employee>((page, pageSize) =>
         `/api/employees?page=${page}&pageSize=${pageSize}&isActive=true`),
+      api.get<EvaluatorSettings[]>('/api/evaluator-settings'),
     ]);
     setOrgUnits(ou);
     setPositions(jp);
     setEducationLevels(ed);
     setUsers(userList);
-    setEvaluatorOptions(evaluatorResult);
+    // Only people who are set up as evaluators; the backend rejects anyone else.
+    const evaluatorIds = new Set(evaluatorSettings.map((setting) => setting.employeeId));
+    setEvaluatorOptions(evaluatorResult.filter((employee) => evaluatorIds.has(employee.id)));
   }, []);
 
   useEffect(() => {
