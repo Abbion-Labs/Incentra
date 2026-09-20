@@ -96,8 +96,6 @@ export function EvaluationEditorPage() {
 
         return {
           measureTypeId: m.measureTypeId,
-          measureDescriptionId: m.measureDescriptionId != null ? m.measureDescriptionId : '',
-          customDescription: m.customDescription ?? '',
           ratingComment: m.ratingComment?.trim() ? m.ratingComment : autoComment,
           ratingLevelId: m.ratingLevelId,
           sortOrder: m.sortOrder,
@@ -105,8 +103,6 @@ export function EvaluationEditorPage() {
       })
       : measureTypes.map((mt, i) => ({
         measureTypeId: mt.id,
-        measureDescriptionId: '',
-        customDescription: '',
         ratingComment: '',
         ratingLevelId: notRatedLevelId ?? ratingLevels[0]?.id ?? 1,
         sortOrder: mt.sortOrder ?? i,
@@ -181,8 +177,6 @@ export function EvaluationEditorPage() {
         goals?: RatingGoalSaveItem[];
         measures?: Array<{
           measureTypeId: number;
-          measureDescriptionId: number | null;
-          customDescription: string | null;
           ratingComment: string | null;
           ratingLevelId: number;
           sortOrder: number;
@@ -205,8 +199,6 @@ export function EvaluationEditorPage() {
         payload.goals = mergeGoalsForRatingSave(server.goals, evaluation.goals);
         payload.measures = measures.map((m, i) => ({
           measureTypeId: m.measureTypeId,
-          measureDescriptionId: typeof m.measureDescriptionId === 'number' ? m.measureDescriptionId : null,
-          customDescription: m.customDescription || null,
           ratingComment: m.ratingComment || null,
           ratingLevelId: m.ratingLevelId,
           sortOrder: m.sortOrder ?? i,

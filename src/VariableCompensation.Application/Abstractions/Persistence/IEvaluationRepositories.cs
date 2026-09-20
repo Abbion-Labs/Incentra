@@ -64,13 +64,11 @@ public interface IEvaluationLookupRepository
 
     Task<IReadOnlyList<DescriptiveRating>> GetDescriptiveRatingsAsync(CancellationToken cancellationToken);
 
-    Task<IReadOnlyList<MeasureType>> GetMeasureTypesAsync(bool includeDescriptions, CancellationToken cancellationToken);
+    Task<IReadOnlyList<MeasureType>> GetMeasureTypesAsync(CancellationToken cancellationToken);
 
     Task<bool> RatingLevelExistsAsync(long id, CancellationToken cancellationToken);
 
     Task<bool> MeasureTypeExistsAsync(long id, CancellationToken cancellationToken);
-
-    Task<bool> MeasureDescriptionExistsAsync(long measureTypeId, long descriptionId, CancellationToken cancellationToken);
 }
 
 public interface IDescriptiveRatingRepository

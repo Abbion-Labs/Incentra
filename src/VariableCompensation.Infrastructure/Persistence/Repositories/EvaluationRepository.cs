@@ -250,7 +250,6 @@ public sealed class EvaluationRepository : IEvaluationRepository
             .Include(e => e.Goals).ThenInclude(g => g.RatingLevel)
             .Include(e => e.Measures).ThenInclude(m => m.MeasureType)
             .Include(e => e.Measures).ThenInclude(m => m.RatingLevel)
-            .Include(e => e.Measures).ThenInclude(m => m.MeasureDescription)
             .Include(e => e.Criteria)
             .Include(e => e.Conditions)
             .Include(e => e.Training);
@@ -276,25 +275,16 @@ public sealed class EvaluationLookupRepository : IEvaluationLookupRepository
             .OrderBy(x => x.SortOrder)
             .ToListAsync(cancellationToken);
 
-    public async Task<IReadOnlyList<MeasureType>> GetMeasureTypesAsync(bool includeDescriptions, CancellationToken cancellationToken)
-    {
-        var query = this.context.MeasureTypes.AsNoTracking().Where(x => x.IsActive).AsQueryable();
-        if (includeDescriptions)
-        {
-            query = query.Include(m => m.Descriptions.Where(d => d.IsActive));
-        }
-
-        return await query.OrderBy(m => m.SortOrder).ToListAsync(cancellationToken);
-    }
+    public async Task<IReadOnlyList<MeasureType>> GetMeasureTypesAsync(CancellationToken cancellationToken) =>
+        await this.context.MeasureTypes
+            .AsNoTracking()
+            .Where(x => x.IsActive)
+            .OrderBy(x => x.SortOrder)
+            .ToListAsync(cancellationToken);
 
     public Task<bool> RatingLevelExistsAsync(long id, CancellationToken cancellationToken) =>
         this.context.RatingLevels.AnyAsync(x => x.Id == id && x.IsActive, cancellationToken);
 
     public Task<bool> MeasureTypeExistsAsync(long id, CancellationToken cancellationToken) =>
         this.context.MeasureTypes.AnyAsync(x => x.Id == id && x.IsActive, cancellationToken);
-
-    public Task<bool> MeasureDescriptionExistsAsync(long measureTypeId, long descriptionId, CancellationToken cancellationToken) =>
-        this.context.MeasureTypeDescriptions.AnyAsync(
-            x => x.Id == descriptionId && x.MeasureTypeId == measureTypeId && x.IsActive,
-            cancellationToken);
 }

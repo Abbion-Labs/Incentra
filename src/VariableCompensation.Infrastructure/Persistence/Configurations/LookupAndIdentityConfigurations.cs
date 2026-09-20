@@ -87,16 +87,6 @@ internal sealed class MeasureTypeConfiguration : IEntityTypeConfiguration<Measur
     }
 }
 
-internal sealed class MeasureTypeDescriptionConfiguration : IEntityTypeConfiguration<MeasureTypeDescription>
-{
-    public void Configure(EntityTypeBuilder<MeasureTypeDescription> builder)
-    {
-        builder.ToTable("measure_type_descriptions");
-        builder.HasKey(x => x.Id);
-        builder.HasOne(x => x.MeasureType).WithMany(x => x.Descriptions).HasForeignKey(x => x.MeasureTypeId);
-    }
-}
-
 internal sealed class OrganizationUnitConfiguration : IEntityTypeConfiguration<OrganizationUnit>
 {
     public void Configure(EntityTypeBuilder<OrganizationUnit> builder)

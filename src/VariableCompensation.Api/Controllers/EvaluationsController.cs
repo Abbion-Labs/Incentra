@@ -124,7 +124,7 @@ public sealed class EvaluationsController : ControllerBase
     {
         var goals = request.Goals?.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder)).ToList();
         var measures = request.Measures?.Select(m => new EvaluationMeasureItem(
-            m.MeasureTypeId, m.MeasureDescriptionId, m.CustomDescription, m.RatingComment, m.RatingLevelId, m.SortOrder)).ToList();
+            m.MeasureTypeId, m.RatingComment, m.RatingLevelId, m.SortOrder)).ToList();
         EvaluationTrainingDraftItem? training = request.Training is null
             ? null
             : new EvaluationTrainingDraftItem(
@@ -163,7 +163,7 @@ public sealed class EvaluationsController : ControllerBase
     public async Task<IActionResult> ReplaceMeasures(long id, [FromBody] ReplaceEvaluationMeasuresRequest request, CancellationToken cancellationToken)
     {
         var measures = request.Measures.Select(m => new EvaluationMeasureItem(
-            m.MeasureTypeId, m.MeasureDescriptionId, m.CustomDescription, m.RatingComment, m.RatingLevelId, m.SortOrder)).ToList();
+            m.MeasureTypeId, m.RatingComment, m.RatingLevelId, m.SortOrder)).ToList();
         var result = await this.mediator.Send(new ReplaceEvaluationMeasuresCommand(id, request.Version, measures), cancellationToken);
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
     }

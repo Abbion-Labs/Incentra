@@ -108,17 +108,6 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
-        if (!await context.MeasureTypeDescriptions.AnyAsync())
-        {
-            var initiative = await context.MeasureTypes.FirstAsync(m => m.Code == "INITIATIVE");
-            var creativity = await context.MeasureTypes.FirstAsync(m => m.Code == "CREATIVITY");
-            context.MeasureTypeDescriptions.AddRange(
-                new MeasureTypeDescription { MeasureTypeId = initiative.Id, Description = "Aktivno traži nove zadatke" },
-                new MeasureTypeDescription { MeasureTypeId = initiative.Id, Description = "Predlaže poboljšanja procesa" },
-                new MeasureTypeDescription { MeasureTypeId = creativity.Id, Description = "Pronalazi kreativna rešenja problema" });
-            await context.SaveChangesAsync();
-        }
-
         await RealisticOrganizationSeeder.EnsureAsync(context, encryption);
     }
 

@@ -3,7 +3,7 @@ import type { EvaluationMeasure } from '../../api/types';
 import { useIntl } from '../../i18n';
 
 import { formatLocalizedRatingDisplay } from '../../utils/ratingLevelLabels';
-import { formatMeasureTypeName, getMeasureTypeDescription, measureTypeCodeFromName } from '../../utils/measureRatingDefaults';
+import { formatMeasureTypeName, getMeasureTypeDescription } from '../../utils/measureRatingDefaults';
 
 
 
@@ -22,13 +22,7 @@ export function EvaluationMeasuresTable({ measures, variant = 'full' }: Evaluati
   const { formatMessage } = useIntl();
 
   function measureDescriptionText(measure: EvaluationMeasure): string {
-    if (measure.customDescription?.trim()) return measure.customDescription.trim();
-    const code = measureTypeCodeFromName(measure.measureTypeName);
-    if (code) {
-      const localized = getMeasureTypeDescription(code, formatMessage);
-      if (localized) return localized;
-    }
-    return measure.measureDescription?.trim() ?? '';
+    return measure.measureTypeCode ? getMeasureTypeDescription(measure.measureTypeCode, formatMessage) : '';
   }
 
 
@@ -69,7 +63,7 @@ export function EvaluationMeasuresTable({ measures, variant = 'full' }: Evaluati
 
               <tr key={m.id}>
 
-                <td className="col-text">{formatMeasureTypeName(formatMessage, { name: m.measureTypeName })}</td>
+                <td className="col-text">{formatMeasureTypeName(formatMessage, { code: m.measureTypeCode, name: m.measureTypeName })}</td>
 
                 <td className="col-meta">{formatLocalizedRatingDisplay(formatMessage, m.ratingLevelValue, m.ratingLevelLabel)}</td>
 
@@ -119,7 +113,7 @@ export function EvaluationMeasuresTable({ measures, variant = 'full' }: Evaluati
 
             <tr key={m.id}>
 
-              <td className="col-text">{formatMeasureTypeName(formatMessage, { name: m.measureTypeName })}</td>
+              <td className="col-text">{formatMeasureTypeName(formatMessage, { code: m.measureTypeCode, name: m.measureTypeName })}</td>
 
               <td className="col-text">{measureDescriptionText(m) || formatMessage({ id: 'common.emptyValue' })}</td>
 

@@ -265,7 +265,7 @@ public sealed class GetDescriptiveRatingsQueryHandler : IRequestHandler<GetDescr
     }
 }
 
-public sealed record GetMeasureTypesQuery(bool IncludeDescriptions) : IRequest<IReadOnlyList<MeasureTypeResponse>>;
+public sealed record GetMeasureTypesQuery : IRequest<IReadOnlyList<MeasureTypeResponse>>;
 
 public sealed class GetMeasureTypesQueryHandler : IRequestHandler<GetMeasureTypesQuery, IReadOnlyList<MeasureTypeResponse>>
 {
@@ -275,7 +275,7 @@ public sealed class GetMeasureTypesQueryHandler : IRequestHandler<GetMeasureType
 
     public async Task<IReadOnlyList<MeasureTypeResponse>> Handle(GetMeasureTypesQuery request, CancellationToken cancellationToken)
     {
-        var items = await this.repository.GetMeasureTypesAsync(request.IncludeDescriptions, cancellationToken);
-        return items.Select(m => EvaluationMappings.ToMeasureType(m, request.IncludeDescriptions)).ToList();
+        var items = await this.repository.GetMeasureTypesAsync(cancellationToken);
+        return items.Select(EvaluationMappings.ToMeasureType).ToList();
     }
 }

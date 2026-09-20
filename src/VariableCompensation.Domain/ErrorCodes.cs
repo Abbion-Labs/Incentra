@@ -65,7 +65,6 @@ public static class ErrorCodes
     public const string ImageTooLarge = "vn-0062";
     public const string NotRatedLevelMissing = "vn-0063";
     public const string GoalDescriptionRequired = "vn-0064";
-    public const string MeasureDescriptionNotFound = "vn-0065";
     public const string CriterionDescriptionRequired = "vn-0066";
     public const string ConditionDescriptionRequired = "vn-0067";
     public const string GoalsPlanningLocked = "vn-0068";

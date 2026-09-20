@@ -140,13 +140,6 @@ internal static class EvaluationDraftMutator
                 return Result.Failure($"{ErrorCodes.MeasureTypeNotFound}?id={item.MeasureTypeId}");
             }
 
-            if (item.MeasureDescriptionId is not null &&
-                !await lookupRepository.MeasureDescriptionExistsAsync(
-                    item.MeasureTypeId, item.MeasureDescriptionId.Value, cancellationToken))
-            {
-                return Result.Failure(ErrorCodes.MeasureDescriptionNotFound);
-            }
-
             if (!await lookupRepository.RatingLevelExistsAsync(item.RatingLevelId, cancellationToken))
             {
                 return Result.Failure($"{ErrorCodes.RatingLevelNotFound}?id={item.RatingLevelId}");
@@ -159,8 +152,6 @@ internal static class EvaluationDraftMutator
             entity.Measures.Add(new EvaluationMeasure
             {
                 MeasureTypeId = item.MeasureTypeId,
-                MeasureDescriptionId = item.MeasureDescriptionId,
-                CustomDescription = item.CustomDescription,
                 RatingComment = item.RatingComment,
                 RatingLevelId = item.RatingLevelId,
                 SortOrder = item.SortOrder,
