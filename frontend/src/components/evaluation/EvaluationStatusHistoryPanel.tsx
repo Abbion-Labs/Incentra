@@ -1,7 +1,7 @@
-import type { EvaluationStatusHistoryEntry } from '../../api/types';
-import { useIntl } from '../../i18n';
-import { statusLabel } from '../../utils/status';
-import { formatDateTime } from '../../utils/formatLocale';
+import type { EvaluationStatusHistoryEntry } from "../../api/types";
+import { useIntl } from "../../i18n";
+import { statusLabel } from "../../utils/status";
+import { formatDateTime } from "../../utils/formatLocale";
 
 interface EvaluationStatusHistoryPanelProps {
   items: EvaluationStatusHistoryEntry[];
@@ -9,11 +9,17 @@ interface EvaluationStatusHistoryPanelProps {
   error: string;
 }
 
-export function EvaluationStatusHistoryPanel({ items, loading, error }: EvaluationStatusHistoryPanelProps) {
+export function EvaluationStatusHistoryPanel({
+  items,
+  loading,
+  error,
+}: EvaluationStatusHistoryPanelProps) {
   const { formatMessage } = useIntl();
 
   if (loading) {
-    return <p className="empty-inline">{formatMessage({ id: 'common.loading' })}</p>;
+    return (
+      <p className="empty-inline">{formatMessage({ id: "common.loading" })}</p>
+    );
   }
 
   if (error) {
@@ -21,7 +27,11 @@ export function EvaluationStatusHistoryPanel({ items, loading, error }: Evaluati
   }
 
   if (items.length === 0) {
-    return <p className="empty-inline">{formatMessage({ id: 'evaluation.statusHistoryEmpty' })}</p>;
+    return (
+      <p className="empty-inline">
+        {formatMessage({ id: "evaluation.statusHistoryEmpty" })}
+      </p>
+    );
   }
 
   return (
@@ -29,24 +39,28 @@ export function EvaluationStatusHistoryPanel({ items, loading, error }: Evaluati
       {items.map((entry) => (
         <li key={entry.id} className="evaluation-status-history__item">
           <div className="evaluation-status-history__meta">
-            <time dateTime={entry.changedAt}>{formatDateTime(entry.changedAt)}</time>
+            <time dateTime={entry.changedAt}>
+              {formatDateTime(entry.changedAt)}
+            </time>
           </div>
           <p className="evaluation-status-history__transition">
             {entry.fromStatus
               ? formatMessage(
-                  { id: 'evaluation.statusHistoryTransition' },
+                  { id: "evaluation.statusHistoryTransition" },
                   {
                     from: statusLabel(entry.fromStatus, formatMessage),
                     to: statusLabel(entry.toStatus, formatMessage),
                   },
                 )
               : formatMessage(
-                  { id: 'evaluation.statusHistoryInitial' },
+                  { id: "evaluation.statusHistoryInitial" },
                   { status: statusLabel(entry.toStatus, formatMessage) },
                 )}
           </p>
           {entry.comment?.trim() && (
-            <p className="evaluation-status-history__comment">{entry.comment}</p>
+            <p className="evaluation-status-history__comment">
+              {entry.comment}
+            </p>
           )}
         </li>
       ))}

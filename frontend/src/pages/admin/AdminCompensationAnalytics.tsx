@@ -4,7 +4,7 @@ import { api } from '../../api/client';
 import type { CompensationAnalytics, CompensationAnalyticsChartType, OrganizationUnit } from '../../api/types';
 import { currentYear } from '../../utils/status';
 import { COMPENSATION_CHART_OPTIONS } from '../../utils/compensationAnalytics';
-import { AlertMessages } from '../../components/common/AlertMessages';
+import { useToast } from '../../hooks';
 import { CompensationDistributionChart } from './components/CompensationDistributionChart';
 import { CompensationEmployeeBarChart } from './components/CompensationEmployeeBarChart';
 import { useIntl } from '../../i18n';
@@ -13,6 +13,7 @@ const ALL_ORG_VALUE = 'all';
 
 export function AdminCompensationAnalytics() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [orgUnits, setOrgUnits] = useState<OrganizationUnit[]>([]);
   const [organizationUnitId, setOrganizationUnitId] = useState(ALL_ORG_VALUE);
   const [year, setYear] = useState(String(currentYear));
@@ -20,7 +21,6 @@ export function AdminCompensationAnalytics() {
 
   const [analytics, setAnalytics] = useState<CompensationAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const yearOptions = useMemo(() => {
     const base = currentYear;
@@ -44,7 +44,6 @@ export function AdminCompensationAnalytics() {
     if (!selectedYear) return;
 
     setLoading(true);
-    setError('');
     try {
       const params = new URLSearchParams({
         year: selectedYear,
@@ -57,19 +56,19 @@ export function AdminCompensationAnalytics() {
       const data = await api.get<CompensationAnalytics>(`/api/compensation-results/analytics?${params}`);
       setAnalytics(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'admin.analyticsLoadError' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'admin.analyticsLoadError' }));
       setAnalytics(null);
     } finally {
       setLoading(false);
     }
-  }, [formatMessage]);
+  }, [formatMessage, toast]);
 
   useEffect(() => {
     loadOrgUnits().catch((e) => {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.unknown' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.unknown' }));
       setLoading(false);
     });
-  }, [formatMessage, loadOrgUnits]);
+  }, [formatMessage, loadOrgUnits, toast]);
 
   useEffect(() => {
     loadAnalytics(organizationUnitId, year, chartType);
@@ -102,8 +101,6 @@ export function AdminCompensationAnalytics() {
   return (
     <div className="card compensation-analytics">
       <div className="compensation-analytics__top">
-        <AlertMessages error={error} />
-
         <div className="form-grid admin-form__grid compensation-analytics__filters">
         <div className="form-row">
           <label htmlFor="analytics-org">{formatMessage({ id: 'common.organizationUnit' })}</label>

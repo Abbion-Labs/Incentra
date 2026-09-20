@@ -4,19 +4,17 @@ import { useAuth } from '../auth/AuthContext';
 import { syncUserEmployeeProfile } from '../auth/syncUserEmployeeProfile';
 import type { Employee } from '../api/types';
 import { AppLayout } from '../components/AppLayout';
-import { AlertMessages } from '../components/common/AlertMessages';
 import { EmployeeAvatarUpload } from '../components/employee/EmployeeAvatarUpload';
+import { useToast } from '../hooks';
 import { useIntl } from '../i18n';
-import { localizeApiError } from '../utils/errorLocalization';
 import { roleLabel } from '../utils/status';
 
 export function AccountSettingsPage() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const { user, updateEmployeeProfile, updateNotificationPreferences } = useAuth();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -31,16 +29,15 @@ export function AccountSettingsPage() {
       return;
     }
     setLoading(true);
-    setError('');
     try {
       const data = await api.get<Employee>(`/api/employees/${user.employeeId}`);
       setEmployee(data);
     } catch (e) {
-      setError(e instanceof Error ? localizeApiError(e.message, formatMessage) : formatMessage({ id: 'account.loadProfileError' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'account.loadProfileError' }));
     } finally {
       setLoading(false);
     }
-  }, [user?.employeeId]);
+  }, [user?.employeeId, formatMessage, toast]);
 
   useEffect(() => {
     loadEmployee();
@@ -48,11 +45,9 @@ export function AccountSettingsPage() {
 
   async function handlePasswordChange(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
-    setMessage('');
 
     if (newPassword !== confirmPassword) {
-      setError(formatMessage({ id: 'account.passwordMismatch' }));
+      toast.error(formatMessage({ id: 'account.passwordMismatch' }));
       return;
     }
 
@@ -62,28 +57,26 @@ export function AccountSettingsPage() {
         currentPassword,
         newPassword,
       });
-      setMessage(formatMessage({ id: 'account.passwordChanged' }));
+      toast.success(formatMessage({ id: 'account.passwordChanged' }));
       setCurrentPassword('');
       setNewPassword('');
       setConfirmPassword('');
     } catch (e) {
-      setError(e instanceof Error ? localizeApiError(e.message, formatMessage) : formatMessage({ id: 'account.passwordChangeFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'account.passwordChangeFailed' }));
     } finally {
       setChangingPassword(false);
     }
   }
 
   async function handleNotificationToggle(enabled: boolean) {
-    setError('');
-    setMessage('');
     setSavingNotifications(true);
     try {
       await updateNotificationPreferences(enabled);
-      setMessage(formatMessage({ id: 'account.emailNotificationsUpdated' }));
+      toast.success(formatMessage({ id: 'account.emailNotificationsUpdated' }));
     } catch (e) {
-      setError(
+      toast.error(
         e instanceof Error
-          ? localizeApiError(e.message, formatMessage)
+          ? e.message
           : formatMessage({ id: 'account.emailNotificationsUpdateFailed' }),
       );
     } finally {
@@ -95,8 +88,6 @@ export function AccountSettingsPage() {
 
   return (
     <AppLayout title={formatMessage({ id: 'account.title' })}>
-      <AlertMessages error={error} info={message} />
-
       <div className="account-settings">
         <div className="card account-settings__profile">
           <h2 className="account-settings__section-title">{formatMessage({ id: 'account.profile' })}</h2>

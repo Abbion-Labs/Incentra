@@ -10,7 +10,7 @@ import {
 import { createPortal } from 'react-dom';
 import type { EvaluationSummary } from '../../api/types';
 import { useIntl } from '../../i18n';
-import { useEvaluationStatusHistory } from '../../hooks/useEvaluationStatusHistory';
+import { useEvaluationStatusHistory, useToast } from '../../hooks';
 import { isReturnedEvaluation } from '../../utils/evaluationBuckets';
 import { EvaluationStatusHistoryPanel } from './EvaluationStatusHistoryPanel';
 
@@ -35,6 +35,7 @@ export function EvaluationStatusWithHistory({
   children,
 }: EvaluationStatusWithHistoryProps) {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const popoverId = useId();
   const triggerRef = useRef<HTMLSpanElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -43,6 +44,10 @@ export function EvaluationStatusWithHistory({
   const [pinned, setPinned] = useState(false);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
   const { items, loading, error } = useEvaluationStatusHistory(evaluationId);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   const title = formatMessage({ id: 'evaluation.statusHistoryTitle' });
   const countSuffix = !loading && items.length > 0 ? ` (${items.length})` : '';

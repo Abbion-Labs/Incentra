@@ -2,35 +2,33 @@ import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import type { ControllerEvaluatorSummary } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
 import { EmptyState } from '../../components/common/EmptyState';
 import { TableSkeleton } from '../../components/common/LoadingSkeleton';
 import { AppLayout } from '../../components/AppLayout';
-import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
+import { useDebouncedSearch, useToast } from '../../hooks';
 import { matchesNameSearch, normalizeSearchTerm } from '../../utils/nameSearch';
 import { EmployeeAvatar } from '../../components/employee/EmployeeAvatar';
 import { useIntl } from '../../i18n';
 
 export function ControllerEvaluatorsPage() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const navigate = useNavigate();
   const [evaluators, setEvaluators] = useState<ControllerEvaluatorSummary[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const { input: searchInput, debounced: search, setInput: setSearchInput } = useDebouncedSearch();
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const items = await api.get<ControllerEvaluatorSummary[]>('/api/evaluator-settings/my-evaluators');
       setEvaluators(items);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [formatMessage, toast]);
 
   useEffect(() => {
     load();
@@ -60,8 +58,6 @@ export function ControllerEvaluatorsPage() {
           />
         </div>
       </div>
-
-      <AlertMessages error={error} />
 
       <div className="card card--flush">
         {loading ? (

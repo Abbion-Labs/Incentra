@@ -8,13 +8,10 @@ import type { EmployeeSalary, EmployeeSalaryOption } from '../../api/types';
 
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 
-import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 
-import { usePagedList } from '../../hooks/usePagedList';
 import { useIntl } from '../../i18n';
 import { formatNumber } from '../../utils/formatLocale';
-
-import { AdminPageHeader } from './components/AdminPageHeader';
 
 
 
@@ -68,6 +65,7 @@ function formatPeriod(from: string, to: string | null): string {
 
 export function AdminSalaries() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
 
   const { input: search, debounced: debouncedSearch, setInput: setSearch } = useDebouncedSearch();
 
@@ -76,10 +74,6 @@ export function AdminSalaries() {
   const [loadingWithoutSalary, setLoadingWithoutSalary] = useState(false);
 
   const [saving, setSaving] = useState(false);
-
-  const [error, setError] = useState('');
-
-  const [message, setMessage] = useState('');
 
 
 
@@ -189,7 +183,7 @@ export function AdminSalaries() {
 
     } catch (e) {
 
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadEmployeesWithoutSalaryFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadEmployeesWithoutSalaryFailed' }));
 
       setWithoutSalary([]);
 
@@ -199,7 +193,7 @@ export function AdminSalaries() {
 
     }
 
-  }, []);
+  }, [formatMessage, toast]);
 
 
 
@@ -217,13 +211,9 @@ export function AdminSalaries() {
 
   useEffect(() => {
 
-    if (listError) {
+    if (listError) toast.error(listError);
 
-      setError(listError);
-
-    }
-
-  }, [listError]);
+  }, [listError, toast]);
 
 
 
@@ -253,7 +243,7 @@ export function AdminSalaries() {
 
     } catch (e) {
 
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.salaryHistoryLoadFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.salaryHistoryLoadFailed' }));
 
       setHistoryEmployeeId(null);
 
@@ -283,10 +273,6 @@ export function AdminSalaries() {
 
     setSaving(true);
 
-    setError('');
-
-    setMessage('');
-
     try {
 
       await api.put(`/api/employee-salaries/${employeeId}`, {
@@ -301,7 +287,7 @@ export function AdminSalaries() {
 
       });
 
-      setMessage(formatMessage({ id: 'alerts.salarySavedWithHistory' }));
+      toast.success(formatMessage({ id: 'alerts.salarySavedWithHistory' }));
 
       setShowAdd(false);
 
@@ -325,7 +311,7 @@ export function AdminSalaries() {
 
     } catch (e) {
 
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.saveFailed' }));
 
     } finally {
 
@@ -348,10 +334,6 @@ export function AdminSalaries() {
     setEditEffectiveFrom(todayIso());
 
     setShowAdd(false);
-
-    setError('');
-
-    setMessage('');
 
   }
 
@@ -381,7 +363,7 @@ export function AdminSalaries() {
 
     if (!addEmployeeId || !points || points <= 0 || points > 1000 || !salaryPerPoint || salaryPerPoint <= 0) {
 
-      setError(formatMessage({ id: 'errors.invalidSalaryEmployeeAndPoints' }));
+      toast.warning(formatMessage({ id: 'errors.invalidSalaryEmployeeAndPoints' }));
 
       return;
 
@@ -403,7 +385,7 @@ export function AdminSalaries() {
 
     if (!points || points <= 0 || points > 1000 || !salaryPerPoint || salaryPerPoint <= 0) {
 
-      setError(formatMessage({ id: 'errors.invalidSalaryPoints' }));
+      toast.warning(formatMessage({ id: 'errors.invalidSalaryPoints' }));
 
       return;
 
@@ -418,11 +400,6 @@ export function AdminSalaries() {
   return (
 
     <div className="card">
-
-      <AdminPageHeader
-        error={error}
-        message={message}
-      />
 
       {showAdd && (
 

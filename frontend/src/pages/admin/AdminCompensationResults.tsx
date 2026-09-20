@@ -6,10 +6,9 @@ import type { CompensationCalculationStatus, CompensationParameters, Compensatio
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 import { downloadCsv } from '../../utils/downloadCsv';
 import { currentYear } from '../../utils/status';
-import { usePagedList } from '../../hooks/usePagedList';
+import { usePagedList, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { formatDateTime, formatNumber, formatPercent } from '../../utils/formatLocale';
-import { AdminPageHeader } from './components/AdminPageHeader';
 
 function formatTableAmount(value: number): string {
   return formatNumber(value, 0, 0);
@@ -24,6 +23,7 @@ function formatCsvAmount(value: number): string {
 
 export function AdminCompensationResults() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [orgUnits, setOrgUnits] = useState<OrganizationUnit[]>([]);
   const [organizationUnitId, setOrganizationUnitId] = useState('');
   const [year, setYear] = useState(String(currentYear));
@@ -34,8 +34,6 @@ export function AdminCompensationResults() {
   const [calculationStatus, setCalculationStatus] = useState<CompensationCalculationStatus | null>(null);
   const [exporting, setExporting] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const yearOptions = useMemo(() => {
     const base = currentYear;
     return [base - 1, base, base + 1];
@@ -112,9 +110,9 @@ export function AdminCompensationResults() {
 
   useEffect(() => {
     loadOrgUnits().catch((e) => {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
     });
-  }, [loadOrgUnits]);
+  }, [loadOrgUnits, formatMessage, toast]);
 
   useEffect(() => {
     if (organizationUnitId && year) {
@@ -123,10 +121,8 @@ export function AdminCompensationResults() {
   }, [organizationUnitId, year, loadParametersMeta]);
 
   useEffect(() => {
-    if (listError) {
-      setError(listError);
-    }
-  }, [listError]);
+    if (listError) toast.error(listError);
+  }, [listError, toast]);
 
   const emptyMessage = debouncedSearch
     ? formatMessage({ id: 'evaluation.noSearchResults' })
@@ -146,7 +142,7 @@ export function AdminCompensationResults() {
 
   async function handleFinalize() {
     if (!parametersId || !calculationStatus || calculationStatus.totalResults === 0) {
-      setError(formatMessage({ id: 'errors.noResultsToFinalize' }));
+      toast.warning(formatMessage({ id: 'errors.noResultsToFinalize' }));
       return;
     }
 
@@ -155,16 +151,14 @@ export function AdminCompensationResults() {
     }
 
     setFinalizing(true);
-    setError('');
-    setMessage('');
     try {
       const response = await api.post<{ finalizedCount: number }>(
         `/api/compensation-parameters/${parametersId}/finalize`,
       );
-      setMessage(formatMessage({ id: 'alerts.finalizedResults' }, { count: response.finalizedCount }));
+      toast.success(formatMessage({ id: 'alerts.finalizedResults' }, { count: response.finalizedCount }));
       await loadParametersMeta(organizationUnitId, year);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.finalizeFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.finalizeFailed' }));
     } finally {
       setFinalizing(false);
     }
@@ -198,7 +192,6 @@ export function AdminCompensationResults() {
   async function handleExport() {
     if (!organizationUnitId || !year) return;
     setExporting(true);
-    setError('');
     setListError('');
     try {
       const hasAllLoaded = totalCount > 0 && results.length >= totalCount;
@@ -220,12 +213,12 @@ export function AdminCompensationResults() {
             return `/api/compensation-results?${params}`;
           });
       if (rows.length === 0) {
-        setError(formatMessage({ id: 'errors.noDataToExport' }));
+        toast.warning(formatMessage({ id: 'errors.noDataToExport' }));
         return;
       }
       exportRows(rows);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.exportFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.exportFailed' }));
     } finally {
       setExporting(false);
     }
@@ -233,7 +226,6 @@ export function AdminCompensationResults() {
 
   return (
     <div className="card card--table-fill">
-      <AdminPageHeader error={error} message={message} />
       <div className="filter-bar compensation-results-toolbar">
         <div className="compensation-results-filters form-grid admin-form__grid">
           <div className="form-row">
