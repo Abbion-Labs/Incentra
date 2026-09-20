@@ -3,6 +3,7 @@ using VariableCompensation.Application.Auth.Commands.UpdateAdminUser;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Identity;
 using VariableCompensation.Domain.Entities.Lookup;
+using VariableCompensation.Domain.Entities.Hr;
 using VariableCompensation.Testing.Common.Fakes;
 
 namespace VariableCompensation.Application.Tests.Auth;
@@ -30,9 +31,15 @@ public class UpdateAdminUserCommandHandlerTests
         };
         userRepository.Users[1] = user;
 
+        var employeeRepository = new FakeEmployeeRepository();
+        employeeRepository.EmployeesByUserId[1] = new Employee { Id = 7 };
+        var evaluatorSettings = new FakeEvaluatorSettingsRepository();
+        evaluatorSettings.Store[7] = new EvaluatorSettings { EmployeeId = 7, ControllerEmployeeId = 9 };
+
         var handler = new UpdateAdminUserCommandHandler(
             userRepository,
-            new FakeEmployeeRepository(),
+            employeeRepository,
+            evaluatorSettings,
             new FakeRoleLookup());
 
         var result = await handler.Handle(
@@ -53,6 +60,7 @@ public class UpdateAdminUserCommandHandlerTests
         var handler = new UpdateAdminUserCommandHandler(
             userRepository,
             new FakeEmployeeRepository(),
+            new FakeEvaluatorSettingsRepository(),
             new FakeRoleLookup());
 
         var result = await handler.Handle(

@@ -90,6 +90,10 @@
     "vn-0089": "Došlo je do neočekivane greške. Pokušajte ponovo. (ID: {traceId})",
     "vn-0090": "Podatak je u međuvremenu izmenjen od strane drugog korisnika. Osvežite stranicu i pokušajte ponovo.",
     "vn-0091": "Zapis sa istom vrednošću već postoji.",
-    "vn-0092": "Previše neuspelih pokušaja prijave. Pokušajte ponovo za {seconds} s."
+    "vn-0092": "Previše neuspelih pokušaja prijave. Pokušajte ponovo za {seconds} s.",
+    "vn-0093": "Izabrana osoba nije podešena kao ocenjivač. Prvo je dodajte među ocenjivače.",
+    "vn-0094": "Nalog nije povezan sa zaposlenim. Prvo povežite nalog u formi zaposlenog, pa mu dodelite ulogu ocenjivača.",
+    "vn-0095": "Za ulogu ocenjivača morate izabrati kontrolora.",
+    "vn-0096": "Ocenjivaču su dodeljeni podređeni. Prerasporedite ih pre uklanjanja uloge."
   }
 }

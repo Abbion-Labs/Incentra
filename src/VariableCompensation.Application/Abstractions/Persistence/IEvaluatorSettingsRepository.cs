@@ -18,5 +18,7 @@ public interface IEvaluatorSettingsRepository
 
     Task AddAsync(EvaluatorSettings entity, CancellationToken cancellationToken);
 
+    void Remove(EvaluatorSettings entity);
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

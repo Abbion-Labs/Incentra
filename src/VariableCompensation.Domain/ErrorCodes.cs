@@ -92,4 +92,8 @@ public static class ErrorCodes
     public const string ConcurrencyConflict = "vn-0090";
     public const string DuplicateValue = "vn-0091";
     public const string TooManyLoginAttempts = "vn-0092";
+    public const string EvaluatorNotConfigured = "vn-0093";
+    public const string EvaluatorUserNotLinkedToEmployee = "vn-0094";
+    public const string EvaluatorControllerRequired = "vn-0095";
+    public const string EvaluatorHasSubordinates = "vn-0096";
 }

@@ -90,6 +90,10 @@
     "vn-0089": "An unexpected error occurred. Please try again. (ID: {traceId})",
     "vn-0090": "The data was modified by another user in the meantime. Please refresh and try again.",
     "vn-0091": "A record with the same value already exists.",
-    "vn-0092": "Too many failed sign-in attempts. Try again in {seconds} seconds."
+    "vn-0092": "Too many failed sign-in attempts. Try again in {seconds} seconds.",
+    "vn-0093": "The selected person is not set up as an evaluator. Add them to the evaluators first.",
+    "vn-0094": "This account is not linked to an employee. Link it on the employee form first, then grant the evaluator role.",
+    "vn-0095": "Pick a controller for the evaluator role.",
+    "vn-0096": "This evaluator still has people assigned to them. Reassign them before removing the role."
   }
 }

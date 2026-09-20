@@ -5,26 +5,36 @@ using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Auth;
 using VariableCompensation.Application.Auth.Commands.RegisterUser;
 using VariableCompensation.Application.Auth.Models;
+using VariableCompensation.Application.Hr.EvaluatorSettings.Services;
 using VariableCompensation.Domain;
+using VariableCompensation.Domain.Enums;
 
 namespace VariableCompensation.Application.Auth.Commands.UpdateAdminUser;
 
-public sealed record UpdateAdminUserCommand(long UserId, string Email, bool IsActive, IReadOnlyList<string> RoleCodes)
+public sealed record UpdateAdminUserCommand(
+    long UserId,
+    string Email,
+    bool IsActive,
+    IReadOnlyList<string> RoleCodes,
+    long? ControllerEmployeeId = null)
     : IRequest<Result<AdminUserListItemResponse>>;
 
 public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminUserCommand, Result<AdminUserListItemResponse>>
 {
     private readonly IUserRepository userRepository;
     private readonly IEmployeeRepository employeeRepository;
+    private readonly IEvaluatorSettingsRepository evaluatorSettingsRepository;
     private readonly IRoleLookup roleLookup;
 
     public UpdateAdminUserCommandHandler(
         IUserRepository userRepository,
         IEmployeeRepository employeeRepository,
+        IEvaluatorSettingsRepository evaluatorSettingsRepository,
         IRoleLookup roleLookup)
     {
         this.userRepository = userRepository;
         this.employeeRepository = employeeRepository;
+        this.evaluatorSettingsRepository = evaluatorSettingsRepository;
         this.roleLookup = roleLookup;
     }
 
@@ -55,6 +65,18 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
             return Result.Failure<AdminUserListItemResponse>(roleIdsResult.Error);
         }
 
+        var evaluatorSync = await EvaluatorRoleSync.ApplyAsync(
+            user.Id,
+            request.RoleCodes.Contains(RoleCodes.Evaluator, StringComparer.OrdinalIgnoreCase),
+            request.ControllerEmployeeId,
+            this.employeeRepository,
+            this.evaluatorSettingsRepository,
+            cancellationToken);
+        if (evaluatorSync.IsFailure)
+        {
+            return Result.Failure<AdminUserListItemResponse>(evaluatorSync.Error);
+        }
+
         var previousRoleIds = user.UserRoles.Select(ur => ur.RoleId).OrderBy(id => id).ToList();
         user.Email = email;
         user.IsActive = request.IsActive;
@@ -69,6 +91,7 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
         }
 
         await this.userRepository.SaveChangesAsync(cancellationToken);
+        await this.evaluatorSettingsRepository.SaveChangesAsync(cancellationToken);
 
         var reloaded = await this.userRepository.FindByIdWithRolesAsync(user.Id, cancellationToken);
         if (reloaded is null)

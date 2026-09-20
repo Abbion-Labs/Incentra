@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client';
-import type { AdminUser } from '../../api/types';
+import { fetchAllPages } from '../../api/paged';
+import type { AdminUser, Employee, EvaluatorSettings } from '../../api/types';
 import { useIntl } from '../../i18n';
 import {
   AdminUserForm,
@@ -22,18 +23,36 @@ export function AdminUsers() {
 
   const [formValues, setFormValues] = useState<UserFormValues>(emptyUserForm());
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [configuredEvaluatorIds, setConfiguredEvaluatorIds] = useState<Set<number>>(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const list = await api.get<AdminUser[]>('/api/users');
+      const [list, employeeList, settings] = await Promise.all([
+        api.get<AdminUser[]>('/api/users'),
+        fetchAllPages<Employee>((page, pageSize) =>
+          `/api/employees?page=${page}&pageSize=${pageSize}&isActive=true`),
+        api.get<EvaluatorSettings[]>('/api/evaluator-settings'),
+      ]);
       setUsers(list);
+      setEmployees(employeeList);
+      setConfiguredEvaluatorIds(new Set(settings.map((s) => s.employeeId)));
     } catch (e) {
       toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
     } finally {
       setLoading(false);
     }
   }, [formatMessage, toast]);
+
+  // An evaluator cannot be their own controller.
+  const controllerOptions = useMemo(
+    () => employees.filter((e) => e.id !== editingUser?.employeeId),
+    [employees, editingUser],
+  );
+
+  const alreadyConfiguredEvaluator =
+    editingUser?.employeeId != null && configuredEvaluatorIds.has(editingUser.employeeId);
 
   useEffect(() => {
     load();
@@ -59,6 +78,9 @@ export function AdminUsers() {
           email: formValues.email.trim(),
           isActive: formValues.isActive,
           roleCodes: formValues.roleCodes,
+          controllerEmployeeId: formValues.controllerEmployeeId
+            ? Number(formValues.controllerEmployeeId)
+            : null,
         });
         if (formValues.password.trim()) {
           await api.put(`/api/users/${editingUser.id}/password`, {
@@ -103,6 +125,8 @@ export function AdminUsers() {
         values={formValues}
         editingUser={editingUser}
         saving={saving}
+        controllerOptions={controllerOptions}
+        alreadyConfiguredEvaluator={alreadyConfiguredEvaluator}
         onChange={setFormValues}
         onSubmit={handleSubmit}
         onCancel={startCreate}

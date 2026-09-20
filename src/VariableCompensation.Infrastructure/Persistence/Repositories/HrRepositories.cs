@@ -233,6 +233,9 @@ public sealed class EmployeeRepository : IEmployeeRepository
     public Task<bool> ExistsAsync(long id, CancellationToken cancellationToken) =>
         this.context.Employees.AnyAsync(e => e.Id == id, cancellationToken);
 
+    public Task<bool> HasSubordinatesAsync(long evaluatorEmployeeId, CancellationToken cancellationToken) =>
+        this.context.Employees.AnyAsync(e => e.EvaluatorEmployeeId == evaluatorEmployeeId, cancellationToken);
+
     public Task<Employee?> FindByUserIdAsync(long userId, CancellationToken cancellationToken) =>
         this.context.Employees
             .AsNoTracking()

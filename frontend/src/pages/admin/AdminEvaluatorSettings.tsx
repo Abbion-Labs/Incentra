@@ -85,17 +85,12 @@ export function AdminEvaluatorSettings() {
     load();
   }, [load]);
 
-  const configuredEvaluatorIds = useMemo(
-    () => new Set(settings.map((s) => s.employeeId)),
-    [settings],
+  const editingEvaluatorName = useMemo(
+    () => settings.find((s) => s.employeeId === editingId)?.employeeFullName ?? '',
+    [settings, editingId],
   );
 
-  const availableEvaluators = useMemo(
-    () => employees.filter((e) => !configuredEvaluatorIds.has(e.id) || e.id === editingId),
-    [employees, configuredEvaluatorIds, editingId],
-  );
-
-  function startCreate() {
+  function closeEditor() {
     setEditingId(null);
     setForm(emptyForm());
   }
@@ -119,9 +114,10 @@ export function AdminEvaluatorSettings() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (editingId === null) return;
+
     setSaving(true);
     const payload = {
-      employeeId: Number(form.evaluatorId),
       controllerEmployeeId: Number(form.controllerId),
       thresholdDoesNotMeet: Number(form.thresholdDoesNotMeet),
       thresholdMeets: Number(form.thresholdMeets),
@@ -133,24 +129,8 @@ export function AdminEvaluatorSettings() {
       percentExceeds: Number(form.percentExceeds),
     };
     try {
-      if (editingId) {
-        await api.put(`/api/evaluator-settings/${editingId}`, {
-          controllerEmployeeId: payload.controllerEmployeeId,
-          thresholdDoesNotMeet: payload.thresholdDoesNotMeet,
-          thresholdMeets: payload.thresholdMeets,
-          thresholdGood: payload.thresholdGood,
-          thresholdExceeds: payload.thresholdExceeds,
-          percentDoesNotMeet: payload.percentDoesNotMeet,
-          percentMeets: payload.percentMeets,
-          percentGood: payload.percentGood,
-          percentExceeds: payload.percentExceeds,
-        });
-        toast.success(formatMessage({ id: 'alerts.settingsUpdated' }));
-      } else {
-        await api.post('/api/evaluator-settings', payload);
-        toast.success(formatMessage({ id: 'alerts.settingsCreated' }));
-        startCreate();
-      }
+      await api.put(`/api/evaluator-settings/${editingId}`, payload);
+      toast.success(formatMessage({ id: 'alerts.settingsUpdated' }));
       await load();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
@@ -164,29 +144,23 @@ export function AdminEvaluatorSettings() {
       <AdminPageHeader
         actions={
           editingId ? (
-            <button type="button" className="btn btn-secondary" onClick={startCreate}>
-              {formatMessage({ id: 'admin.evaluatorSettings.newSettings' })}
+            <button type="button" className="btn btn-secondary" onClick={closeEditor}>
+              {formatMessage({ id: 'admin.evaluatorSettings.closeEditor' })}
             </button>
           ) : null
         }
       />
 
+      {editingId === null ? (
+        <div className="card">
+          <p>{formatMessage({ id: 'admin.evaluatorSettings.selectToEdit' })}</p>
+        </div>
+      ) : (
       <form className="card admin-form" onSubmit={handleSubmit}>
         <div className="form-grid admin-form__grid">
           <div className="form-row">
-            <label htmlFor="eval-employee">{formatMessage({ id: 'admin.evaluators' })}</label>
-            <select
-              id="eval-employee"
-              value={form.evaluatorId}
-              onChange={(e) => setField('evaluatorId', e.target.value)}
-              required
-              disabled={!!editingId}
-            >
-              <option value="">{formatMessage({ id: 'common.selectPlaceholder' })}</option>
-              {availableEvaluators.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.fullName}</option>
-              ))}
-            </select>
+            <label>{formatMessage({ id: 'admin.evaluators' })}</label>
+            <p className="admin-form__static-value">{editingEvaluatorName}</p>
           </div>
           <div className="form-row">
             <label htmlFor="eval-controller">{formatMessage({ id: 'roles.CONTROLLER' })}</label>
@@ -297,19 +271,14 @@ export function AdminEvaluatorSettings() {
         </div>
         <div className="actions">
           <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving
-              ? formatMessage({ id: 'buttons.saving' })
-              : editingId
-                ? formatMessage({ id: 'buttons.saveChanges' })
-                : formatMessage({ id: 'buttons.add' })}
+            {saving ? formatMessage({ id: 'buttons.saving' }) : formatMessage({ id: 'buttons.saveChanges' })}
           </button>
-          {editingId && (
-            <button type="button" className="btn btn-secondary" onClick={startCreate}>
-              {formatMessage({ id: 'buttons.cancel' })}
-            </button>
-          )}
+          <button type="button" className="btn btn-secondary" onClick={closeEditor}>
+            {formatMessage({ id: 'buttons.cancel' })}
+          </button>
         </div>
       </form>
+      )}
 
       <div className="card">
         {loading ? (
