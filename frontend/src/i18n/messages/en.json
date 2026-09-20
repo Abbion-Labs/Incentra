@@ -2,8 +2,6 @@
   "navigation": {
     "brand": "Incentra",
     "main": "Main navigation",
-    "showMenu": "Show navigation",
-    "hideMenu": "Hide navigation",
     "myAccount": "My account",
     "logout": "Sign out",
     "evaluatorEmployees": "Employees",
