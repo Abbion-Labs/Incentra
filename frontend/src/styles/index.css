@@ -40,9 +40,14 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
 }
 
 a {
@@ -58,12 +63,16 @@ textarea {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .topbar {
+  flex-shrink: 0;
+  z-index: 20;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border-bottom: 1px solid var(--border);
   padding: 0.65rem var(--space-lg);
@@ -259,7 +268,9 @@ textarea {
   display: flex;
   flex: 1;
   min-width: 0;
+  min-height: 0;
   width: 100%;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -268,7 +279,8 @@ textarea {
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 1rem 0;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar a {
@@ -314,7 +326,11 @@ textarea {
   flex: 1;
   width: 100%;
   min-width: 0;
+  min-height: 0;
   max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: clamp(var(--space-md), 2.5vw, var(--space-xl));
   container-type: inline-size;
   container-name: main;
@@ -969,18 +985,6 @@ textarea {
   overflow-x: auto;
 }
 
-.app-shell:has(.table-wrap--infinite) {
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.app-shell:has(.table-wrap--infinite) .layout-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
 .main-content:has(.table-wrap--infinite) {
   display: flex;
   flex-direction: column;
@@ -1068,15 +1072,9 @@ textarea {
 }
 
 @container main (max-width: 900px) {
-  .app-shell:has(.table-wrap--infinite) {
-    height: auto;
-    overflow: visible;
-  }
-
-  .app-shell:has(.table-wrap--infinite) .layout-body,
   .main-content:has(.table-wrap--infinite),
   .varijabila-page:has(.table-wrap--infinite) {
-    overflow: visible;
+    overflow: auto;
   }
 
   .main-content:has(.table-wrap--infinite) > .card--table-fill,
@@ -2979,18 +2977,6 @@ textarea {
   min-width: 0;
   overflow-x: auto;
   overflow-y: visible;
-}
-
-.app-shell:has(.compensation-analytics) {
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.app-shell:has(.compensation-analytics) .layout-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
 }
 
 .main-content:has(.compensation-analytics) {
