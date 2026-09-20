@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { BrandMark } from '../components/BrandMark';
 import { useIntl } from '../i18n';
 import { localizeApiError } from '../utils/errorLocalization';
+
+const HERO_POINTS = ['auth.heroPointGoals', 'auth.heroPointWorkflow', 'auth.heroPointPayout'] as const;
 
 const DEMO_ACCOUNTS = [
   { labelKey: 'auth.admin', email: 'admin@local.dev', password: 'Admin123!' },
@@ -54,9 +57,25 @@ export function LoginPage() {
         <div className="login-hero__orb login-hero__orb--2" aria-hidden />
         <div className="login-hero__orb login-hero__orb--3" aria-hidden />
         <div className="login-hero__content">
-          <span className="app-brand__mark login-hero__mark">VN</span>
-          <h1 className="login-hero__title">{formatMessage({ id: 'navigation.brand' })}</h1>
+          <div className="login-hero__lockup">
+            <span className="app-brand__mark login-hero__mark">
+              <BrandMark size={32} />
+            </span>
+            <h1 className="login-hero__wordmark">{formatMessage({ id: 'navigation.brand' })}</h1>
+          </div>
           <p className="login-hero__tagline">{formatMessage({ id: 'auth.heroTagline' })}</p>
+          <ul className="login-hero__points">
+            {HERO_POINTS.map((pointKey) => (
+              <li key={pointKey} className="login-hero__point">
+                <span className="login-hero__point-icon" aria-hidden>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3} strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 12.5l5 5L20 7" />
+                  </svg>
+                </span>
+                {formatMessage({ id: pointKey })}
+              </li>
+            ))}
+          </ul>
         </div>
       </aside>
 

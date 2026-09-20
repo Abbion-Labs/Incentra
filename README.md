@@ -1,4 +1,4 @@
-# Variable Compensation
+# Incentra
 
 Sistem za varijabilno nagrađivanje zaposlenih — backend API (.NET 8) sa PostgreSQL bazom.
 
@@ -238,13 +238,13 @@ Formula `v1`: bodovi iz radnog mesta (`SortOrder × 10`), procenat iz evaluator 
 1. Otvori http://localhost:5050
 2. Login: `admin@local.dev` / `admin` (iz `docker/.env`)
 3. **Register → Server**
-   - Name: `Variable Compensation`
+   - Name: `Incentra`
    - Host: `host.docker.internal`
    - Port: `5433`
    - Database: `variable_compensation`
    - Username: `vc_app`
    - Password: `vc_dev_password_change_me`
-4. Proširi: `Servers → Variable Compensation → Databases → variable_compensation → Schemas → public → Tables`
+4. Proširi: `Servers → Incentra → Databases → variable_compensation → Schemas → public → Tables`
 
 ### Terminal (psql)
 

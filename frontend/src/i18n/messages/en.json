@@ -1,6 +1,6 @@
 {
   "navigation": {
-    "brand": "Variable Compensation",
+    "brand": "Incentra",
     "main": "Main navigation",
     "showMenu": "Show navigation",
     "hideMenu": "Hide navigation",
@@ -99,7 +99,10 @@
   "auth": {
     "welcome": "Welcome",
     "subtitle": "Sign in with your email and password",
-    "heroTagline": "Evaluation and compensation",
+    "heroTagline": "Evaluation and variable compensation",
+    "heroPointGoals": "Clearly defined goals and criteria",
+    "heroPointWorkflow": "Guided flow from evaluator to controller",
+    "heroPointPayout": "Variable pay calculated without spreadsheets",
     "loginFailed": "Login failed.",
     "demoAccounts": "Demo accounts",
     "placeholderEmail": "name@company.com",

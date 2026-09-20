@@ -1,6 +1,6 @@
 {
   "navigation": {
-    "brand": "Varijabilno nagrađivanje",
+    "brand": "Incentra",
     "main": "Glavna navigacija",
     "showMenu": "Prikaži navigaciju",
     "hideMenu": "Sakrij navigaciju",
@@ -99,7 +99,10 @@
   "auth": {
     "welcome": "Dobrodošli",
     "subtitle": "Prijavite se email adresom i lozinkom",
-    "heroTagline": "Ocenjivanje i kompenzacija",
+    "heroTagline": "Ocenjivanje i varijabilno nagrađivanje",
+    "heroPointGoals": "Jasno postavljeni ciljevi i kriterijumi",
+    "heroPointWorkflow": "Vođen proces od ocenjivača do kontrole",
+    "heroPointPayout": "Obračun varijabile bez ručnih tabela",
     "loginFailed": "Prijava nije uspela.",
     "demoAccounts": "Demo nalozi",
     "placeholderEmail": "ime@firma.rs",
