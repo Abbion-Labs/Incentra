@@ -97,7 +97,8 @@ export function AdminEvaluatorSettings() {
   // A controller is an account carrying the CONTROLLER role; nothing else marks one.
   const controllerOptions = useMemo(() => {
     const controllerEmployeeIds = new Set(
-      users.filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
+      users
+        .filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
         .map((u) => u.employeeId as number),
     );
     return employees.filter((e) => controllerEmployeeIds.has(e.id));

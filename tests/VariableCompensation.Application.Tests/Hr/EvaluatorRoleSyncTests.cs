@@ -134,6 +134,36 @@ public class EvaluatorRoleSyncTests
         settings.Store.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task TheControllerRole_CannotBeRemoved_WhileEvaluatorsStillReportToThem()
+    {
+        var employees = new FakeEmployeeRepository();
+        employees.EmployeesByUserId[UserId] = new Employee { Id = ControllerId };
+        var settings = new FakeEvaluatorSettingsRepository();
+        settings.Store[EmployeeId] = new EvaluatorSettings
+        {
+            EmployeeId = EmployeeId,
+            ControllerEmployeeId = ControllerId,
+        };
+
+        var result = await ControllerRoleCheck.EnsureRoleCanBeRemovedAsync(
+            UserId, employees, settings, CancellationToken.None);
+
+        result.Error.Should().Be(ErrorCodes.ControllerHasEvaluators);
+    }
+
+    [Fact]
+    public async Task TheControllerRole_CanBeRemoved_WhenNobodyReportsToThem()
+    {
+        var employees = new FakeEmployeeRepository();
+        employees.EmployeesByUserId[UserId] = new Employee { Id = ControllerId };
+
+        var result = await ControllerRoleCheck.EnsureRoleCanBeRemovedAsync(
+            UserId, employees, new FakeEvaluatorSettingsRepository(), CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+    }
+
     private static (FakeEmployeeRepository Employees, FakeEvaluatorSettingsRepository Settings) LinkedEmployee()
     {
         var employees = new FakeEmployeeRepository();

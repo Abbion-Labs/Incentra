@@ -31,4 +31,25 @@ public static class ControllerRoleCheck
             ? Result.Success()
             : Result.Failure(ErrorCodes.ControllerRoleRequired);
     }
+
+    /// <summary>
+    /// Taking the role away from someone who still supervises evaluators would
+    /// leave those evaluators with a controller who can no longer review them.
+    /// </summary>
+    public static async Task<Result> EnsureRoleCanBeRemovedAsync(
+        long userId,
+        IEmployeeRepository employeeRepository,
+        IEvaluatorSettingsRepository evaluatorSettingsRepository,
+        CancellationToken cancellationToken)
+    {
+        var employee = await employeeRepository.FindByUserIdAsync(userId, cancellationToken);
+        if (employee is null)
+        {
+            return Result.Success();
+        }
+
+        return await evaluatorSettingsRepository.IsControllerForAnyEvaluatorAsync(employee.Id, cancellationToken)
+            ? Result.Failure(ErrorCodes.ControllerHasEvaluators)
+            : Result.Success();
+    }
 }

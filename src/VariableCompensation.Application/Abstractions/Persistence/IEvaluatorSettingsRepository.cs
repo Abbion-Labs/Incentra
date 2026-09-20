@@ -16,6 +16,8 @@ public interface IEvaluatorSettingsRepository
 
     Task<bool> ExistsAsync(long employeeId, CancellationToken cancellationToken);
 
+    Task<bool> IsControllerForAnyEvaluatorAsync(long controllerEmployeeId, CancellationToken cancellationToken);
+
     Task AddAsync(EvaluatorSettings entity, CancellationToken cancellationToken);
 
     void Remove(EvaluatorSettings entity);

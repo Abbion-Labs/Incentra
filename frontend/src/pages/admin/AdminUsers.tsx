@@ -56,11 +56,13 @@ export function AdminUsers() {
   // Only real controllers, and an evaluator cannot be their own.
   const controllerOptions = useMemo(() => {
     const controllerEmployeeIds = new Set(
-      users.filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
+      users
+        .filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
         .map((u) => u.employeeId as number),
     );
     return employees.filter(
-      (e) => controllerEmployeeIds.has(e.id) && e.id !== editingUser?.employeeId,
+      (e) =>
+        controllerEmployeeIds.has(e.id) && e.id !== editingUser?.employeeId,
     );
   }, [employees, users, editingUser]);
 

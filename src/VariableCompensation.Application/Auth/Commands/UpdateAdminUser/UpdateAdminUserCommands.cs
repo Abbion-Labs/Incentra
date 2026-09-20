@@ -65,6 +65,24 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
             return Result.Failure<AdminUserListItemResponse>(roleIdsResult.Error);
         }
 
+        var controllerRoleId = await this.roleLookup.FindRoleIdByCodeAsync(RoleCodes.Controller, cancellationToken);
+        var hadControllerRole = controllerRoleId is not null
+            && user.UserRoles.Any(ur => ur.RoleId == controllerRoleId.Value);
+        var keepsControllerRole = request.RoleCodes.Contains(RoleCodes.Controller, StringComparer.OrdinalIgnoreCase);
+
+        if (hadControllerRole && !keepsControllerRole)
+        {
+            var controllerRemoval = await ControllerRoleCheck.EnsureRoleCanBeRemovedAsync(
+                user.Id,
+                this.employeeRepository,
+                this.evaluatorSettingsRepository,
+                cancellationToken);
+            if (controllerRemoval.IsFailure)
+            {
+                return Result.Failure<AdminUserListItemResponse>(controllerRemoval.Error);
+            }
+        }
+
         var evaluatorSync = await EvaluatorRoleSync.ApplyAsync(
             user.Id,
             request.RoleCodes.Contains(RoleCodes.Evaluator, StringComparer.OrdinalIgnoreCase),
