@@ -54,7 +54,7 @@ export function GoalsPlanningPage() {
     setAutosaveStatus('dirty');
   }, [canEditPlanning]);
 
-  useUnsavedChangesGuard(
+  const { allowNextNavigation } = useUnsavedChangesGuard(
     canEditPlanning && isDirty,
     formatMessage({ id: 'common.unsavedChangesWarning' }),
   );
@@ -205,6 +205,7 @@ export function GoalsPlanningPage() {
   async function handleSave() {
     const saved = await saveAll();
     if (saved) {
+      allowNextNavigation();
       toast.success(formatMessage({ id: 'alerts.goalsPlanningSaved' }));
       navigate('/evaluator/goals?tab=set');
     }
