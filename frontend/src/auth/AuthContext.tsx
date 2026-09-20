@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { api, clearToken, ensureValidSession, revokeRefreshToken, setAuthTokens } from '../api/client';
+import { api, clearToken, restoreSession, revokeRefreshToken, setAccessToken } from '../api/client';
 import { setSessionExpiredHandler } from './session';
 import type { AuthResponse, UserProfile } from '../api/types';
 
@@ -10,7 +10,6 @@ interface AuthContextValue {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   hasRole: (...roles: string[]) => boolean;
-  refreshUser: () => Promise<void>;
   updateEmployeeProfile: (patch: Partial<Pick<UserProfile,
     'employeeAvatarUrl' | 'employeeFullName' | 'employeeFirstName' | 'employeeLastName' | 'emailNotificationsEnabled'>>) => void;
   updateNotificationPreferences: (enabled: boolean) => Promise<void>;
@@ -21,16 +20,6 @@ const AuthContext = createContext<AuthContextValue | null>(null);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-
-  const refreshUser = useCallback(async () => {
-    try {
-      const profile = await api.get<UserProfile>('/api/auth/me');
-      setUser((prev) => (profile ? { ...(prev ?? {}), ...profile } : null));
-    } catch {
-      setUser(null);
-      clearToken();
-    }
-  }, []);
 
   const updateEmployeeProfile = useCallback(
     (patch: Partial<Pick<UserProfile,
@@ -55,14 +44,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    void ensureValidSession()
-      .then(() => refreshUser())
+    // The refresh cookie is the only thing that survives a reload, so the session is restored from it.
+    // The response already carries the profile, which saves a separate /api/auth/me call.
+    void restoreSession()
+      .then((profile) => setUser(profile))
       .finally(() => setLoading(false));
-  }, [refreshUser]);
+  }, []);
 
   const login = useCallback(async (email: string, password: string) => {
     const response = await api.post<AuthResponse>('/api/auth/login', { email, password });
-    setAuthTokens(response.accessToken, response.refreshToken);
+    setAccessToken(response.accessToken);
     setUser(response.user);
   }, []);
 
@@ -78,8 +69,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ user, loading, login, logout, hasRole, refreshUser, updateEmployeeProfile, updateNotificationPreferences }),
-    [user, loading, login, logout, hasRole, refreshUser, updateEmployeeProfile, updateNotificationPreferences],
+    () => ({ user, loading, login, logout, hasRole, updateEmployeeProfile, updateNotificationPreferences }),
+    [user, loading, login, logout, hasRole, updateEmployeeProfile, updateNotificationPreferences],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

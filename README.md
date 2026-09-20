@@ -96,11 +96,31 @@ Seed admin nalog:
 
 Endpointi:
 - `POST /api/auth/login` — javno
-- `POST /api/auth/refresh` — javno
+- `POST /api/auth/refresh` — javno; refresh token čita iz kolačića
+- `POST /api/auth/logout` — javno; revokuje refresh token i briše kolačić
 - `GET /api/auth/me` — zahteva JWT (`Authorize`)
 - `POST /api/auth/register` — samo `ADMIN` role
 
 Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud/users`) pri kreiranju ili izmeni korisnika izaberite jednu ili više uloga (checkbox). Nakon promene uloga, korisnik se mora ponovo prijaviti da bi JWT sadržao nove uloge.
+
+### Tokeni
+
+| Token | Trajanje | Gde se čuva |
+|---|---|---|
+| Access (JWT) | 60 min | u telu odgovora; frontend ga drži **samo u memoriji stranice** |
+| Refresh | 7 dana, rotira se | kolačić `vc_refresh` (`HttpOnly`, `SameSite=Strict`, `Path=/api/auth`) |
+
+Refresh token se **ne vraća u telu odgovora**, pa ga skripte na stranici ne mogu pročitati. `SameSite=Strict` znači da se kolačić nikad ne šalje sa tuđeg sajta, pa poseban CSRF token nije potreban.
+
+Podešavanja:
+
+- `RefreshCookie__Secure` — kolačić se šalje samo preko HTTPS-a. Podrazumevano je `true` i u produkciji se **ne podešava**. Isključen je jedino u `appsettings.Development.json`, jer lokalni razvoj radi preko HTTP-a, gde bi browser odbio `Secure` kolačić.
+
+  > Namerno se ne izvodi iz `Request.IsHttps`: iza Vercel proxy-ja backend prima običan HTTP (proxy završava TLS), pa bi se `Secure` tiho isključio u produkciji.
+- Kolačić radi dok su frontend i API na istom domenu (lokalno preko Vite proxy-ja, na Vercelu preko `/api` rewrite-a). Ako API pređe na poseban domen, traži `SameSite=None`, CORS sa kredencijalima i zasebnu CSRF zaštitu.
+- `POST /api/auth/refresh` i `/logout` primarno čitaju kolačić, a kao rezervu prihvataju i `{ "refreshToken": "..." }` u telu, radi Swagger-a i ručnog testiranja.
+
+> **Pri prelasku na kolačić svi prijavljeni korisnici moraju jednom ponovo da se prijave**, jer su im tokeni ostali u `localStorage`, koji se više ne koristi. Frontend te stare ključeve briše pri učitavanju.
 
 U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
 
