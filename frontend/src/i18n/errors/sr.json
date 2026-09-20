@@ -94,6 +94,7 @@
     "vn-0093": "Izabrana osoba nije podešena kao ocenjivač. Prvo je dodajte među ocenjivače.",
     "vn-0094": "Nalog nije povezan sa zaposlenim. Prvo povežite nalog u formi zaposlenog, pa mu dodelite ulogu ocenjivača.",
     "vn-0095": "Za ulogu ocenjivača morate izabrati kontrolora.",
-    "vn-0096": "Ocenjivaču su dodeljeni podređeni. Prerasporedite ih pre uklanjanja uloge."
+    "vn-0096": "Ocenjivaču su dodeljeni podređeni. Prerasporedite ih pre uklanjanja uloge.",
+    "vn-0097": "Zaposlenom su dodeljeni podređeni koje ocenjuje. Prerasporedite ih pre deaktivacije."
   }
 }

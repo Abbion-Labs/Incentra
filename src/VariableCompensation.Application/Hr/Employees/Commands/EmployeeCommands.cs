@@ -190,6 +190,14 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
             return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeSelfEvaluator);
         }
 
+        // Deactivating an evaluator would leave the people they rate without
+        // anyone able to rate them, the same hole the role rules close.
+        if (entity.IsActive && !request.IsActive
+            && await this.employeeRepository.HasSubordinatesAsync(request.Id, cancellationToken))
+        {
+            return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeHasSubordinates);
+        }
+
         if (request.EvaluatorEmployeeId is not null)
         {
             if (!await this.employeeRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))

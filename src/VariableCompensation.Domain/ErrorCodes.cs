@@ -96,4 +96,5 @@ public static class ErrorCodes
     public const string EvaluatorUserNotLinkedToEmployee = "vn-0094";
     public const string EvaluatorControllerRequired = "vn-0095";
     public const string EvaluatorHasSubordinates = "vn-0096";
+    public const string EmployeeHasSubordinates = "vn-0097";
 }
