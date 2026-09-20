@@ -7,6 +7,8 @@ public sealed class UpdateAdminUserRequest
     public bool IsActive { get; init; } = true;
 
     public IReadOnlyList<string> RoleCodes { get; init; } = Array.Empty<string>();
+
+    public long? ControllerEmployeeId { get; init; }
 }
 
 public sealed class ResetAdminUserPasswordRequest

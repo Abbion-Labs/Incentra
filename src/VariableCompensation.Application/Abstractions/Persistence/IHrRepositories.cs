@@ -77,6 +77,8 @@ public interface IEmployeeRepository
 
     Task<IReadOnlyDictionary<long, Employee>> GetEmployeesByUserIdsAsync(CancellationToken cancellationToken);
 
+    Task<bool> HasSubordinatesAsync(long evaluatorEmployeeId, CancellationToken cancellationToken);
+
     Task AddAsync(Employee entity, CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);

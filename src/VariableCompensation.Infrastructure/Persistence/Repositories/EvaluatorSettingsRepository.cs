@@ -39,6 +39,8 @@ public sealed class EvaluatorSettingsRepository : IEvaluatorSettingsRepository
     public async Task AddAsync(EvaluatorSettings entity, CancellationToken cancellationToken) =>
         await this.context.EvaluatorSettings.AddAsync(entity, cancellationToken);
 
+    public void Remove(EvaluatorSettings entity) => this.context.EvaluatorSettings.Remove(entity);
+
     public Task SaveChangesAsync(CancellationToken cancellationToken) =>
         this.context.SaveChangesAsync(cancellationToken);
 
