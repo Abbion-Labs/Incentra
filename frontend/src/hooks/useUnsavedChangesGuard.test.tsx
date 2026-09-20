@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { act, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { RouterProvider, createMemoryRouter, useNavigate } from 'react-router-dom';
+import {
+  RouterProvider,
+  createMemoryRouter,
+  useNavigate,
+} from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
 import { useUnsavedChangesGuard } from './useUnsavedChangesGuard';
 

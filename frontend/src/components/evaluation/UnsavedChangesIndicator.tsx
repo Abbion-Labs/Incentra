@@ -4,7 +4,9 @@ interface UnsavedChangesIndicatorProps {
   visible: boolean;
 }
 
-export function UnsavedChangesIndicator({ visible }: UnsavedChangesIndicatorProps) {
+export function UnsavedChangesIndicator({
+  visible,
+}: UnsavedChangesIndicatorProps) {
   const { formatMessage } = useIntl();
 
   if (!visible) return null;

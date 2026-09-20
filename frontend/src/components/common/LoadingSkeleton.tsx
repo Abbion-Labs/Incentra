@@ -39,9 +39,16 @@ export function PageHeaderSkeleton() {
 export function CardSkeleton({ lines = 3 }: { lines?: number }) {
   return (
     <div className="card skeleton-block" aria-hidden>
-      <div className="skeleton-cell skeleton-cell--short" style={{ width: '40%', marginBottom: '1rem' }} />
+      <div
+        className="skeleton-cell skeleton-cell--short"
+        style={{ width: '40%', marginBottom: '1rem' }}
+      />
       {Array.from({ length: lines }).map((_, i) => (
-        <div key={i} className="skeleton-cell skeleton-cell--long" style={{ marginBottom: '0.5rem' }} />
+        <div
+          key={i}
+          className="skeleton-cell skeleton-cell--long"
+          style={{ marginBottom: '0.5rem' }}
+        />
       ))}
     </div>
   );

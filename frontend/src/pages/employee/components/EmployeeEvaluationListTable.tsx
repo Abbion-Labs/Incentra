@@ -4,13 +4,18 @@ import type { EvaluationSummary } from '../../../api/types';
 import { AverageDisplay } from '../../../components/evaluation/AverageDisplay';
 import { DescriptiveRatingBadge } from '../../../components/evaluation/DescriptiveRatingBadge';
 import { useIntl } from '../../../i18n';
-import { formatSummaryAverage, summaryDescriptiveRatingName } from '../../../utils/scoring';
+import {
+  formatSummaryAverage,
+  summaryDescriptiveRatingName,
+} from '../../../utils/scoring';
 
 interface EmployeeEvaluationListTableProps {
   evaluations: EvaluationSummary[];
 }
 
-export function EmployeeEvaluationListTable({ evaluations }: EmployeeEvaluationListTableProps) {
+export function EmployeeEvaluationListTable({
+  evaluations,
+}: EmployeeEvaluationListTableProps) {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
 
@@ -18,7 +23,10 @@ export function EmployeeEvaluationListTable({ evaluations }: EmployeeEvaluationL
     navigate(`/employee/evaluations/${id}`);
   }
 
-  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, id: number) {
+  function handleRowKeyDown(
+    event: KeyboardEvent<HTMLTableRowElement>,
+    id: number,
+  ) {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       openEvaluation(id);
@@ -30,10 +38,18 @@ export function EmployeeEvaluationListTable({ evaluations }: EmployeeEvaluationL
       <table className="table table--hover table--clickable">
         <thead>
           <tr>
-            <th className="col-meta">{formatMessage({ id: 'evaluation.period' })}</th>
-            <th className="col-text">{formatMessage({ id: 'evaluation.evaluator' })}</th>
-            <th className="col-num">{formatMessage({ id: 'evaluation.average' })}</th>
-            <th className="col-meta">{formatMessage({ id: 'evaluation.descriptiveLabel' })}</th>
+            <th className="col-meta">
+              {formatMessage({ id: 'evaluation.period' })}
+            </th>
+            <th className="col-text">
+              {formatMessage({ id: 'evaluation.evaluator' })}
+            </th>
+            <th className="col-num">
+              {formatMessage({ id: 'evaluation.average' })}
+            </th>
+            <th className="col-meta">
+              {formatMessage({ id: 'evaluation.descriptiveLabel' })}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -54,7 +70,9 @@ export function EmployeeEvaluationListTable({ evaluations }: EmployeeEvaluationL
                 <AverageDisplay value={formatSummaryAverage(ev)} />
               </td>
               <td className="col-meta">
-                <DescriptiveRatingBadge name={summaryDescriptiveRatingName(ev)} />
+                <DescriptiveRatingBadge
+                  name={summaryDescriptiveRatingName(ev)}
+                />
               </td>
             </tr>
           ))}

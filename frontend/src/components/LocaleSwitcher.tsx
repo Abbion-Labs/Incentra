@@ -6,7 +6,11 @@ export function LocaleSwitcher() {
   const { formatMessage } = useIntl();
 
   return (
-    <div className="locale-switch" role="group" aria-label={formatMessage({ id: 'common.language' })}>
+    <div
+      className="locale-switch"
+      role="group"
+      aria-label={formatMessage({ id: 'common.language' })}
+    >
       {SUPPORTED_LOCALES.map((value) => (
         <button
           key={value}

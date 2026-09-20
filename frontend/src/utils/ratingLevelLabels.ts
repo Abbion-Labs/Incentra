@@ -2,9 +2,9 @@ import type { RatingLevel } from '../api/types';
 import type { IntlMessage, NestedKeys } from '../i18n/i18n.types';
 import { NOT_RATED_VALUE, isNotRated } from './scoring';
 
-export type RatingLevelFormatMessage = (
-  descriptor: { id: NestedKeys<IntlMessage> },
-) => string;
+export type RatingLevelFormatMessage = (descriptor: {
+  id: NestedKeys<IntlMessage>;
+}) => string;
 
 const RATING_LEVEL_LABEL_KEYS: Record<number, NestedKeys<IntlMessage>> = {
   1: 'ratingLevels.labels.1',
@@ -29,7 +29,8 @@ function resolveRatingLevelValue(
 ): number | null {
   if (level) return level.value;
   if (value != null) return value;
-  if (label && label in KNOWN_RATING_LABEL_TO_VALUE) return KNOWN_RATING_LABEL_TO_VALUE[label];
+  if (label && label in KNOWN_RATING_LABEL_TO_VALUE)
+    return KNOWN_RATING_LABEL_TO_VALUE[label];
   return null;
 }
 
@@ -55,6 +56,9 @@ export function formatLocalizedRatingDisplay(
   label: string,
 ): string {
   if (value === NOT_RATED_VALUE || label === '/') return '/';
-  const localizedLabel = formatRatingLevelLabel(formatMessage, { value, label });
+  const localizedLabel = formatRatingLevelLabel(formatMessage, {
+    value,
+    label,
+  });
   return `${value} — ${localizedLabel}`;
 }

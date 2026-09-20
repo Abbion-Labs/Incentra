@@ -26,46 +26,80 @@ describe('scoring', () => {
   });
 
   it('detailHasIncompleteRatings_whenMeasuresMissing', () => {
-    expect(detailHasIncompleteRatings({
-      hasIncompleteRatings: false,
-      goals: [{ ratingLevelValue: 3, ratingLevelLabel: 'Zadovoljava' } as EvaluationDetail['goals'][number]],
-      measures: [],
-      status: 'Draft',
-      overallAverage: null,
-    } as unknown as EvaluationDetail)).toBe(true);
+    expect(
+      detailHasIncompleteRatings({
+        hasIncompleteRatings: false,
+        goals: [
+          {
+            ratingLevelValue: 3,
+            ratingLevelLabel: 'Zadovoljava',
+          } as EvaluationDetail['goals'][number],
+        ],
+        measures: [],
+        status: 'Draft',
+        overallAverage: null,
+      } as unknown as EvaluationDetail),
+    ).toBe(true);
   });
 
   it('hasLocalIncompleteRatings_withNotRatedLevel', () => {
-    expect(hasLocalIncompleteRatings(
-      [{ ratingLevelId: 1, ratingLevelValue: 0, ratingLevelLabel: '/' } as never],
-      [{ ratingLevelId: 5 }],
-      1,
-    )).toBe(true);
+    expect(
+      hasLocalIncompleteRatings(
+        [
+          {
+            ratingLevelId: 1,
+            ratingLevelValue: 0,
+            ratingLevelLabel: '/',
+          } as never,
+        ],
+        [{ ratingLevelId: 5 }],
+        1,
+      ),
+    ).toBe(true);
   });
 
   it('goldenScoringCases_matchBackendOutputs', () => {
-    const file = path.resolve(__dirname, '../../tests/golden/scoring-cases.json');
+    const file = path.resolve(
+      __dirname,
+      '../../tests/golden/scoring-cases.json',
+    );
     const cases = JSON.parse(readFileSync(file, 'utf8')) as Array<{
       name: string;
       goals: Array<{ ratingLevelId: number; weight?: number }>;
       measures: Array<{ ratingLevelId: number }>;
-      expected: { goalsAverage: number | null; measuresAverage: number | null; overallAverage: number | null };
+      expected: {
+        goalsAverage: number | null;
+        measuresAverage: number | null;
+        overallAverage: number | null;
+      };
     }>;
 
     for (const testCase of cases) {
       const goalsAverage = calculateComponentAverage(
-        testCase.goals.map((goal) => ({ ratingLevelId: goal.ratingLevelId, weight: goal.weight ?? null })),
+        testCase.goals.map((goal) => ({
+          ratingLevelId: goal.ratingLevelId,
+          weight: goal.weight ?? null,
+        })),
         ratingLevels,
       );
       const measuresAverage = calculateComponentAverage(
-        testCase.measures.map((measure) => ({ ratingLevelId: measure.ratingLevelId })),
+        testCase.measures.map((measure) => ({
+          ratingLevelId: measure.ratingLevelId,
+        })),
         ratingLevels,
       );
-      const overallAverage = calculateOverallAverage(goalsAverage, measuresAverage);
+      const overallAverage = calculateOverallAverage(
+        goalsAverage,
+        measuresAverage,
+      );
 
       expect(goalsAverage, testCase.name).toBe(testCase.expected.goalsAverage);
-      expect(measuresAverage, testCase.name).toBe(testCase.expected.measuresAverage);
-      expect(overallAverage, testCase.name).toBe(testCase.expected.overallAverage);
+      expect(measuresAverage, testCase.name).toBe(
+        testCase.expected.measuresAverage,
+      );
+      expect(overallAverage, testCase.name).toBe(
+        testCase.expected.overallAverage,
+      );
     }
   });
 });

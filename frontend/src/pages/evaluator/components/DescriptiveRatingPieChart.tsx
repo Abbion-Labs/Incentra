@@ -1,7 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DescriptiveRatingDistributionItem } from '../../../api/types';
 import { useIntl } from '../../../i18n';
-import { descriptiveRatingChartColor, formatDescriptiveRatingLabel } from '../../../utils/descriptiveRating';
+import {
+  descriptiveRatingChartColor,
+  formatDescriptiveRatingLabel,
+} from '../../../utils/descriptiveRating';
 
 interface DescriptiveRatingPieChartProps {
   items: DescriptiveRatingDistributionItem[];
@@ -18,7 +21,12 @@ interface Slice {
   endAngle: number;
 }
 
-function polarToCartesian(cx: number, cy: number, radius: number, angle: number) {
+function polarToCartesian(
+  cx: number,
+  cy: number,
+  radius: number,
+  angle: number,
+) {
   const rad = ((angle - 90) * Math.PI) / 180;
   return {
     x: cx + radius * Math.cos(rad),
@@ -26,14 +34,23 @@ function polarToCartesian(cx: number, cy: number, radius: number, angle: number)
   };
 }
 
-function describeArc(cx: number, cy: number, radius: number, startAngle: number, endAngle: number) {
+function describeArc(
+  cx: number,
+  cy: number,
+  radius: number,
+  startAngle: number,
+  endAngle: number,
+) {
   const start = polarToCartesian(cx, cy, radius, endAngle);
   const end = polarToCartesian(cx, cy, radius, startAngle);
   const largeArc = endAngle - startAngle > 180 ? 1 : 0;
   return `M ${cx} ${cy} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
 }
 
-export function DescriptiveRatingPieChart({ items, year }: DescriptiveRatingPieChartProps) {
+export function DescriptiveRatingPieChart({
+  items,
+  year,
+}: DescriptiveRatingPieChartProps) {
   const { formatMessage } = useIntl();
   const [activeKey, setActiveKey] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -65,7 +82,11 @@ export function DescriptiveRatingPieChart({ items, year }: DescriptiveRatingPieC
       .filter((item) => item.count > 0)
       .map((item) => {
         const sweep = (item.count / total) * 360;
-        const label = formatDescriptiveRatingLabel(formatMessage, { code: item.code, name: item.name }) ?? item.name;
+        const label =
+          formatDescriptiveRatingLabel(formatMessage, {
+            code: item.code,
+            name: item.name,
+          }) ?? item.name;
         const slice: Slice = {
           key: item.code,
           label,
@@ -83,7 +104,9 @@ export function DescriptiveRatingPieChart({ items, year }: DescriptiveRatingPieC
   if (slices.length === 0) {
     return (
       <div className="analytics-chart analytics-chart--empty">
-        <p>{formatMessage({ id: 'charts.noRatedEmployeesForYear' }, { year })}</p>
+        <p>
+          {formatMessage({ id: 'charts.noRatedEmployeesForYear' }, { year })}
+        </p>
       </div>
     );
   }
@@ -99,7 +122,16 @@ export function DescriptiveRatingPieChart({ items, year }: DescriptiveRatingPieC
       style={{ '--pie-chart-size': `${pieSize}px` } as React.CSSProperties}
     >
       <div ref={canvasRef} className="analytics-pie-chart__canvas-wrap">
-        <svg viewBox={`0 0 ${size} ${size}`} className="analytics-chart__svg" preserveAspectRatio="xMidYMid meet" role="img" aria-label={formatMessage({ id: 'charts.descriptiveRatingDistributionAria' }, { year })}>
+        <svg
+          viewBox={`0 0 ${size} ${size}`}
+          className="analytics-chart__svg"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label={formatMessage(
+            { id: 'charts.descriptiveRatingDistributionAria' },
+            { year },
+          )}
+        >
           {slices.map((slice) => (
             <path
               key={slice.key}
@@ -111,10 +143,23 @@ export function DescriptiveRatingPieChart({ items, year }: DescriptiveRatingPieC
             />
           ))}
           <circle cx={cx} cy={cy} r={52} fill="#fff" />
-          <text x={cx} y={cy - 4} textAnchor="middle" fontSize="13" fill="#64748b">
+          <text
+            x={cx}
+            y={cy - 4}
+            textAnchor="middle"
+            fontSize="13"
+            fill="#64748b"
+          >
             {year}.
           </text>
-          <text x={cx} y={cy + 16} textAnchor="middle" fontSize="18" fontWeight="600" fill="#0f172a">
+          <text
+            x={cx}
+            y={cy + 16}
+            textAnchor="middle"
+            fontSize="18"
+            fontWeight="600"
+            fill="#0f172a"
+          >
             {slices.reduce((sum, slice) => sum + slice.count, 0)}
           </text>
         </svg>
@@ -122,22 +167,29 @@ export function DescriptiveRatingPieChart({ items, year }: DescriptiveRatingPieC
 
       <ul className="analytics-chart__legend">
         {items.map((item) => {
-          const label = formatDescriptiveRatingLabel(formatMessage, { code: item.code, name: item.name }) ?? item.name;
+          const label =
+            formatDescriptiveRatingLabel(formatMessage, {
+              code: item.code,
+              name: item.name,
+            }) ?? item.name;
           return (
-          <li
-            key={item.descriptiveRatingId}
-            className={activeKey === item.code ? 'is-active' : undefined}
-            onMouseEnter={() => setActiveKey(item.code)}
-            onMouseLeave={() => setActiveKey(null)}
-          >
-            <span className="analytics-chart__legend-swatch" style={{ background: descriptiveRatingChartColor(item.code) }} />
-            <span className="analytics-chart__legend-body">
-              <span className="analytics-chart__legend-label">{label}</span>
-              <span className="analytics-chart__legend-value">
-                {item.count} ({item.percentage.toFixed(1)}%)
+            <li
+              key={item.descriptiveRatingId}
+              className={activeKey === item.code ? 'is-active' : undefined}
+              onMouseEnter={() => setActiveKey(item.code)}
+              onMouseLeave={() => setActiveKey(null)}
+            >
+              <span
+                className="analytics-chart__legend-swatch"
+                style={{ background: descriptiveRatingChartColor(item.code) }}
+              />
+              <span className="analytics-chart__legend-body">
+                <span className="analytics-chart__legend-label">{label}</span>
+                <span className="analytics-chart__legend-value">
+                  {item.count} ({item.percentage.toFixed(1)}%)
+                </span>
               </span>
-            </span>
-          </li>
+            </li>
           );
         })}
       </ul>

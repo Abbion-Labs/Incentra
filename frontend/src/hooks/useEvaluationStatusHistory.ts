@@ -17,13 +17,18 @@ export function useEvaluationStatusHistory(evaluationId: number | undefined) {
     setLoading(true);
     setError('');
 
-    api.get<EvaluationStatusHistoryEntry[]>(`/api/evaluations/${evaluationId}/status-history`)
+    api
+      .get<EvaluationStatusHistoryEntry[]>(
+        `/api/evaluations/${evaluationId}/status-history`,
+      )
       .then((data) => {
         if (!cancelled) setItems(data);
       })
       .catch((e) => {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : 'Failed to load status history');
+          setError(
+            e instanceof Error ? e.message : 'Failed to load status history',
+          );
           setItems([]);
         }
       })

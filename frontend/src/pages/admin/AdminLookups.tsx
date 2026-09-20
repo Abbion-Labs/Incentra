@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api/client';
-import type { EducationLevel, JobPosition, OrganizationUnit } from '../../api/types';
+import type {
+  EducationLevel,
+  JobPosition,
+  OrganizationUnit,
+} from '../../api/types';
 import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { LookupCrudPanel } from './components/LookupCrudPanel';
@@ -27,7 +31,13 @@ export function AdminLookups() {
   useEffect(() => {
     setLoading(true);
     load()
-      .catch((e) => toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' })))
+      .catch((e) =>
+        toast.error(
+          e instanceof Error
+            ? e.message
+            : formatMessage({ id: 'errors.generic' }),
+        ),
+      )
       .finally(() => setLoading(false));
   }, [load, formatMessage, toast]);
 

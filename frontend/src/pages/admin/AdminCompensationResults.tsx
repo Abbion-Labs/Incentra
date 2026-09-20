@@ -2,13 +2,22 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import { fetchAllPages } from '../../api/paged';
-import type { CompensationCalculationStatus, CompensationParameters, CompensationResult, OrganizationUnit } from '../../api/types';
+import type {
+  CompensationCalculationStatus,
+  CompensationParameters,
+  CompensationResult,
+  OrganizationUnit,
+} from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 import { downloadCsv } from '../../utils/downloadCsv';
 import { currentYear } from '../../utils/status';
 import { usePagedList, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
-import { formatDateTime, formatNumber, formatPercent } from '../../utils/formatLocale';
+import {
+  formatDateTime,
+  formatNumber,
+  formatPercent,
+} from '../../utils/formatLocale';
 
 function formatTableAmount(value: number): string {
   return formatNumber(value, 0, 0);
@@ -31,7 +40,8 @@ export function AdminCompensationResults() {
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [currency, setCurrency] = useState('RSD');
   const [parametersId, setParametersId] = useState<number | null>(null);
-  const [calculationStatus, setCalculationStatus] = useState<CompensationCalculationStatus | null>(null);
+  const [calculationStatus, setCalculationStatus] =
+    useState<CompensationCalculationStatus | null>(null);
   const [exporting, setExporting] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
   const yearOptions = useMemo(() => {
@@ -84,33 +94,40 @@ export function AdminCompensationResults() {
     }
   }, []);
 
-  const loadParametersMeta = useCallback(async (orgId: string, selectedYear: string) => {
-    try {
-      const parameters = await api.get<CompensationParameters[]>(
-        `/api/compensation-parameters?organizationUnitId=${orgId}&year=${selectedYear}`,
-      );
-      if (parameters.length > 0) {
-        setParametersId(parameters[0].id);
-        setCurrency(parameters[0].currency || 'RSD');
-        const status = await api.get<CompensationCalculationStatus>(
-          `/api/compensation-parameters/${parameters[0].id}/calculation-status`,
+  const loadParametersMeta = useCallback(
+    async (orgId: string, selectedYear: string) => {
+      try {
+        const parameters = await api.get<CompensationParameters[]>(
+          `/api/compensation-parameters?organizationUnitId=${orgId}&year=${selectedYear}`,
         );
-        setCalculationStatus(status);
-      } else {
+        if (parameters.length > 0) {
+          setParametersId(parameters[0].id);
+          setCurrency(parameters[0].currency || 'RSD');
+          const status = await api.get<CompensationCalculationStatus>(
+            `/api/compensation-parameters/${parameters[0].id}/calculation-status`,
+          );
+          setCalculationStatus(status);
+        } else {
+          setParametersId(null);
+          setCalculationStatus(null);
+          setCurrency('RSD');
+        }
+      } catch {
         setParametersId(null);
         setCalculationStatus(null);
         setCurrency('RSD');
       }
-    } catch {
-      setParametersId(null);
-      setCalculationStatus(null);
-      setCurrency('RSD');
-    }
-  }, []);
+    },
+    [],
+  );
 
   useEffect(() => {
     loadOrgUnits().catch((e) => {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.generic' }),
+      );
     });
   }, [loadOrgUnits, formatMessage, toast]);
 
@@ -137,16 +154,27 @@ export function AdminCompensationResults() {
     if (calculationStatus.isFinalized) {
       return formatMessage({ id: 'admin.compensationResults.finalized' });
     }
-    return formatMessage({ id: 'admin.compensationResults.draftCount' }, { count: calculationStatus.totalResults });
+    return formatMessage(
+      { id: 'admin.compensationResults.draftCount' },
+      { count: calculationStatus.totalResults },
+    );
   }, [calculationStatus]);
 
   async function handleFinalize() {
-    if (!parametersId || !calculationStatus || calculationStatus.totalResults === 0) {
+    if (
+      !parametersId ||
+      !calculationStatus ||
+      calculationStatus.totalResults === 0
+    ) {
       toast.warning(formatMessage({ id: 'errors.noResultsToFinalize' }));
       return;
     }
 
-    if (!window.confirm(formatMessage({ id: 'admin.compensationResults.finalizeConfirm' }))) {
+    if (
+      !window.confirm(
+        formatMessage({ id: 'admin.compensationResults.finalizeConfirm' }),
+      )
+    ) {
       return;
     }
 
@@ -155,17 +183,28 @@ export function AdminCompensationResults() {
       const response = await api.post<{ finalizedCount: number }>(
         `/api/compensation-parameters/${parametersId}/finalize`,
       );
-      toast.success(formatMessage({ id: 'alerts.finalizedResults' }, { count: response.finalizedCount }));
+      toast.success(
+        formatMessage(
+          { id: 'alerts.finalizedResults' },
+          { count: response.finalizedCount },
+        ),
+      );
       await loadParametersMeta(organizationUnitId, year);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.finalizeFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.finalizeFailed' }),
+      );
     } finally {
       setFinalizing(false);
     }
   }
 
   function exportRows(rows: CompensationResult[]) {
-    const orgName = orgUnits.find((unit) => String(unit.id) === organizationUnitId)?.name ?? organizationUnitId;
+    const orgName =
+      orgUnits.find((unit) => String(unit.id) === organizationUnitId)?.name ??
+      organizationUnitId;
     downloadCsv(
       `varijabila-${year}-${orgName.replace(/[^\w\s-]/g, '').trim() || 'prikaz'}.csv`,
       [
@@ -173,7 +212,9 @@ export function AdminCompensationResults() {
         formatMessage({ id: 'evaluation.orgUnitShort' }),
         formatMessage({ id: 'admin.compensationResults.fixedSalary' }),
         formatMessage({ id: 'admin.compensationResults.annualCompensation' }),
-        formatMessage({ id: 'admin.compensationResults.quarterlyCompensation' }),
+        formatMessage({
+          id: 'admin.compensationResults.quarterlyCompensation',
+        }),
         formatMessage({ id: 'admin.compensationResults.monthlyCompensation' }),
         formatMessage({ id: 'admin.compensationResults.payShare' }),
       ],
@@ -218,7 +259,11 @@ export function AdminCompensationResults() {
       }
       exportRows(rows);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.exportFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.exportFailed' }),
+      );
     } finally {
       setExporting(false);
     }
@@ -229,27 +274,41 @@ export function AdminCompensationResults() {
       <div className="filter-bar compensation-results-toolbar">
         <div className="compensation-results-filters form-grid admin-form__grid">
           <div className="form-row">
-            <label htmlFor="results-org">{formatMessage({ id: 'common.organizationUnit' })}</label>
+            <label htmlFor="results-org">
+              {formatMessage({ id: 'common.organizationUnit' })}
+            </label>
             <select
               id="results-org"
               value={organizationUnitId}
               onChange={(e) => setOrganizationUnitId(e.target.value)}
             >
               {orgUnits.map((unit) => (
-                <option key={unit.id} value={unit.id}>{unit.name}</option>
+                <option key={unit.id} value={unit.id}>
+                  {unit.name}
+                </option>
               ))}
             </select>
           </div>
           <div className="form-row">
-            <label htmlFor="results-year">{formatMessage({ id: 'common.year' })}</label>
-            <select id="results-year" value={year} onChange={(e) => setYear(e.target.value)}>
+            <label htmlFor="results-year">
+              {formatMessage({ id: 'common.year' })}
+            </label>
+            <select
+              id="results-year"
+              value={year}
+              onChange={(e) => setYear(e.target.value)}
+            >
               {yearOptions.map((y) => (
-                <option key={y} value={y}>{y}</option>
+                <option key={y} value={y}>
+                  {y}
+                </option>
               ))}
             </select>
           </div>
           <div className="form-row filter-bar-search">
-            <label htmlFor="results-search">{formatMessage({ id: 'admin.employeeSearch' })}</label>
+            <label htmlFor="results-search">
+              {formatMessage({ id: 'admin.employeeSearch' })}
+            </label>
             <input
               id="results-search"
               type="search"
@@ -285,7 +344,9 @@ export function AdminCompensationResults() {
             </span>
             {calculationStatus.lastCalculatedAt && (
               <span className="card__hint" style={{ margin: 0 }}>
-                {formatMessage({ id: 'admin.compensationResults.lastCalculation' })}{' '}
+                {formatMessage({
+                  id: 'admin.compensationResults.lastCalculation',
+                })}{' '}
                 {formatDateTime(calculationStatus.lastCalculatedAt)}
               </span>
             )}
@@ -299,7 +360,9 @@ export function AdminCompensationResults() {
             >
               {finalizing
                 ? formatMessage({ id: 'admin.compensationResults.finalizing' })
-                : formatMessage({ id: 'admin.compensationResults.finalizeResults' })}
+                : formatMessage({
+                    id: 'admin.compensationResults.finalizeResults',
+                  })}
             </button>
           ) : null}
         </div>
@@ -311,7 +374,9 @@ export function AdminCompensationResults() {
           <p>{emptyMessage}</p>
           {!debouncedSearch && (
             <p style={{ marginTop: '0.5rem' }}>
-              <Link to="/admin/varijabila/compensation">{formatMessage({ id: 'common.goToParameters' })}</Link>
+              <Link to="/admin/varijabila/compensation">
+                {formatMessage({ id: 'common.goToParameters' })}
+              </Link>
             </p>
           )}
         </div>
@@ -321,23 +386,57 @@ export function AdminCompensationResults() {
             <table className="table table--hover compensation-results-table__grid">
               <thead>
                 <tr>
-                  <th className="col-text">{formatMessage({ id: 'common.fullName' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.compensationResults.fixedSalary' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.compensationResults.annualCompensation' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.compensationResults.quarterlyCompensation' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.compensationResults.monthlyCompensation' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.compensationResults.payShare' })}</th>
+                  <th className="col-text">
+                    {formatMessage({ id: 'common.fullName' })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.compensationResults.fixedSalary',
+                    })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.compensationResults.annualCompensation',
+                    })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.compensationResults.quarterlyCompensation',
+                    })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.compensationResults.monthlyCompensation',
+                    })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.compensationResults.payShare',
+                    })}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {results.map((row) => (
                   <tr key={row.id}>
-                    <td className="cell-primary col-text">{row.employeeFullName}</td>
-                    <td className="col-num">{formatTableAmount(row.fixedSalary)}</td>
-                    <td className="col-num">{formatTableAmount(row.netCompensation)}</td>
-                    <td className="col-num">{formatTableAmount(row.quarterlyCompensation)}</td>
-                    <td className="col-num">{formatTableAmount(row.monthlyCompensation)}</td>
-                    <td className="col-num">{formatPercent(row.compensationPercent)}</td>
+                    <td className="cell-primary col-text">
+                      {row.employeeFullName}
+                    </td>
+                    <td className="col-num">
+                      {formatTableAmount(row.fixedSalary)}
+                    </td>
+                    <td className="col-num">
+                      {formatTableAmount(row.netCompensation)}
+                    </td>
+                    <td className="col-num">
+                      {formatTableAmount(row.quarterlyCompensation)}
+                    </td>
+                    <td className="col-num">
+                      {formatTableAmount(row.monthlyCompensation)}
+                    </td>
+                    <td className="col-num">
+                      {formatPercent(row.compensationPercent)}
+                    </td>
                   </tr>
                 ))}
               </tbody>

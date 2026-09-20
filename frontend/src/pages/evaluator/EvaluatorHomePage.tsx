@@ -1,10 +1,10 @@
-import { useEffect } from "react";
-import type { Employee } from "../../api/types";
-import { InfiniteScrollSentinel } from "../../components/common/InfiniteScrollSentinel";
-import { AppLayout } from "../../components/AppLayout";
-import { useDebouncedSearch, usePagedList, useToast } from "../../hooks";
-import { useIntl } from "../../i18n";
-import { EmployeeListTable } from "./components/EmployeeListTable";
+import { useEffect } from 'react';
+import type { Employee } from '../../api/types';
+import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
+import { AppLayout } from '../../components/AppLayout';
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
+import { useIntl } from '../../i18n';
+import { EmployeeListTable } from './components/EmployeeListTable';
 
 export function EvaluatorHomePage() {
   const { formatMessage } = useIntl();
@@ -28,10 +28,10 @@ export function EvaluatorHomePage() {
       const params = new URLSearchParams({
         page: String(page),
         pageSize: String(pageSize),
-        isActive: "true",
+        isActive: 'true',
       });
       if (search.trim()) {
-        params.set("search", search.trim());
+        params.set('search', search.trim());
       }
       return `/api/employees?${params}`;
     },
@@ -42,11 +42,11 @@ export function EvaluatorHomePage() {
   }, [error, toast]);
 
   return (
-    <AppLayout title={formatMessage({ id: "admin.employees" })}>
+    <AppLayout title={formatMessage({ id: 'admin.employees' })}>
       <div className="card card--filter">
         <div className="form-row filter-bar-search">
           <label htmlFor="employee-search">
-            {formatMessage({ id: "evaluation.searchEmployees" })}
+            {formatMessage({ id: 'evaluation.searchEmployees' })}
           </label>
           <input
             id="employee-search"
@@ -54,7 +54,7 @@ export function EvaluatorHomePage() {
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder={formatMessage({
-              id: "evaluation.employeeSearchPlaceholder",
+              id: 'evaluation.employeeSearchPlaceholder',
             })}
           />
         </div>

@@ -1,4 +1,9 @@
-import type { EducationLevel, Employee, JobPosition, OrganizationUnit } from '../../../api/types';
+import type {
+  EducationLevel,
+  Employee,
+  JobPosition,
+  OrganizationUnit,
+} from '../../../api/types';
 import { useIntl } from '../../../i18n';
 
 export interface EmployeeFormValues {
@@ -29,8 +34,12 @@ export function employeeToForm(employee: Employee): EmployeeFormValues {
     lastName: employee.lastName,
     organizationUnitId: String(employee.organizationUnitId),
     jobPositionId: String(employee.jobPositionId),
-    educationLevelId: employee.educationLevelId ? String(employee.educationLevelId) : '',
-    evaluatorEmployeeId: employee.evaluatorEmployeeId ? String(employee.evaluatorEmployeeId) : '',
+    educationLevelId: employee.educationLevelId
+      ? String(employee.educationLevelId)
+      : '',
+    evaluatorEmployeeId: employee.evaluatorEmployeeId
+      ? String(employee.evaluatorEmployeeId)
+      : '',
     hiredAt: employee.hiredAt ?? '',
     isActive: employee.isActive,
   };
@@ -68,7 +77,10 @@ export function AdminEmployeeForm({
   onCancel,
 }: AdminEmployeeFormProps) {
   const { formatMessage } = useIntl();
-  function setField<K extends keyof EmployeeFormValues>(key: K, value: EmployeeFormValues[K]) {
+  function setField<K extends keyof EmployeeFormValues>(
+    key: K,
+    value: EmployeeFormValues[K],
+  ) {
     onChange({ ...values, [key]: value });
   }
 
@@ -86,7 +98,9 @@ export function AdminEmployeeForm({
     >
       <div className="form-grid admin-form__grid">
         <div className="form-row">
-          <label htmlFor="emp-first-name">{formatMessage({ id: 'common.firstName' })}</label>
+          <label htmlFor="emp-first-name">
+            {formatMessage({ id: 'common.firstName' })}
+          </label>
           <input
             id="emp-first-name"
             value={values.firstName}
@@ -95,7 +109,9 @@ export function AdminEmployeeForm({
           />
         </div>
         <div className="form-row">
-          <label htmlFor="emp-last-name">{formatMessage({ id: 'common.lastName' })}</label>
+          <label htmlFor="emp-last-name">
+            {formatMessage({ id: 'common.lastName' })}
+          </label>
           <input
             id="emp-last-name"
             value={values.lastName}
@@ -104,49 +120,75 @@ export function AdminEmployeeForm({
           />
         </div>
         <div className="form-row">
-          <label htmlFor="emp-org">{formatMessage({ id: 'evaluation.orgUnitShort' })}</label>
+          <label htmlFor="emp-org">
+            {formatMessage({ id: 'evaluation.orgUnitShort' })}
+          </label>
           <select
             id="emp-org"
             value={values.organizationUnitId}
             onChange={(e) => setField('organizationUnitId', e.target.value)}
             required
           >
-            <option value="">{formatMessage({ id: 'common.selectPlaceholder' })}</option>
-            {orgUnits.filter((o) => o.isActive).map((o) => (
-              <option key={o.id} value={o.id}>{o.name}</option>
-            ))}
+            <option value="">
+              {formatMessage({ id: 'common.selectPlaceholder' })}
+            </option>
+            {orgUnits
+              .filter((o) => o.isActive)
+              .map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.name}
+                </option>
+              ))}
           </select>
         </div>
         <div className="form-row">
-          <label htmlFor="emp-position">{formatMessage({ id: 'evaluation.jobPosition' })}</label>
+          <label htmlFor="emp-position">
+            {formatMessage({ id: 'evaluation.jobPosition' })}
+          </label>
           <select
             id="emp-position"
             value={values.jobPositionId}
             onChange={(e) => setField('jobPositionId', e.target.value)}
             required
           >
-            <option value="">{formatMessage({ id: 'common.selectPlaceholder' })}</option>
-            {positions.filter((p) => p.isActive).map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
+            <option value="">
+              {formatMessage({ id: 'common.selectPlaceholder' })}
+            </option>
+            {positions
+              .filter((p) => p.isActive)
+              .map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
           </select>
         </div>
         <div className="form-row">
-          <label htmlFor="emp-education">{formatMessage({ id: 'admin.employeeForm.educationLevel' })}</label>
+          <label htmlFor="emp-education">
+            {formatMessage({ id: 'admin.employeeForm.educationLevel' })}
+          </label>
           <select
             id="emp-education"
             value={values.educationLevelId}
             onChange={(e) => setField('educationLevelId', e.target.value)}
             required
           >
-            <option value="">{formatMessage({ id: 'common.selectPlaceholder' })}</option>
-            {educationLevels.filter((e) => e.isActive).map((e) => (
-              <option key={e.id} value={e.id}>{e.name}</option>
-            ))}
+            <option value="">
+              {formatMessage({ id: 'common.selectPlaceholder' })}
+            </option>
+            {educationLevels
+              .filter((e) => e.isActive)
+              .map((e) => (
+                <option key={e.id} value={e.id}>
+                  {e.name}
+                </option>
+              ))}
           </select>
         </div>
         <div className="form-row">
-          <label htmlFor="emp-evaluator">{formatMessage({ id: 'admin.evaluators' })}</label>
+          <label htmlFor="emp-evaluator">
+            {formatMessage({ id: 'admin.evaluators' })}
+          </label>
           <select
             id="emp-evaluator"
             value={values.evaluatorEmployeeId}
@@ -154,12 +196,16 @@ export function AdminEmployeeForm({
           >
             <option value="">—</option>
             {evaluators.map((e) => (
-              <option key={e.id} value={e.id}>{e.fullName}</option>
+              <option key={e.id} value={e.id}>
+                {e.fullName}
+              </option>
             ))}
           </select>
         </div>
         <div className="form-row">
-          <label htmlFor="emp-hired">{formatMessage({ id: 'common.hiredFrom' })}</label>
+          <label htmlFor="emp-hired">
+            {formatMessage({ id: 'common.hiredFrom' })}
+          </label>
           <input
             id="emp-hired"
             type="date"
@@ -169,20 +215,28 @@ export function AdminEmployeeForm({
         </div>
         {editingId && (
           <div className="form-row">
-            <label htmlFor="emp-active">{formatMessage({ id: 'evaluation.status' })}</label>
+            <label htmlFor="emp-active">
+              {formatMessage({ id: 'evaluation.status' })}
+            </label>
             <select
               id="emp-active"
               value={values.isActive ? '1' : '0'}
               onChange={(e) => setField('isActive', e.target.value === '1')}
             >
-              <option value="1">{formatMessage({ id: 'common.active' })}</option>
-              <option value="0">{formatMessage({ id: 'common.inactive' })}</option>
+              <option value="1">
+                {formatMessage({ id: 'common.active' })}
+              </option>
+              <option value="0">
+                {formatMessage({ id: 'common.inactive' })}
+              </option>
             </select>
           </div>
         )}
         {editingId && (
           <div className="form-row">
-            <label htmlFor="emp-user">{formatMessage({ id: 'common.linkedAccount' })}</label>
+            <label htmlFor="emp-user">
+              {formatMessage({ id: 'common.linkedAccount' })}
+            </label>
             <select
               id="emp-user"
               value={linkedUserId}
@@ -190,7 +244,9 @@ export function AdminEmployeeForm({
             >
               <option value="">—</option>
               {availableUsers.map((user) => (
-                <option key={user.id} value={user.id}>{user.email}</option>
+                <option key={user.id} value={user.id}>
+                  {user.email}
+                </option>
               ))}
             </select>
           </div>
@@ -205,7 +261,11 @@ export function AdminEmployeeForm({
               : formatMessage({ id: 'admin.employeeForm.addEmployee' })}
         </button>
         {editingId && (
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onCancel}
+          >
             {formatMessage({ id: 'buttons.cancel' })}
           </button>
         )}

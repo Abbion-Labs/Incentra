@@ -8,9 +8,17 @@ interface FormSectionProps {
   variant?: 'default' | 'secondary';
 }
 
-export function FormSection({ title, hint, actions, children, variant = 'default' }: FormSectionProps) {
+export function FormSection({
+  title,
+  hint,
+  actions,
+  children,
+  variant = 'default',
+}: FormSectionProps) {
   return (
-    <section className={`form-section card ${variant === 'secondary' ? 'form-section--secondary' : ''}`}>
+    <section
+      className={`form-section card ${variant === 'secondary' ? 'form-section--secondary' : ''}`}
+    >
       <div className="form-section__header">
         <div className="form-section__heading">
           <h2 className="form-section__title">{title}</h2>

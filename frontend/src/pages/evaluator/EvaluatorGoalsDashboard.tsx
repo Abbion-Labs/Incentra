@@ -1,36 +1,36 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from 'react';
 
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
-import { api } from "../../api/client";
+import { api } from '../../api/client';
 
-import type { Employee, EvaluationSummary, PagedResult } from "../../api/types";
+import type { Employee, EvaluationSummary, PagedResult } from '../../api/types';
 
-import { InfiniteScrollSentinel } from "../../components/common/InfiniteScrollSentinel";
-import { TableSkeleton } from "../../components/common/LoadingSkeleton";
+import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
+import { TableSkeleton } from '../../components/common/LoadingSkeleton';
 
-import { AppLayout } from "../../components/AppLayout";
+import { AppLayout } from '../../components/AppLayout';
 
 import {
   PeriodFilters,
   currentQuarter,
   currentYear,
-} from "../../components/PeriodFilters";
+} from '../../components/PeriodFilters';
 
-import { useDebouncedSearch, usePagedList, useToast } from "../../hooks";
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 
-import { useEvaluationBucketCounts } from "../../hooks/useEvaluationBucketCounts";
-import { useIntl } from "../../i18n";
+import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
+import { useIntl } from '../../i18n';
 
-import { type GoalsBucket } from "../../utils/goalsBuckets";
+import { type GoalsBucket } from '../../utils/goalsBuckets';
 
-import { buildEvaluationsPagePath } from "../../utils/evaluationApi";
+import { buildEvaluationsPagePath } from '../../utils/evaluationApi';
 
-import { GoalsBucketTabs } from "./components/GoalsBucketTabs";
+import { GoalsBucketTabs } from './components/GoalsBucketTabs';
 
-import { PlanningEmployeesTable } from "./components/PlanningEmployeesTable";
+import { PlanningEmployeesTable } from './components/PlanningEmployeesTable';
 
-import { SetGoalsTable } from "./components/SetGoalsTable";
+import { SetGoalsTable } from './components/SetGoalsTable';
 
 export function EvaluatorGoalsDashboard() {
   const { formatMessage } = useIntl();
@@ -39,9 +39,9 @@ export function EvaluatorGoalsDashboard() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  const tabFromUrl = searchParams.get("tab") as GoalsBucket | null;
+  const tabFromUrl = searchParams.get('tab') as GoalsBucket | null;
 
-  const initialTab: GoalsBucket = tabFromUrl === "set" ? "set" : "pending";
+  const initialTab: GoalsBucket = tabFromUrl === 'set' ? 'set' : 'pending';
 
   const [activeTab, setActiveTab] = useState<GoalsBucket>(initialTab);
 
@@ -81,7 +81,7 @@ export function EvaluatorGoalsDashboard() {
   } = usePagedList<Employee>({
     queryKey: employeesQueryKey,
 
-    enabled: activeTab === "pending",
+    enabled: activeTab === 'pending',
 
     fetchPage: (page, pageSize) => {
       const params = new URLSearchParams({
@@ -89,9 +89,9 @@ export function EvaluatorGoalsDashboard() {
 
         pageSize: String(pageSize),
 
-        isActive: "true",
+        isActive: 'true',
 
-        goalsBucket: "pending",
+        goalsBucket: 'pending',
 
         goalsYear: String(year),
 
@@ -99,7 +99,7 @@ export function EvaluatorGoalsDashboard() {
       });
 
       if (search.trim()) {
-        params.set("search", search.trim());
+        params.set('search', search.trim());
       }
 
       return `/api/employees?${params}`;
@@ -122,7 +122,7 @@ export function EvaluatorGoalsDashboard() {
   } = usePagedList<EvaluationSummary>({
     queryKey: setGoalsQueryKey,
 
-    enabled: activeTab === "set",
+    enabled: activeTab === 'set',
 
     fetchPage: (page, pageSize) =>
       buildEvaluationsPagePath(page, pageSize, {
@@ -130,14 +130,14 @@ export function EvaluatorGoalsDashboard() {
 
         quarter,
 
-        bucket: "goalscomplete",
+        bucket: 'goalscomplete',
 
         search,
       }),
   });
 
   useEffect(() => {
-    if (tabFromUrl === "pending" || tabFromUrl === "set") {
+    if (tabFromUrl === 'pending' || tabFromUrl === 'set') {
       setActiveTab(tabFromUrl);
     }
   }, [tabFromUrl]);
@@ -171,7 +171,7 @@ export function EvaluatorGoalsDashboard() {
         return;
       }
 
-      const created = await api.post<EvaluationSummary>("/api/evaluations", {
+      const created = await api.post<EvaluationSummary>('/api/evaluations', {
         employeeId,
         year,
         quarter,
@@ -181,7 +181,7 @@ export function EvaluatorGoalsDashboard() {
       toast.error(
         e instanceof Error
           ? e.message
-          : formatMessage({ id: "errors.creationFailed" }),
+          : formatMessage({ id: 'errors.creationFailed' }),
       );
     } finally {
       setCreatingFor(null);
@@ -197,10 +197,10 @@ export function EvaluatorGoalsDashboard() {
     [counts.goalsComplete, counts.goalsPending],
   );
 
-  const loading = activeTab === "pending" ? loadingEmployees : loadingSet;
+  const loading = activeTab === 'pending' ? loadingEmployees : loadingSet;
 
   return (
-    <AppLayout title={formatMessage({ id: "evaluation.goalsTitle" })}>
+    <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
       <div className="card card--filter">
         <PeriodFilters
           year={year}
@@ -220,7 +220,7 @@ export function EvaluatorGoalsDashboard() {
         counts={tabCounts}
       />
 
-      {activeTab === "pending" ? (
+      {activeTab === 'pending' ? (
         <div className="card card--flush card--table-fill">
           {loading ? (
             <TableSkeleton rows={4} columns={4} />
@@ -233,7 +233,7 @@ export function EvaluatorGoalsDashboard() {
                   search={search}
                   onStartPlanning={startPlanning}
                   evaluationLabel={() =>
-                    formatMessage({ id: "evaluation.setGoals" })
+                    formatMessage({ id: 'evaluation.setGoals' })
                   }
                 />
 

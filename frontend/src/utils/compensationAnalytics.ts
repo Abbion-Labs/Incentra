@@ -1,14 +1,29 @@
 import type { CompensationAnalyticsChartType } from '../api/types';
 
-export const COMPENSATION_CHART_OPTIONS: Array<{ value: CompensationAnalyticsChartType; labelKey: string }> = [
-  { value: 'shareDistribution', labelKey: 'charts.compensation.shareDistribution' },
+export const COMPENSATION_CHART_OPTIONS: Array<{
+  value: CompensationAnalyticsChartType;
+  labelKey: string;
+}> = [
+  {
+    value: 'shareDistribution',
+    labelKey: 'charts.compensation.shareDistribution',
+  },
   { value: 'shareByEmployee', labelKey: 'charts.compensation.shareByEmployee' },
   { value: 'netDistribution', labelKey: 'charts.compensation.netDistribution' },
   { value: 'netByEmployee', labelKey: 'charts.compensation.netByEmployee' },
-  { value: 'monthlyByEmployee', labelKey: 'charts.compensation.monthlyByEmployee' },
+  {
+    value: 'monthlyByEmployee',
+    labelKey: 'charts.compensation.monthlyByEmployee',
+  },
 ];
 
-export const CHART_BAR_COLORS = ['#1E2761', '#7A2048', '#408EC6', '#2A9D8F', '#E76F51'];
+export const CHART_BAR_COLORS = [
+  '#1E2761',
+  '#7A2048',
+  '#408EC6',
+  '#2A9D8F',
+  '#E76F51',
+];
 
 export function chartColor(index: number): string {
   return CHART_BAR_COLORS[index % CHART_BAR_COLORS.length];

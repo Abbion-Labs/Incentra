@@ -21,15 +21,29 @@ export function DescriptiveRatingBadge({
   emptyLabel = '—',
 }: DescriptiveRatingBadgeProps) {
   const { formatMessage } = useIntl();
-  const label = formatDescriptiveRatingLabel(formatMessage, { code, name, descriptiveRatingId });
-  const styleCode = resolveDescriptiveRatingCode({ code, name, descriptiveRatingId });
+  const label = formatDescriptiveRatingLabel(formatMessage, {
+    code,
+    name,
+    descriptiveRatingId,
+  });
+  const styleCode = resolveDescriptiveRatingCode({
+    code,
+    name,
+    descriptiveRatingId,
+  });
 
   if (!label) {
-    return <span className={`average-muted ${className ?? ''}`.trim()}>{emptyLabel}</span>;
+    return (
+      <span className={`average-muted ${className ?? ''}`.trim()}>
+        {emptyLabel}
+      </span>
+    );
   }
 
   return (
-    <span className={`${descriptiveRatingClass(styleCode ?? name)} ${className ?? ''}`.trim()}>
+    <span
+      className={`${descriptiveRatingClass(styleCode ?? name)} ${className ?? ''}`.trim()}
+    >
       {label}
     </span>
   );

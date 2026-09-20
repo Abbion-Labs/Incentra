@@ -1,5 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
-import { DEFAULT_LOCALE, LOCALE_STORAGE_KEY, type AppLocale } from './constants';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
+import {
+  DEFAULT_LOCALE,
+  LOCALE_STORAGE_KEY,
+  type AppLocale,
+} from './constants';
 import { getLocale } from './getLocale';
 
 interface LocaleContextValue {
@@ -35,7 +47,9 @@ export function LocaleProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo(() => ({ locale, setLocale }), [locale, setLocale]);
 
-  return <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>;
+  return (
+    <LocaleContext.Provider value={value}>{children}</LocaleContext.Provider>
+  );
 }
 
 export function useLocale(): LocaleContextValue {

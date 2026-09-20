@@ -23,7 +23,10 @@ export function roleLabel(role: string, formatMessage: FormatMessage): string {
   return key ? formatMessage({ id: key }) : role;
 }
 
-export function statusLabel(status: string, formatMessage: FormatMessage): string {
+export function statusLabel(
+  status: string,
+  formatMessage: FormatMessage,
+): string {
   const key = statusLabelKey[status];
   return key ? formatMessage({ id: key }) : status;
 }
@@ -33,9 +36,13 @@ export function statusClass(status: string): string {
 }
 
 export const currentYear = new Date().getFullYear();
-export const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3) as 1 | 2 | 3 | 4;
+export const currentQuarter = Math.ceil((new Date().getMonth() + 1) / 3) as
+  1 | 2 | 3 | 4;
 
-export function previousQuarter(year: number, quarter: number): { year: number; quarter: number } {
+export function previousQuarter(
+  year: number,
+  quarter: number,
+): { year: number; quarter: number } {
   if (quarter > 1) {
     return { year, quarter: quarter - 1 };
   }

@@ -1,7 +1,10 @@
 import type { EvaluationDetail, RatingLevel } from '../../api/types';
 import { useIntl } from '../../i18n';
 import { FormSection } from '../forms/FormSection';
-import { ConditionsFulfilledToggle, ConditionsNotMetCommentField } from './ConditionsFulfilledControls';
+import {
+  ConditionsFulfilledToggle,
+  ConditionsNotMetCommentField,
+} from './ConditionsFulfilledControls';
 import { SectionAverageFooter } from './SectionAverageFooter';
 import { RatingValueSelect } from './RatingValueSelect';
 import {
@@ -11,7 +14,10 @@ import {
   findRatingLevel,
   isNotRated,
 } from '../../utils/scoring';
-import { formatLocalizedRatingDisplay, formatRatingLevelLabel } from '../../utils/ratingLevelLabels';
+import {
+  formatLocalizedRatingDisplay,
+  formatRatingLevelLabel,
+} from '../../utils/ratingLevelLabels';
 
 interface EvaluationGoalsEditableProps {
   evaluation: EvaluationDetail;
@@ -20,7 +26,10 @@ interface EvaluationGoalsEditableProps {
   onChange: (evaluation: EvaluationDetail) => void;
 }
 
-function goalsIncomplete(goals: EvaluationDetail['goals'], ratingLevels: RatingLevel[]): boolean {
+function goalsIncomplete(
+  goals: EvaluationDetail['goals'],
+  ratingLevels: RatingLevel[],
+): boolean {
   if (goals.length === 0) return true;
   return goals.some((goal) => {
     const level = findRatingLevel(ratingLevels, goal.ratingLevelId);
@@ -36,11 +45,18 @@ function EvaluationGoalsEditable({
 }: EvaluationGoalsEditableProps) {
   const { formatMessage } = useIntl();
   if (evaluation.goals.length === 0) {
-    return <p className="empty-inline">{formatMessage({ id: 'evaluation.noGoalsSet' })}</p>;
+    return (
+      <p className="empty-inline">
+        {formatMessage({ id: 'evaluation.noGoalsSet' })}
+      </p>
+    );
   }
 
   const goalsAverage = calculateComponentAverage(
-    evaluation.goals.map((goal) => ({ ratingLevelId: goal.ratingLevelId, weight: goal.weight })),
+    evaluation.goals.map((goal) => ({
+      ratingLevelId: goal.ratingLevelId,
+      weight: goal.weight,
+    })),
     ratingLevels,
   );
   const averageText = formatComponentAverage(
@@ -57,53 +73,74 @@ function EvaluationGoalsEditable({
             <tr>
               <th style={{ width: '2rem' }}>#</th>
               <th>{formatMessage({ id: 'evaluation.goalDescription' })}</th>
-              <th style={{ width: '5.5rem' }}>{formatMessage({ id: 'evaluation.rating' })}</th>
-              <th style={{ width: '11rem' }}>{formatMessage({ id: 'evaluation.descriptiveLabel' })}</th>
+              <th style={{ width: '5.5rem' }}>
+                {formatMessage({ id: 'evaluation.rating' })}
+              </th>
+              <th style={{ width: '11rem' }}>
+                {formatMessage({ id: 'evaluation.descriptiveLabel' })}
+              </th>
             </tr>
           </thead>
           <tbody>
             {evaluation.goals.map((g, idx) => {
-              const selectedLevel = findRatingLevel(ratingLevels, g.ratingLevelId);
+              const selectedLevel = findRatingLevel(
+                ratingLevels,
+                g.ratingLevelId,
+              );
               return (
-              <tr key={g.id}>
-                <td className="cell-muted">{idx + 1}</td>
-                <td className="cell-primary">{g.description}</td>
-                <td>
-                  {editable ? (
-                    <RatingValueSelect
-                      ratingLevels={ratingLevels}
-                      value={g.ratingLevelId}
-                      onChange={(ratingLevelId) => {
-                        const level = findRatingLevel(ratingLevels, ratingLevelId);
-                        const next = evaluation.goals.map((goal) =>
-                          goal.id === g.id && level
-                            ? {
-                                ...goal,
-                                ratingLevelId: level.id,
-                                ratingLevelValue: level.value,
-                                ratingLevelLabel: level.label,
-                              }
-                            : goal,
-                        );
-                        onChange({ ...evaluation, goals: next });
-                      }}
-                    />
-                  ) : (
-                    selectedLevel
-                      ? ratingValueOptionLabel(selectedLevel)
-                      : formatLocalizedRatingDisplay(formatMessage, g.ratingLevelValue, g.ratingLevelLabel)
-                  )}
-                </td>
-                <td className="cell-muted">
-                  {formatRatingLevelLabel(formatMessage, { level: selectedLevel, value: g.ratingLevelValue, label: g.ratingLevelLabel })}
-                </td>
-              </tr>
-            );
+                <tr key={g.id}>
+                  <td className="cell-muted">{idx + 1}</td>
+                  <td className="cell-primary">{g.description}</td>
+                  <td>
+                    {editable ? (
+                      <RatingValueSelect
+                        ratingLevels={ratingLevels}
+                        value={g.ratingLevelId}
+                        onChange={(ratingLevelId) => {
+                          const level = findRatingLevel(
+                            ratingLevels,
+                            ratingLevelId,
+                          );
+                          const next = evaluation.goals.map((goal) =>
+                            goal.id === g.id && level
+                              ? {
+                                  ...goal,
+                                  ratingLevelId: level.id,
+                                  ratingLevelValue: level.value,
+                                  ratingLevelLabel: level.label,
+                                }
+                              : goal,
+                          );
+                          onChange({ ...evaluation, goals: next });
+                        }}
+                      />
+                    ) : selectedLevel ? (
+                      ratingValueOptionLabel(selectedLevel)
+                    ) : (
+                      formatLocalizedRatingDisplay(
+                        formatMessage,
+                        g.ratingLevelValue,
+                        g.ratingLevelLabel,
+                      )
+                    )}
+                  </td>
+                  <td className="cell-muted">
+                    {formatRatingLevelLabel(formatMessage, {
+                      level: selectedLevel,
+                      value: g.ratingLevelValue,
+                      label: g.ratingLevelLabel,
+                    })}
+                  </td>
+                </tr>
+              );
             })}
           </tbody>
         </table>
       </div>
-      <SectionAverageFooter label={formatMessage({ id: 'evaluation.goalsAverage' })} value={averageText} />
+      <SectionAverageFooter
+        label={formatMessage({ id: 'evaluation.goalsAverage' })}
+        value={averageText}
+      />
     </>
   );
 }
@@ -138,13 +175,15 @@ export function EvaluationPlanningOverview({
     <>
       <FormSection
         title={formatMessage({ id: 'evaluation.goalsTitle' })}
-        actions={showConditionsToggle && onConditionsFulfilledChange ? (
-          <ConditionsFulfilledToggle
-            checked={conditionsFulfilled}
-            editable={editable}
-            onChange={onConditionsFulfilledChange}
-          />
-        ) : undefined}
+        actions={
+          showConditionsToggle && onConditionsFulfilledChange ? (
+            <ConditionsFulfilledToggle
+              checked={conditionsFulfilled}
+              editable={editable}
+              onChange={onConditionsFulfilledChange}
+            />
+          ) : undefined
+        }
       >
         {!canRateGoals ? (
           <ConditionsNotMetCommentField
@@ -161,28 +200,36 @@ export function EvaluationPlanningOverview({
           />
         )}
       </FormSection>
-      {canRateGoals && (evaluation.conditions.length > 0 || evaluation.criteria.length > 0) && (
-        <div className="form-section-grid">
-          {evaluation.conditions.length > 0 && (
-            <FormSection title={formatMessage({ id: 'evaluation.conditionsTitle' })} variant="secondary">
-              <ul className="readonly-list">
-                {evaluation.conditions.map((c) => (
-                  <li key={c.id}>{c.description}</li>
-                ))}
-              </ul>
-            </FormSection>
-          )}
-          {evaluation.criteria.length > 0 && (
-            <FormSection title={formatMessage({ id: 'evaluation.criteriaTitle' })} variant="secondary">
-              <ul className="readonly-list">
-                {evaluation.criteria.map((c) => (
-                  <li key={c.id}>{c.description}</li>
-                ))}
-              </ul>
-            </FormSection>
-          )}
-        </div>
-      )}
+      {canRateGoals &&
+        (evaluation.conditions.length > 0 ||
+          evaluation.criteria.length > 0) && (
+          <div className="form-section-grid">
+            {evaluation.conditions.length > 0 && (
+              <FormSection
+                title={formatMessage({ id: 'evaluation.conditionsTitle' })}
+                variant="secondary"
+              >
+                <ul className="readonly-list">
+                  {evaluation.conditions.map((c) => (
+                    <li key={c.id}>{c.description}</li>
+                  ))}
+                </ul>
+              </FormSection>
+            )}
+            {evaluation.criteria.length > 0 && (
+              <FormSection
+                title={formatMessage({ id: 'evaluation.criteriaTitle' })}
+                variant="secondary"
+              >
+                <ul className="readonly-list">
+                  {evaluation.criteria.map((c) => (
+                    <li key={c.id}>{c.description}</li>
+                  ))}
+                </ul>
+              </FormSection>
+            )}
+          </div>
+        )}
     </>
   );
 }

@@ -2,7 +2,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import type { KeyboardEvent } from 'react';
 import type { EvaluationSummary } from '../../../api/types';
 import { useIntl } from '../../../i18n';
-import { evaluationDisplayClass, evaluationDisplayLabel } from '../../../utils/evaluationBuckets';
+import {
+  evaluationDisplayClass,
+  evaluationDisplayLabel,
+} from '../../../utils/evaluationBuckets';
 import { formatSummaryAverage } from '../../../utils/scoring';
 import { AverageDisplay } from '../../../components/evaluation/AverageDisplay';
 import { formatDate } from '../../../utils/formatLocale';
@@ -15,7 +18,9 @@ function needsControllerAction(ev: EvaluationSummary): boolean {
   return ev.status === 'Submitted' || ev.status === 'UnderReview';
 }
 
-export function ControllerEvaluationTable({ evaluations }: ControllerEvaluationTableProps) {
+export function ControllerEvaluationTable({
+  evaluations,
+}: ControllerEvaluationTableProps) {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
   const showActions = evaluations.some(needsControllerAction);
@@ -24,7 +29,10 @@ export function ControllerEvaluationTable({ evaluations }: ControllerEvaluationT
     navigate(`/controller/evaluations/${id}`);
   }
 
-  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, ev: EvaluationSummary) {
+  function handleRowKeyDown(
+    event: KeyboardEvent<HTMLTableRowElement>,
+    ev: EvaluationSummary,
+  ) {
     if (needsControllerAction(ev)) return;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -34,15 +42,29 @@ export function ControllerEvaluationTable({ evaluations }: ControllerEvaluationT
 
   return (
     <div className="table-wrap">
-      <table className={`table table--hover table--evaluations table--clickable${showActions ? ' table--evaluations--with-actions' : ''}`}>
+      <table
+        className={`table table--hover table--evaluations table--clickable${showActions ? ' table--evaluations--with-actions' : ''}`}
+      >
         <thead>
           <tr>
-            <th className="col-text">{formatMessage({ id: 'admin.employees' })}</th>
-            <th className="col-text">{formatMessage({ id: 'admin.evaluators' })}</th>
-            <th className="col-meta">{formatMessage({ id: 'evaluation.period' })}</th>
-            <th className="col-num">{formatMessage({ id: 'evaluation.average' })}</th>
-            <th className="col-meta">{formatMessage({ id: 'evaluation.status' })}</th>
-            <th className="col-meta">{formatMessage({ id: 'evaluation.submittedAt' })}</th>
+            <th className="col-text">
+              {formatMessage({ id: 'admin.employees' })}
+            </th>
+            <th className="col-text">
+              {formatMessage({ id: 'admin.evaluators' })}
+            </th>
+            <th className="col-meta">
+              {formatMessage({ id: 'evaluation.period' })}
+            </th>
+            <th className="col-num">
+              {formatMessage({ id: 'evaluation.average' })}
+            </th>
+            <th className="col-meta">
+              {formatMessage({ id: 'evaluation.status' })}
+            </th>
+            <th className="col-meta">
+              {formatMessage({ id: 'evaluation.submittedAt' })}
+            </th>
             {showActions && <th className="col-actions"></th>}
           </tr>
         </thead>
@@ -54,7 +76,11 @@ export function ControllerEvaluationTable({ evaluations }: ControllerEvaluationT
                 key={ev.id}
                 className={actionable ? undefined : 'table-row--navigable'}
                 onClick={actionable ? undefined : () => openEvaluation(ev.id)}
-                onKeyDown={actionable ? undefined : (event) => handleRowKeyDown(event, ev)}
+                onKeyDown={
+                  actionable
+                    ? undefined
+                    : (event) => handleRowKeyDown(event, ev)
+                }
                 tabIndex={actionable ? undefined : 0}
                 role={actionable ? undefined : 'link'}
               >
@@ -67,7 +93,9 @@ export function ControllerEvaluationTable({ evaluations }: ControllerEvaluationT
                   <AverageDisplay value={formatSummaryAverage(ev)} />
                 </td>
                 <td className="col-meta">
-                  <span className={evaluationDisplayClass(ev)}>{evaluationDisplayLabel(ev, formatMessage)}</span>
+                  <span className={evaluationDisplayClass(ev)}>
+                    {evaluationDisplayLabel(ev, formatMessage)}
+                  </span>
                 </td>
                 <td className="cell-muted col-meta">
                   {ev.submittedAt ? formatDate(ev.submittedAt) : '—'}
@@ -117,11 +145,20 @@ export function ControllerFilters({
       <div className="form-grid form-grid--filters">
         <div className="form-row">
           <label>{formatMessage({ id: 'common.year' })}</label>
-          <input type="number" value={year} onChange={(e) => onYearChange(Number(e.target.value))} />
+          <input
+            type="number"
+            value={year}
+            onChange={(e) => onYearChange(Number(e.target.value))}
+          />
         </div>
         <div className="form-row">
           <label>{formatMessage({ id: 'evaluation.quarter' })}</label>
-          <select value={quarter} onChange={(e) => onQuarterChange(Number(e.target.value) as 1 | 2 | 3 | 4)}>
+          <select
+            value={quarter}
+            onChange={(e) =>
+              onQuarterChange(Number(e.target.value) as 1 | 2 | 3 | 4)
+            }
+          >
             {[1, 2, 3, 4].map((q) => (
               <option key={q} value={q}>
                 Q{q}
@@ -131,11 +168,22 @@ export function ControllerFilters({
         </div>
         <div className="form-row">
           <label>{formatMessage({ id: 'evaluation.status' })}</label>
-          <select value={statusFilter} onChange={(e) => onStatusFilterChange(e.target.value)}>
-            <option value="pending">{formatMessage({ id: 'status.UnderReview' })}</option>
-            <option value="approved">{formatMessage({ id: 'status.Approved' })}</option>
-            <option value="returned">{formatMessage({ id: 'evaluation.bucket.returned' })}</option>
-            <option value="all">{formatMessage({ id: 'evaluation.all' })}</option>
+          <select
+            value={statusFilter}
+            onChange={(e) => onStatusFilterChange(e.target.value)}
+          >
+            <option value="pending">
+              {formatMessage({ id: 'status.UnderReview' })}
+            </option>
+            <option value="approved">
+              {formatMessage({ id: 'status.Approved' })}
+            </option>
+            <option value="returned">
+              {formatMessage({ id: 'evaluation.bucket.returned' })}
+            </option>
+            <option value="all">
+              {formatMessage({ id: 'evaluation.all' })}
+            </option>
           </select>
         </div>
       </div>

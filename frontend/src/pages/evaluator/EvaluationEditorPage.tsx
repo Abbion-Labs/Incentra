@@ -1,43 +1,43 @@
-import { Link, useParams } from "react-router-dom";
-import { useCallback, useEffect, useState } from "react";
-import { api } from "../../api/client";
-import type { Employee, EvaluationDetail } from "../../api/types";
-import { ConfirmDialog } from "../../components/common/ConfirmDialog";
-import { CardSkeleton } from "../../components/common/LoadingSkeleton";
-import { EvaluationPlanningOverview } from "../../components/evaluation/EvaluationPlanningOverview";
-import { MeasuresEditorSection } from "../../components/evaluation/MeasuresEditorSection";
-import { SubmitEvaluationPanel } from "../../components/evaluation/SubmitEvaluationPanel";
-import { TrainingSection } from "../../components/evaluation/TrainingSection";
-import { UnsavedChangesIndicator } from "../../components/evaluation/UnsavedChangesIndicator";
-import { AppLayout } from "../../components/AppLayout";
+import { Link, useParams } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
+import { api } from '../../api/client';
+import type { Employee, EvaluationDetail } from '../../api/types';
+import { ConfirmDialog } from '../../components/common/ConfirmDialog';
+import { CardSkeleton } from '../../components/common/LoadingSkeleton';
+import { EvaluationPlanningOverview } from '../../components/evaluation/EvaluationPlanningOverview';
+import { MeasuresEditorSection } from '../../components/evaluation/MeasuresEditorSection';
+import { SubmitEvaluationPanel } from '../../components/evaluation/SubmitEvaluationPanel';
+import { TrainingSection } from '../../components/evaluation/TrainingSection';
+import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
+import { AppLayout } from '../../components/AppLayout';
 import {
   useEvaluation,
   useLookups,
   useToast,
   useUnsavedChangesGuard,
-} from "../../hooks";
+} from '../../hooks';
 import {
   EvaluationStatusSummary,
   EvaluationScoresSummary,
-} from "./components/EvaluationRatingMeta";
-import { GoalsPlanningEmployeeCard } from "./components/GoalsPlanningEmployeeCard";
+} from './components/EvaluationRatingMeta';
+import { GoalsPlanningEmployeeCard } from './components/GoalsPlanningEmployeeCard';
 import {
   findNotRatedLevelId,
   hasLocalIncompleteRatings,
   calculateComponentAverage,
   calculateOverallAverage,
   canSubmitEvaluationDraft,
-} from "../../utils/scoring";
-import { descriptiveRatingNameFromAverage } from "../../utils/descriptiveRating";
-import { isGoalsPlanningComplete } from "../../utils/goalsPlanning";
-import { getMeasureRatingComment } from "../../utils/measureRatingDefaults";
+} from '../../utils/scoring';
+import { descriptiveRatingNameFromAverage } from '../../utils/descriptiveRating';
+import { isGoalsPlanningComplete } from '../../utils/goalsPlanning';
+import { getMeasureRatingComment } from '../../utils/measureRatingDefaults';
 import {
   fetchLatestEvaluation,
   mergeGoalsForRatingSave,
   type RatingGoalSaveItem,
-} from "../../utils/evaluationSave";
-import type { MeasureDraft } from "../../components/evaluation/MeasuresEditorSection";
-import { useIntl } from "../../i18n";
+} from '../../utils/evaluationSave';
+import type { MeasureDraft } from '../../components/evaluation/MeasuresEditorSection';
+import { useIntl } from '../../i18n';
 
 export function EvaluationEditorPage() {
   const { formatMessage } = useIntl();
@@ -50,16 +50,16 @@ export function EvaluationEditorPage() {
   const [saving, setSaving] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [measures, setMeasures] = useState<MeasureDraft[]>([]);
-  const [trainingsAttended, setTrainingsAttended] = useState("");
-  const [missingKnowledgeSkills, setMissingKnowledgeSkills] = useState("");
+  const [trainingsAttended, setTrainingsAttended] = useState('');
+  const [missingKnowledgeSkills, setMissingKnowledgeSkills] = useState('');
   const [selfDevelopmentSuggestions, setSelfDevelopmentSuggestions] =
-    useState("");
-  const [trainingEvaluatorComment, setTrainingEvaluatorComment] = useState("");
+    useState('');
+  const [trainingEvaluatorComment, setTrainingEvaluatorComment] = useState('');
   const [conditionsFulfilled, setConditionsFulfilled] = useState(true);
-  const [conditionsNotMetComment, setConditionsNotMetComment] = useState("");
+  const [conditionsNotMetComment, setConditionsNotMetComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  const editable = evaluation?.status === "Draft";
+  const editable = evaluation?.status === 'Draft';
   const notRatedLevelId = findNotRatedLevelId(ratingLevels);
 
   const markDirty = useCallback(() => {
@@ -69,7 +69,7 @@ export function EvaluationEditorPage() {
 
   useUnsavedChangesGuard(
     editable && isDirty,
-    formatMessage({ id: "common.unsavedChangesWarning" }),
+    formatMessage({ id: 'common.unsavedChangesWarning' }),
   );
 
   useEffect(() => {
@@ -109,7 +109,7 @@ export function EvaluationEditorPage() {
             const autoComment =
               mt && level && level.value > 0
                 ? getMeasureRatingComment(mt.code, level.value, formatMessage)
-                : "";
+                : '';
 
             return {
               measureTypeId: m.measureTypeId,
@@ -122,20 +122,20 @@ export function EvaluationEditorPage() {
           })
         : measureTypes.map((mt, i) => ({
             measureTypeId: mt.id,
-            ratingComment: "",
+            ratingComment: '',
             ratingLevelId: notRatedLevelId ?? ratingLevels[0]?.id ?? 1,
             sortOrder: mt.sortOrder ?? i,
           }));
 
     setMeasures(hydratedMeasures);
-    setTrainingsAttended(evaluation.training?.trainingDescription ?? "");
-    setMissingKnowledgeSkills(evaluation.training?.knowledgeDescription ?? "");
+    setTrainingsAttended(evaluation.training?.trainingDescription ?? '');
+    setMissingKnowledgeSkills(evaluation.training?.knowledgeDescription ?? '');
     setSelfDevelopmentSuggestions(
-      evaluation.training?.developmentDescription ?? "",
+      evaluation.training?.developmentDescription ?? '',
     );
-    setTrainingEvaluatorComment(evaluation.training?.evaluatorComment ?? "");
+    setTrainingEvaluatorComment(evaluation.training?.evaluatorComment ?? '');
     setConditionsFulfilled(evaluation.conditionsFulfilled !== false);
-    setConditionsNotMetComment(evaluation.conditionsNotMetComment ?? "");
+    setConditionsNotMetComment(evaluation.conditionsNotMetComment ?? '');
   }, [
     evaluation?.id,
     evaluation?.version,
@@ -271,7 +271,7 @@ export function EvaluationEditorPage() {
         setEvaluation(current);
         setIsDirty(false);
         if (!options?.silent) {
-          toast.success(formatMessage({ id: "alerts.evaluationSaved" }));
+          toast.success(formatMessage({ id: 'alerts.evaluationSaved' }));
         }
         return current;
       } catch (e) {
@@ -284,7 +284,7 @@ export function EvaluationEditorPage() {
         toast.error(
           e instanceof Error
             ? e.message
-            : formatMessage({ id: "errors.saveFailed" }),
+            : formatMessage({ id: 'errors.saveFailed' }),
         );
         return null;
       } finally {
@@ -329,13 +329,13 @@ export function EvaluationEditorPage() {
       );
       setEvaluation(updated);
       setIsDirty(false);
-      toast.success(formatMessage({ id: "alerts.evaluationSubmitted" }));
+      toast.success(formatMessage({ id: 'alerts.evaluationSubmitted' }));
       setConfirmSubmit(false);
     } catch (e) {
       toast.error(
         e instanceof Error
           ? e.message
-          : formatMessage({ id: "errors.submitFailed" }),
+          : formatMessage({ id: 'errors.submitFailed' }),
       );
     } finally {
       setSaving(false);
@@ -379,7 +379,7 @@ export function EvaluationEditorPage() {
 
   if (loading || !evaluation) {
     return (
-      <AppLayout title={formatMessage({ id: "evaluation.title" })}>
+      <AppLayout title={formatMessage({ id: 'evaluation.title' })}>
         {loading ? (
           <>
             <CardSkeleton lines={2} />
@@ -388,7 +388,7 @@ export function EvaluationEditorPage() {
         ) : (
           <div className="empty-state">
             <p className="empty-state__title">
-              {formatMessage({ id: "errors.evaluationNotFound" })}
+              {formatMessage({ id: 'errors.evaluationNotFound' })}
             </p>
           </div>
         )}
@@ -398,14 +398,14 @@ export function EvaluationEditorPage() {
 
   if (editable && !isGoalsPlanningComplete(evaluation)) {
     return (
-      <AppLayout title={formatMessage({ id: "evaluation.title" })}>
+      <AppLayout title={formatMessage({ id: 'evaluation.title' })}>
         <div className="card">
-          <p>{formatMessage({ id: "evaluation.setPlanningBeforeRating" })}</p>
+          <p>{formatMessage({ id: 'evaluation.setPlanningBeforeRating' })}</p>
           <Link
             to={`/evaluator/goals/evaluations/${evaluation.id}`}
             className="btn btn-primary"
           >
-            {formatMessage({ id: "evaluation.setGoals" })}
+            {formatMessage({ id: 'evaluation.setGoals' })}
           </Link>
         </div>
       </AppLayout>
@@ -414,7 +414,7 @@ export function EvaluationEditorPage() {
 
   return (
     <AppLayout
-      title={`${formatMessage({ id: "evaluation.ratingTitle" })} — ${evaluation.employeeFullName}`}
+      title={`${formatMessage({ id: 'evaluation.ratingTitle' })} — ${evaluation.employeeFullName}`}
     >
       <div className="form-page">
         <GoalsPlanningEmployeeCard
@@ -432,8 +432,8 @@ export function EvaluationEditorPage() {
             evaluation.controllerComment ? (
               <div className="alert alert-info goals-employee-card__controller-comment">
                 <strong>
-                  {formatMessage({ id: "evaluation.controllerCommentLabel" })}
-                </strong>{" "}
+                  {formatMessage({ id: 'evaluation.controllerCommentLabel' })}
+                </strong>{' '}
                 {evaluation.controllerComment}
               </div>
             ) : undefined
@@ -490,8 +490,8 @@ export function EvaluationEditorPage() {
             submitAllowed={submitAllowed}
             submitRequirementsKey={
               conditionsFulfilled
-                ? "evaluation.submitRequirements"
-                : "evaluation.submitRequirementsConditionsNotMet"
+                ? 'evaluation.submitRequirements'
+                : 'evaluation.submitRequirementsConditionsNotMet'
             }
             saving={saving}
             onSave={saveAll}
@@ -513,11 +513,11 @@ export function EvaluationEditorPage() {
         <>
           <ConfirmDialog
             open={confirmSubmit}
-            title={formatMessage({ id: "evaluation.submitToControllerTitle" })}
+            title={formatMessage({ id: 'evaluation.submitToControllerTitle' })}
             message={formatMessage({
-              id: "evaluation.submitToControllerConfirm",
+              id: 'evaluation.submitToControllerConfirm',
             })}
-            confirmLabel={formatMessage({ id: "buttons.submit" })}
+            confirmLabel={formatMessage({ id: 'buttons.submit' })}
             onConfirm={submitEvaluation}
             onCancel={() => setConfirmSubmit(false)}
           />

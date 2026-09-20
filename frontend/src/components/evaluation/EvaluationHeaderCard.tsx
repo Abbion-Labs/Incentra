@@ -1,7 +1,14 @@
 import type { EvaluationDetail } from '../../api/types';
 import { useIntl } from '../../i18n';
-import { evaluationDisplayClass, evaluationDisplayLabel } from '../../utils/evaluationBuckets';
-import { detailHasIncompleteRatings, formatAverageDisplay, formatDetailAverage } from '../../utils/scoring';
+import {
+  evaluationDisplayClass,
+  evaluationDisplayLabel,
+} from '../../utils/evaluationBuckets';
+import {
+  detailHasIncompleteRatings,
+  formatAverageDisplay,
+  formatDetailAverage,
+} from '../../utils/scoring';
 import { statusClass, statusLabel } from '../../utils/status';
 import { AverageDisplay } from './AverageDisplay';
 import { DescriptiveRatingBadge } from './DescriptiveRatingBadge';
@@ -24,35 +31,51 @@ export function EvaluationHeaderCard({
   showStatusHistory = false,
 }: EvaluationHeaderCardProps) {
   const { formatMessage } = useIntl();
-  const showIncomplete = incompleteRatings ?? detailHasIncompleteRatings(evaluation);
-  const averageText = incompleteRatings !== undefined
-    ? formatAverageDisplay(incompleteRatings, evaluation.overallAverage)
-    : formatDetailAverage(evaluation);
-  const averageLabel = variant === 'controller' ? formatMessage({ id: 'evaluation.totalAverage' }) : formatMessage({ id: 'evaluation.average' });
+  const showIncomplete =
+    incompleteRatings ?? detailHasIncompleteRatings(evaluation);
+  const averageText =
+    incompleteRatings !== undefined
+      ? formatAverageDisplay(incompleteRatings, evaluation.overallAverage)
+      : formatDetailAverage(evaluation);
+  const averageLabel =
+    variant === 'controller'
+      ? formatMessage({ id: 'evaluation.totalAverage' })
+      : formatMessage({ id: 'evaluation.average' });
 
-  const statusBadge = variant === 'controller' ? (
-    <span className={statusClass(evaluation.status)}>{statusLabel(evaluation.status, formatMessage)}</span>
-  ) : (
-    <span
-      className={evaluationDisplayClass({
-        status: evaluation.status,
-        goalCount: evaluation.goals.length,
-        controllerComment: evaluation.controllerComment,
-      })}
-    >
-      {evaluationDisplayLabel({
-        status: evaluation.status,
-        goalCount: evaluation.goals.length,
-        controllerComment: evaluation.controllerComment,
-      }, formatMessage)}
-    </span>
-  );
+  const statusBadge =
+    variant === 'controller' ? (
+      <span className={statusClass(evaluation.status)}>
+        {statusLabel(evaluation.status, formatMessage)}
+      </span>
+    ) : (
+      <span
+        className={evaluationDisplayClass({
+          status: evaluation.status,
+          goalCount: evaluation.goals.length,
+          controllerComment: evaluation.controllerComment,
+        })}
+      >
+        {evaluationDisplayLabel(
+          {
+            status: evaluation.status,
+            goalCount: evaluation.goals.length,
+            controllerComment: evaluation.controllerComment,
+          },
+          formatMessage,
+        )}
+      </span>
+    );
 
   const statusDisplay = showStatusHistory ? (
-    <EvaluationStatusWithHistory evaluationId={evaluation.id} evaluation={evaluation}>
+    <EvaluationStatusWithHistory
+      evaluationId={evaluation.id}
+      evaluation={evaluation}
+    >
       {statusBadge}
     </EvaluationStatusWithHistory>
-  ) : statusBadge;
+  ) : (
+    statusBadge
+  );
 
   return (
     <header className="page-header page-header--evaluation">
@@ -60,7 +83,9 @@ export function EvaluationHeaderCard({
         <div className="page-header__main">
           <div className="page-header__title-row">
             <h2 className="page-header__title">
-              {variant === 'employee' ? evaluation.evaluatorFullName : evaluation.employeeFullName}
+              {variant === 'employee'
+                ? evaluation.evaluatorFullName
+                : evaluation.employeeFullName}
             </h2>
             {statusDisplay}
           </div>
@@ -71,9 +96,17 @@ export function EvaluationHeaderCard({
               <>
                 <span>{evaluation.organizationUnitName}</span>
                 <span className="meta-sep">·</span>
-                <span>{formatMessage({ id: 'evaluation.evaluatorPrefix' }, { name: evaluation.evaluatorFullName })}</span>
+                <span>
+                  {formatMessage(
+                    { id: 'evaluation.evaluatorPrefix' },
+                    { name: evaluation.evaluatorFullName },
+                  )}
+                </span>
                 <span className="meta-sep">·</span>
-                <PeriodPill quarter={evaluation.quarter} year={evaluation.year} />
+                <PeriodPill
+                  quarter={evaluation.quarter}
+                  year={evaluation.year}
+                />
               </>
             ) : (
               <PeriodPill quarter={evaluation.quarter} year={evaluation.year} />
@@ -96,27 +129,39 @@ export function EvaluationHeaderCard({
         </div>
       </div>
 
-      {(evaluation.controllerComment && variant !== 'employee') && (
+      {evaluation.controllerComment && variant !== 'employee' && (
         <div className="alert alert-info page-header__alert">
-          <strong>{formatMessage({ id: 'evaluation.controllerCommentLabel' })}</strong> {evaluation.controllerComment}
+          <strong>
+            {formatMessage({ id: 'evaluation.controllerCommentLabel' })}
+          </strong>{' '}
+          {evaluation.controllerComment}
         </div>
       )}
 
       {evaluation.evaluatorComment && variant !== 'evaluator' && (
         <p className="page-header__note">
-          <strong>{formatMessage({ id: 'evaluation.evaluatorNoteLabel' })}</strong> {evaluation.evaluatorComment}
+          <strong>
+            {formatMessage({ id: 'evaluation.evaluatorNoteLabel' })}
+          </strong>{' '}
+          {evaluation.evaluatorComment}
         </p>
       )}
 
       {evaluation.controllerComment && variant === 'employee' && (
         <div className="alert alert-info page-header__alert">
-          <strong>{formatMessage({ id: 'evaluation.controllerCommentLabel' })}</strong> {evaluation.controllerComment}
+          <strong>
+            {formatMessage({ id: 'evaluation.controllerCommentLabel' })}
+          </strong>{' '}
+          {evaluation.controllerComment}
         </div>
       )}
 
       {evaluation.evaluatorComment && variant === 'employee' && (
         <p className="page-header__note">
-          <strong>{formatMessage({ id: 'evaluation.evaluatorNoteLabel' })}</strong> {evaluation.evaluatorComment}
+          <strong>
+            {formatMessage({ id: 'evaluation.evaluatorNoteLabel' })}
+          </strong>{' '}
+          {evaluation.evaluatorComment}
         </p>
       )}
     </header>

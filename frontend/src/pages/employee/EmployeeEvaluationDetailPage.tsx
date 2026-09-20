@@ -1,16 +1,16 @@
-import { useEffect } from "react";
-import { useParams } from "react-router-dom";
-import { LoadingEmpty } from "../../components/common/LoadingEmpty";
-import { PageBackLink } from "../../components/common/PageBackLink";
+import { useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { LoadingEmpty } from '../../components/common/LoadingEmpty';
+import { PageBackLink } from '../../components/common/PageBackLink';
 import {
   EvaluationGoalsList,
   EvaluationTextListSection,
-} from "../../components/evaluation/EvaluationGoalsSection";
-import { EvaluationHeaderCard } from "../../components/evaluation/EvaluationHeaderCard";
-import { EvaluationMeasuresTable } from "../../components/evaluation/EvaluationMeasuresTable";
-import { AppLayout } from "../../components/AppLayout";
-import { useEvaluation, useToast } from "../../hooks";
-import { useIntl } from "../../i18n";
+} from '../../components/evaluation/EvaluationGoalsSection';
+import { EvaluationHeaderCard } from '../../components/evaluation/EvaluationHeaderCard';
+import { EvaluationMeasuresTable } from '../../components/evaluation/EvaluationMeasuresTable';
+import { AppLayout } from '../../components/AppLayout';
+import { useEvaluation, useToast } from '../../hooks';
+import { useIntl } from '../../i18n';
 
 export function EmployeeEvaluationDetailPage() {
   const { formatMessage } = useIntl();
@@ -25,11 +25,11 @@ export function EmployeeEvaluationDetailPage() {
   if (loading || !evaluation) {
     return (
       <AppLayout
-        title={formatMessage({ id: "evaluation.employeeReviewTitle" })}
+        title={formatMessage({ id: 'evaluation.employeeReviewTitle' })}
       >
         <LoadingEmpty
           loading={loading}
-          emptyMessage={formatMessage({ id: "errors.evaluationNotFound" })}
+          emptyMessage={formatMessage({ id: 'errors.evaluationNotFound' })}
         />
       </AppLayout>
     );
@@ -38,13 +38,13 @@ export function EmployeeEvaluationDetailPage() {
   return (
     <AppLayout
       title={formatMessage(
-        { id: "evaluation.myEvaluationTitle" },
+        { id: 'evaluation.myEvaluationTitle' },
         { quarter: evaluation.quarter, year: evaluation.year },
       )}
     >
       <PageBackLink
         to="/employee"
-        label={formatMessage({ id: "common.back" })}
+        label={formatMessage({ id: 'common.back' })}
       />
 
       <EvaluationHeaderCard
@@ -56,8 +56,8 @@ export function EmployeeEvaluationDetailPage() {
         evaluation.conditionsNotMetComment && (
           <div className="alert alert-info">
             <strong>
-              {formatMessage({ id: "evaluation.conditionsNotMetCommentLabel" })}
-            </strong>{" "}
+              {formatMessage({ id: 'evaluation.conditionsNotMetCommentLabel' })}
+            </strong>{' '}
             {evaluation.conditionsNotMetComment}
           </div>
         )}
@@ -65,21 +65,21 @@ export function EmployeeEvaluationDetailPage() {
       <EvaluationGoalsList
         goals={evaluation.goals}
         showRatings={
-          evaluation.status !== "Draft" &&
+          evaluation.status !== 'Draft' &&
           evaluation.conditionsFulfilled !== false
         }
       />
 
       <EvaluationTextListSection
-        title={formatMessage({ id: "evaluation.conditionsTitle" })}
+        title={formatMessage({ id: 'evaluation.conditionsTitle' })}
         items={evaluation.conditions}
-        emptyMessage={formatMessage({ id: "evaluation.noConditions" })}
+        emptyMessage={formatMessage({ id: 'evaluation.noConditions' })}
       />
 
       <EvaluationTextListSection
-        title={formatMessage({ id: "evaluation.criteriaTitle" })}
+        title={formatMessage({ id: 'evaluation.criteriaTitle' })}
         items={evaluation.criteria}
-        emptyMessage={formatMessage({ id: "evaluation.noCriteria" })}
+        emptyMessage={formatMessage({ id: 'evaluation.noCriteria' })}
       />
 
       {evaluation.conditionsFulfilled !== false && (

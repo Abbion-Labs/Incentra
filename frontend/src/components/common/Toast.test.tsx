@@ -9,18 +9,31 @@ function Harness() {
   const toast = useToast();
   return (
     <div>
-      <button type="button" onClick={() => toast.success('Saved')}>success</button>
-      <button type="button" onClick={() => toast.info('Copied')}>info</button>
-      <button type="button" onClick={() => toast.warning('Incomplete')}>warning</button>
-      <button type="button" onClick={() => toast.error('vn-0016')}>error</button>
-      <button type="button" onClick={() => toast.error('vn-0016')}>error-again</button>
+      <button type="button" onClick={() => toast.success('Saved')}>
+        success
+      </button>
+      <button type="button" onClick={() => toast.info('Copied')}>
+        info
+      </button>
+      <button type="button" onClick={() => toast.warning('Incomplete')}>
+        warning
+      </button>
+      <button type="button" onClick={() => toast.error('vn-0016')}>
+        error
+      </button>
+      <button type="button" onClick={() => toast.error('vn-0016')}>
+        error-again
+      </button>
     </div>
   );
 }
 
 function renderToasts() {
   return render(
-    <IntlProvider locale="en-US" messages={flattenMessages(translationsLocale('en'))}>
+    <IntlProvider
+      locale="en-US"
+      messages={flattenMessages(translationsLocale('en'))}
+    >
       <ToastProvider>
         <Harness />
       </ToastProvider>

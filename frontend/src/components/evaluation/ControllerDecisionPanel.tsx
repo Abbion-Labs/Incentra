@@ -24,7 +24,9 @@ export function ControllerDecisionPanel({
     <>
       <div className="form-list controller-decision-fields">
         <div className="form-row">
-          <label htmlFor="controller-comment">{formatMessage({ id: 'controller.commentOptional' })}</label>
+          <label htmlFor="controller-comment">
+            {formatMessage({ id: 'controller.commentOptional' })}
+          </label>
           <textarea
             id="controller-comment"
             rows={3}
@@ -33,21 +35,37 @@ export function ControllerDecisionPanel({
           />
         </div>
         <div className="form-row">
-          <label htmlFor="revision-comment">{formatMessage({ id: 'controller.revisionCommentRequired' })}</label>
+          <label htmlFor="revision-comment">
+            {formatMessage({ id: 'controller.revisionCommentRequired' })}
+          </label>
           <textarea
             id="revision-comment"
             rows={3}
             value={revisionComment}
             onChange={(e) => onRevisionCommentChange(e.target.value)}
-            placeholder={formatMessage({ id: 'controller.revisionCommentPlaceholder' })}
+            placeholder={formatMessage({
+              id: 'controller.revisionCommentPlaceholder',
+            })}
           />
         </div>
       </div>
       <div className="actions">
-        <button type="button" className="btn btn-primary" onClick={onApprove} disabled={saving}>
-          {saving ? formatMessage({ id: 'buttons.processing' }) : formatMessage({ id: 'controller.approveEvaluation' })}
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={onApprove}
+          disabled={saving}
+        >
+          {saving
+            ? formatMessage({ id: 'buttons.processing' })
+            : formatMessage({ id: 'controller.approveEvaluation' })}
         </button>
-        <button type="button" className="btn btn-danger" onClick={onReturnForRevision} disabled={saving}>
+        <button
+          type="button"
+          className="btn btn-danger"
+          onClick={onReturnForRevision}
+          disabled={saving}
+        >
           {formatMessage({ id: 'controller.returnForRevision' })}
         </button>
       </div>

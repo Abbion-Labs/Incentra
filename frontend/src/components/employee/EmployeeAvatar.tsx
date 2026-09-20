@@ -1,7 +1,10 @@
 import type { Employee } from '../../api/types';
 import { getEmployeeInitials } from '../../utils/initials';
 
-type EmployeeAvatarSource = Pick<Employee, 'fullName' | 'firstName' | 'lastName' | 'avatarUrl'>;
+type EmployeeAvatarSource = Pick<
+  Employee,
+  'fullName' | 'firstName' | 'lastName' | 'avatarUrl'
+>;
 
 interface EmployeeAvatarProps {
   employee: EmployeeAvatarSource;
@@ -15,9 +18,19 @@ const sizeClass: Record<NonNullable<EmployeeAvatarProps['size']>, string> = {
   lg: 'employee-avatar--lg',
 };
 
-export function EmployeeAvatar({ employee, size = 'md', className }: EmployeeAvatarProps) {
-  const initials = getEmployeeInitials(employee.fullName, employee.firstName, employee.lastName);
-  const classes = ['employee-avatar', sizeClass[size], className].filter(Boolean).join(' ');
+export function EmployeeAvatar({
+  employee,
+  size = 'md',
+  className,
+}: EmployeeAvatarProps) {
+  const initials = getEmployeeInitials(
+    employee.fullName,
+    employee.firstName,
+    employee.lastName,
+  );
+  const classes = ['employee-avatar', sizeClass[size], className]
+    .filter(Boolean)
+    .join(' ');
 
   if (employee.avatarUrl) {
     return (

@@ -1,6 +1,19 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
-import { api, clearToken, ensureValidSession, revokeRefreshToken, setAuthTokens } from '../api/client';
+import {
+  api,
+  clearToken,
+  ensureValidSession,
+  revokeRefreshToken,
+  setAuthTokens,
+} from '../api/client';
 import { setSessionExpiredHandler } from './session';
 import type { AuthResponse, UserProfile } from '../api/types';
 
@@ -11,8 +24,18 @@ interface AuthContextValue {
   logout: () => void;
   hasRole: (...roles: string[]) => boolean;
   refreshUser: () => Promise<void>;
-  updateEmployeeProfile: (patch: Partial<Pick<UserProfile,
-    'employeeAvatarUrl' | 'employeeFullName' | 'employeeFirstName' | 'employeeLastName' | 'emailNotificationsEnabled'>>) => void;
+  updateEmployeeProfile: (
+    patch: Partial<
+      Pick<
+        UserProfile,
+        | 'employeeAvatarUrl'
+        | 'employeeFullName'
+        | 'employeeFirstName'
+        | 'employeeLastName'
+        | 'emailNotificationsEnabled'
+      >
+    >,
+  ) => void;
   updateNotificationPreferences: (enabled: boolean) => Promise<void>;
 }
 
@@ -33,19 +56,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateEmployeeProfile = useCallback(
-    (patch: Partial<Pick<UserProfile,
-      'employeeAvatarUrl' | 'employeeFullName' | 'employeeFirstName' | 'employeeLastName' | 'emailNotificationsEnabled'>>) => {
+    (
+      patch: Partial<
+        Pick<
+          UserProfile,
+          | 'employeeAvatarUrl'
+          | 'employeeFullName'
+          | 'employeeFirstName'
+          | 'employeeLastName'
+          | 'emailNotificationsEnabled'
+        >
+      >,
+    ) => {
       setUser((prev) => (prev ? { ...prev, ...patch } : prev));
     },
     [],
   );
 
-  const updateNotificationPreferences = useCallback(async (enabled: boolean) => {
-    const profile = await api.put<UserProfile>('/api/auth/notification-preferences', {
-      emailNotificationsEnabled: enabled,
-    });
-    setUser((prev) => (prev ? { ...prev, ...profile } : profile));
-  }, []);
+  const updateNotificationPreferences = useCallback(
+    async (enabled: boolean) => {
+      const profile = await api.put<UserProfile>(
+        '/api/auth/notification-preferences',
+        {
+          emailNotificationsEnabled: enabled,
+        },
+      );
+      setUser((prev) => (prev ? { ...prev, ...profile } : profile));
+    },
+    [],
+  );
 
   useEffect(() => {
     setSessionExpiredHandler(() => {
@@ -61,7 +100,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [refreshUser]);
 
   const login = useCallback(async (email: string, password: string) => {
-    const response = await api.post<AuthResponse>('/api/auth/login', { email, password });
+    const response = await api.post<AuthResponse>('/api/auth/login', {
+      email,
+      password,
+    });
     setAuthTokens(response.accessToken, response.refreshToken);
     setUser(response.user);
   }, []);
@@ -78,8 +120,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ user, loading, login, logout, hasRole, refreshUser, updateEmployeeProfile, updateNotificationPreferences }),
-    [user, loading, login, logout, hasRole, refreshUser, updateEmployeeProfile, updateNotificationPreferences],
+    () => ({
+      user,
+      loading,
+      login,
+      logout,
+      hasRole,
+      refreshUser,
+      updateEmployeeProfile,
+      updateNotificationPreferences,
+    }),
+    [
+      user,
+      loading,
+      login,
+      logout,
+      hasRole,
+      refreshUser,
+      updateEmployeeProfile,
+      updateNotificationPreferences,
+    ],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

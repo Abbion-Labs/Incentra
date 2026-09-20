@@ -7,7 +7,11 @@ interface RatingValueSelectProps {
   onChange: (ratingLevelId: number) => void;
 }
 
-export function RatingValueSelect({ ratingLevels, value, onChange }: RatingValueSelectProps) {
+export function RatingValueSelect({
+  ratingLevels,
+  value,
+  onChange,
+}: RatingValueSelectProps) {
   return (
     <select
       className="select-inline select-inline--rating-value"

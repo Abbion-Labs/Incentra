@@ -31,23 +31,103 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { to: '/evaluator', labelKey: 'navigation.evaluatorEmployees', icon: 'employees', roles: ['EVALUATOR', 'ADMIN'], group: 'evaluator', match: (p) => p === '/evaluator' || p.startsWith('/evaluator/employees') },
-  { to: '/evaluator/goals', labelKey: 'navigation.evaluatorGoals', icon: 'goals', roles: ['EVALUATOR', 'ADMIN'], group: 'evaluator', match: (p) => p.startsWith('/evaluator/goals') },
-  { to: '/evaluator/workflow', labelKey: 'navigation.evaluatorWorkflow', icon: 'evaluation', roles: ['EVALUATOR', 'ADMIN'], group: 'evaluator', match: (p) => p.startsWith('/evaluator/workflow') || p.startsWith('/evaluator/evaluations') },
-  { to: '/evaluator/analytics', labelKey: 'navigation.analytics', icon: 'analytics', roles: ['EVALUATOR', 'ADMIN'], group: 'evaluator', match: (p) => p.startsWith('/evaluator/analytics') },
-  { to: '/controller', labelKey: 'navigation.controllerEmployees', icon: 'employees', roles: ['CONTROLLER', 'ADMIN'], group: 'controller', match: (p) => p === '/controller' || p.startsWith('/controller/employees') },
-  { to: '/controller/workflow', labelKey: 'navigation.controllerWorkflow', icon: 'evaluation', roles: ['CONTROLLER', 'ADMIN'], group: 'controller', match: (p) => p.startsWith('/controller/workflow') || p.startsWith('/controller/evaluations') },
-  { to: '/controller/evaluators', labelKey: 'navigation.controllerEvaluators', icon: 'evaluators', roles: ['CONTROLLER', 'ADMIN'], group: 'controller', match: (p) => p.startsWith('/controller/evaluators') },
-  { to: '/employee', labelKey: 'navigation.employeeEvaluations', icon: 'my-evaluations', roles: ['EMPLOYEE', 'ADMIN'], group: 'employee' },
-  { to: '/admin/crud', labelKey: 'navigation.adminCrud', icon: 'crud', roles: ['ADMIN'], group: 'admin', match: (p) => p.startsWith('/admin/crud') },
-  { to: '/admin/varijabila', labelKey: 'navigation.adminVariableCompensation', icon: 'varijabila', roles: ['PAYROLL'], group: 'payroll', match: (p) => p.startsWith('/admin/varijabila') },
+  {
+    to: '/evaluator',
+    labelKey: 'navigation.evaluatorEmployees',
+    icon: 'employees',
+    roles: ['EVALUATOR', 'ADMIN'],
+    group: 'evaluator',
+    match: (p) => p === '/evaluator' || p.startsWith('/evaluator/employees'),
+  },
+  {
+    to: '/evaluator/goals',
+    labelKey: 'navigation.evaluatorGoals',
+    icon: 'goals',
+    roles: ['EVALUATOR', 'ADMIN'],
+    group: 'evaluator',
+    match: (p) => p.startsWith('/evaluator/goals'),
+  },
+  {
+    to: '/evaluator/workflow',
+    labelKey: 'navigation.evaluatorWorkflow',
+    icon: 'evaluation',
+    roles: ['EVALUATOR', 'ADMIN'],
+    group: 'evaluator',
+    match: (p) =>
+      p.startsWith('/evaluator/workflow') ||
+      p.startsWith('/evaluator/evaluations'),
+  },
+  {
+    to: '/evaluator/analytics',
+    labelKey: 'navigation.analytics',
+    icon: 'analytics',
+    roles: ['EVALUATOR', 'ADMIN'],
+    group: 'evaluator',
+    match: (p) => p.startsWith('/evaluator/analytics'),
+  },
+  {
+    to: '/controller',
+    labelKey: 'navigation.controllerEmployees',
+    icon: 'employees',
+    roles: ['CONTROLLER', 'ADMIN'],
+    group: 'controller',
+    match: (p) => p === '/controller' || p.startsWith('/controller/employees'),
+  },
+  {
+    to: '/controller/workflow',
+    labelKey: 'navigation.controllerWorkflow',
+    icon: 'evaluation',
+    roles: ['CONTROLLER', 'ADMIN'],
+    group: 'controller',
+    match: (p) =>
+      p.startsWith('/controller/workflow') ||
+      p.startsWith('/controller/evaluations'),
+  },
+  {
+    to: '/controller/evaluators',
+    labelKey: 'navigation.controllerEvaluators',
+    icon: 'evaluators',
+    roles: ['CONTROLLER', 'ADMIN'],
+    group: 'controller',
+    match: (p) => p.startsWith('/controller/evaluators'),
+  },
+  {
+    to: '/employee',
+    labelKey: 'navigation.employeeEvaluations',
+    icon: 'my-evaluations',
+    roles: ['EMPLOYEE', 'ADMIN'],
+    group: 'employee',
+  },
+  {
+    to: '/admin/crud',
+    labelKey: 'navigation.adminCrud',
+    icon: 'crud',
+    roles: ['ADMIN'],
+    group: 'admin',
+    match: (p) => p.startsWith('/admin/crud'),
+  },
+  {
+    to: '/admin/varijabila',
+    labelKey: 'navigation.adminVariableCompensation',
+    icon: 'varijabila',
+    roles: ['PAYROLL'],
+    group: 'payroll',
+    match: (p) => p.startsWith('/admin/varijabila'),
+  },
 ];
 
-export function AppLayout({ title, children }: { title: string; children: React.ReactNode }) {
+export function AppLayout({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   const { user, logout, hasRole } = useAuth();
   const { formatMessage } = useIntl();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(readSidebarCollapsed);
+  const [sidebarCollapsed, setSidebarCollapsed] =
+    useState(readSidebarCollapsed);
 
   useEffect(() => {
     try {
@@ -83,8 +163,16 @@ export function AppLayout({ title, children }: { title: string; children: React.
               onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
               aria-expanded={!sidebarCollapsed}
               aria-controls="app-sidebar"
-              aria-label={sidebarCollapsed ? formatMessage({ id: 'navigation.showMenu' }) : formatMessage({ id: 'navigation.hideMenu' })}
-              title={sidebarCollapsed ? formatMessage({ id: 'navigation.showMenu' }) : formatMessage({ id: 'navigation.hideMenu' })}
+              aria-label={
+                sidebarCollapsed
+                  ? formatMessage({ id: 'navigation.showMenu' })
+                  : formatMessage({ id: 'navigation.hideMenu' })
+              }
+              title={
+                sidebarCollapsed
+                  ? formatMessage({ id: 'navigation.showMenu' })
+                  : formatMessage({ id: 'navigation.hideMenu' })
+              }
             >
               <span className="sidebar-toggle__icon" aria-hidden>
                 {sidebarCollapsed ? '☰' : '‹'}
@@ -97,7 +185,9 @@ export function AppLayout({ title, children }: { title: string; children: React.
                 <BrandMark />
               </span>
               <span className="app-brand__text">
-                <span className="app-brand__name">{formatMessage({ id: 'navigation.brand' })}</span>
+                <span className="app-brand__name">
+                  {formatMessage({ id: 'navigation.brand' })}
+                </span>
                 <span className="topbar__page">{title}</span>
               </span>
             </Link>
@@ -108,15 +198,27 @@ export function AppLayout({ title, children }: { title: string; children: React.
         </div>
         <div className="topbar-meta">
           {user && (
-            <Link to="/account" className="topbar-user" title={formatMessage({ id: 'navigation.myAccount' })}>
+            <Link
+              to="/account"
+              className="topbar-user"
+              title={formatMessage({ id: 'navigation.myAccount' })}
+            >
               <TopbarUserAvatar user={user} />
               <div className="topbar-user__text">
-                <span className="topbar-user__name">{user.employeeFullName ?? user.email}</span>
-                {roleSummary && <span className="topbar-user__role">{roleSummary}</span>}
+                <span className="topbar-user__name">
+                  {user.employeeFullName ?? user.email}
+                </span>
+                {roleSummary && (
+                  <span className="topbar-user__role">{roleSummary}</span>
+                )}
               </div>
             </Link>
           )}
-          <button type="button" className="btn btn-secondary btn-sm" onClick={logout}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={logout}
+          >
             {formatMessage({ id: 'navigation.logout' })}
           </button>
         </div>
@@ -134,7 +236,11 @@ export function AppLayout({ title, children }: { title: string; children: React.
                 key={item.to}
                 to={item.to}
                 className={
-                  (item.match ? item.match(location.pathname) : location.pathname.startsWith(item.to))
+                  (
+                    item.match
+                      ? item.match(location.pathname)
+                      : location.pathname.startsWith(item.to)
+                  )
                     ? 'active'
                     : ''
                 }
@@ -142,7 +248,9 @@ export function AppLayout({ title, children }: { title: string; children: React.
                 <span className="sidebar__icon">
                   <SidebarNavIcon name={item.icon} />
                 </span>
-                <span className="sidebar__label">{formatMessage({ id: item.labelKey as never })}</span>
+                <span className="sidebar__label">
+                  {formatMessage({ id: item.labelKey as never })}
+                </span>
               </Link>
             ))}
           </nav>

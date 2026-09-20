@@ -45,7 +45,10 @@ function stepForAxis(range: number, segments: number): number {
 }
 
 /** Uvek tačno 5 vrednosti na vertikalnoj osi */
-function buildNiceAxisScale(minValue: number, maxValue: number): {
+function buildNiceAxisScale(
+  minValue: number,
+  maxValue: number,
+): {
   axisMin: number;
   axisMax: number;
   ticks: number[];
@@ -53,13 +56,15 @@ function buildNiceAxisScale(minValue: number, maxValue: number): {
   const tickCount = 5;
   const segments = tickCount - 1;
   const safeMax = Math.max(maxValue, 1);
-  const axisMin = minValue < 0
-    ? -stepForAxis(Math.abs(minValue), segments) * segments
-    : 0;
+  const axisMin =
+    minValue < 0 ? -stepForAxis(Math.abs(minValue), segments) * segments : 0;
   const step = stepForAxis(safeMax - axisMin, segments);
   const axisMax = axisMin + step * segments;
 
-  const ticks = Array.from({ length: tickCount }, (_, index) => axisMin + step * index);
+  const ticks = Array.from(
+    { length: tickCount },
+    (_, index) => axisMin + step * index,
+  );
 
   return { axisMin, axisMax, ticks };
 }
@@ -92,7 +97,11 @@ export function CompensationRatingPreviewChart({
     [points],
   );
 
-  const { axisMin, axisMax, ticks: axisTicks } = useMemo(
+  const {
+    axisMin,
+    axisMax,
+    ticks: axisTicks,
+  } = useMemo(
     () => buildNiceAxisScale(dataMin, Math.max(dataMax, 1)),
     [dataMin, dataMax],
   );
@@ -125,13 +134,30 @@ export function CompensationRatingPreviewChart({
   }
 
   return (
-    <div className={`analytics-chart${isPanel ? ' analytics-chart--panel' : ''}`}>
+    <div
+      className={`analytics-chart${isPanel ? ' analytics-chart--panel' : ''}`}
+    >
       <div className="analytics-chart__canvas-wrap">
         {tooltip && (
-          <div className="analytics-chart__tooltip" style={{ left: tooltip.x, top: tooltip.y }} role="tooltip">
-            <span className="analytics-chart__tooltip-period">{formatMessage({ id: 'charts.ratingTooltip' }, { rating: tooltip.rating })}</span>
-            <strong>{formatMessage({ id: 'charts.monthly' })} {formatMoney(tooltip.monthly, currency)}</strong>
-            <div>{formatMessage({ id: 'charts.annual' })} {formatMoney(tooltip.annual, currency)}</div>
+          <div
+            className="analytics-chart__tooltip"
+            style={{ left: tooltip.x, top: tooltip.y }}
+            role="tooltip"
+          >
+            <span className="analytics-chart__tooltip-period">
+              {formatMessage(
+                { id: 'charts.ratingTooltip' },
+                { rating: tooltip.rating },
+              )}
+            </span>
+            <strong>
+              {formatMessage({ id: 'charts.monthly' })}{' '}
+              {formatMoney(tooltip.monthly, currency)}
+            </strong>
+            <div>
+              {formatMessage({ id: 'charts.annual' })}{' '}
+              {formatMoney(tooltip.annual, currency)}
+            </div>
           </div>
         )}
 
@@ -154,11 +180,26 @@ export function CompensationRatingPreviewChart({
           </text>
 
           {axisTicks.map((value) => {
-            const y = padding.top + chartHeight - ((value - axisMin) / axisRange) * chartHeight;
+            const y =
+              padding.top +
+              chartHeight -
+              ((value - axisMin) / axisRange) * chartHeight;
             return (
               <g key={value}>
-                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" />
-                <text x={padding.left - 10} y={y + 4} textAnchor="end" fontSize="11" fill="#64748b">
+                <line
+                  x1={padding.left}
+                  y1={y}
+                  x2={width - padding.right}
+                  y2={y}
+                  stroke="#e2e8f0"
+                />
+                <text
+                  x={padding.left - 10}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="11"
+                  fill="#64748b"
+                >
                   {formatAxisMoney(value)}
                 </text>
               </g>
@@ -176,7 +217,8 @@ export function CompensationRatingPreviewChart({
           {points.map((point, index) => {
             const normalized = (point.monthlyVariable - axisMin) / axisRange;
             const barHeight = Math.max(normalized * chartHeight, 0);
-            const x = padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
+            const x =
+              padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
             const y = padding.top + chartHeight - barHeight;
             const belowThreshold = point.rating < acceptablePerformanceRating;
             const fill = belowThreshold ? '#cbd5e1' : '#1e4d8c';
@@ -187,7 +229,10 @@ export function CompensationRatingPreviewChart({
                   x={x}
                   y={y}
                   width={barWidth}
-                  height={Math.max(barHeight, belowThreshold && point.monthlyVariable === 0 ? 2 : 0)}
+                  height={Math.max(
+                    barHeight,
+                    belowThreshold && point.monthlyVariable === 0 ? 2 : 0,
+                  )}
                   rx={4}
                   fill={fill}
                   className="analytics-chart__bar"

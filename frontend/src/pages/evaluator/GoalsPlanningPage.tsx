@@ -1,32 +1,32 @@
-import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
-import { api } from "../../api/client";
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import { api } from '../../api/client';
 import type {
   Employee,
   EvaluationDetail,
   EvaluationSummary,
   PagedResult,
-} from "../../api/types";
-import { LoadingEmpty } from "../../components/common/LoadingEmpty";
-import { FormSection } from "../../components/forms/FormSection";
-import { TextListEditor } from "../../components/forms/TextListEditor";
-import { AppLayout } from "../../components/AppLayout";
-import { useLookups, useToast, useUnsavedChangesGuard } from "../../hooks";
-import { UnsavedChangesIndicator } from "../../components/evaluation/UnsavedChangesIndicator";
+} from '../../api/types';
+import { LoadingEmpty } from '../../components/common/LoadingEmpty';
+import { FormSection } from '../../components/forms/FormSection';
+import { TextListEditor } from '../../components/forms/TextListEditor';
+import { AppLayout } from '../../components/AppLayout';
+import { useLookups, useToast, useUnsavedChangesGuard } from '../../hooks';
+import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import {
   defaultConversationDatetime,
   hasValidPlanningDraft,
   isGoalsPlanningComplete,
   toTextDrafts,
   type TextItemDraft,
-} from "../../utils/goalsPlanning";
-import { fetchLatestEvaluation } from "../../utils/evaluationSave";
-import { previousQuarter } from "../../utils/status";
-import { CopyFromPreviousQuarterButton } from "./components/CopyFromPreviousQuarterButton";
-import { GoalsConversationForm } from "./components/GoalsConversationForm";
-import { GoalsPlanningEmployeeCard } from "./components/GoalsPlanningEmployeeCard";
-import { GoalsReadOnlyOverview } from "./components/GoalsReadOnlyOverview";
-import { useIntl } from "../../i18n";
+} from '../../utils/goalsPlanning';
+import { fetchLatestEvaluation } from '../../utils/evaluationSave';
+import { previousQuarter } from '../../utils/status';
+import { CopyFromPreviousQuarterButton } from './components/CopyFromPreviousQuarterButton';
+import { GoalsConversationForm } from './components/GoalsConversationForm';
+import { GoalsPlanningEmployeeCard } from './components/GoalsPlanningEmployeeCard';
+import { GoalsReadOnlyOverview } from './components/GoalsReadOnlyOverview';
+import { useIntl } from '../../i18n';
 
 export function GoalsPlanningPage() {
   const { formatMessage } = useIntl();
@@ -44,11 +44,11 @@ export function GoalsPlanningPage() {
   const [goals, setGoals] = useState<TextItemDraft[]>([]);
   const [conditions, setConditions] = useState<TextItemDraft[]>([]);
   const [criteria, setCriteria] = useState<TextItemDraft[]>([]);
-  const [conversationAt, setConversationAt] = useState("");
-  const [evaluatorComment, setEvaluatorComment] = useState("");
+  const [conversationAt, setConversationAt] = useState('');
+  const [evaluatorComment, setEvaluatorComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  const editable = evaluation?.status === "Draft";
+  const editable = evaluation?.status === 'Draft';
   const goalsLocked = evaluation ? isGoalsPlanningComplete(evaluation) : false;
   const canEditPlanning = editable && !goalsLocked;
 
@@ -59,7 +59,7 @@ export function GoalsPlanningPage() {
 
   const { allowNextNavigation } = useUnsavedChangesGuard(
     canEditPlanning && isDirty,
-    formatMessage({ id: "common.unsavedChangesWarning" }),
+    formatMessage({ id: 'common.unsavedChangesWarning' }),
   );
 
   const load = useCallback(async () => {
@@ -77,14 +77,14 @@ export function GoalsPlanningPage() {
           ? data.conversationAt.slice(0, 16)
           : defaultConversationDatetime(),
       );
-      setEvaluatorComment(data.evaluatorComment ?? "");
+      setEvaluatorComment(data.evaluatorComment ?? '');
       setGoals(
         data.goals.length > 0
           ? data.goals.map((g) => ({
               description: g.description,
               sortOrder: g.sortOrder,
             }))
-          : [{ description: "", sortOrder: 0 }],
+          : [{ description: '', sortOrder: 0 }],
       );
       setConditions(
         data.conditions.length > 0
@@ -92,7 +92,7 @@ export function GoalsPlanningPage() {
               description: c.description,
               sortOrder: c.sortOrder,
             }))
-          : [{ description: "", sortOrder: 0 }],
+          : [{ description: '', sortOrder: 0 }],
       );
       setCriteria(
         data.criteria.length > 0
@@ -100,14 +100,14 @@ export function GoalsPlanningPage() {
               description: c.description,
               sortOrder: c.sortOrder,
             }))
-          : [{ description: "", sortOrder: 0 }],
+          : [{ description: '', sortOrder: 0 }],
       );
       setIsDirty(false);
     } catch (e) {
       toast.error(
         e instanceof Error
           ? e.message
-          : formatMessage({ id: "errors.loadFailed" }),
+          : formatMessage({ id: 'errors.loadFailed' }),
       );
     } finally {
       setLoading(false);
@@ -210,7 +210,7 @@ export function GoalsPlanningPage() {
       toast.error(
         e instanceof Error
           ? e.message
-          : formatMessage({ id: "errors.saveFailed" }),
+          : formatMessage({ id: 'errors.saveFailed' }),
       );
       return false;
     } finally {
@@ -232,7 +232,7 @@ export function GoalsPlanningPage() {
     if (!evaluation || !canEditPlanning) return false;
 
     if (!hasValidPlanningDraft(goals, conditions, criteria)) {
-      toast.warning(formatMessage({ id: "errors.goalsPlanningIncomplete" }));
+      toast.warning(formatMessage({ id: 'errors.goalsPlanningIncomplete' }));
       return false;
     }
 
@@ -243,8 +243,8 @@ export function GoalsPlanningPage() {
     const saved = await saveAll();
     if (saved) {
       allowNextNavigation();
-      toast.success(formatMessage({ id: "alerts.goalsPlanningSaved" }));
-      navigate("/evaluator/goals?tab=set");
+      toast.success(formatMessage({ id: 'alerts.goalsPlanningSaved' }));
+      navigate('/evaluator/goals?tab=set');
     }
   }
 
@@ -256,7 +256,7 @@ export function GoalsPlanningPage() {
     );
     if (
       hasContent &&
-      !window.confirm(formatMessage({ id: "evaluation.copyOverwriteConfirm" }))
+      !window.confirm(formatMessage({ id: 'evaluation.copyOverwriteConfirm' }))
     ) {
       return;
     }
@@ -274,7 +274,7 @@ export function GoalsPlanningPage() {
       if (!previous) {
         toast.warning(
           formatMessage(
-            { id: "errors.noSavedEvaluationForQuarter" },
+            { id: 'errors.noSavedEvaluationForQuarter' },
             { quarter, year },
           ),
         );
@@ -290,7 +290,7 @@ export function GoalsPlanningPage() {
       if (!hasGoals && !hasConditions && !hasCriteria) {
         toast.warning(
           formatMessage(
-            { id: "errors.noPlanningDataForQuarter" },
+            { id: 'errors.noPlanningDataForQuarter' },
             { quarter, year },
           ),
         );
@@ -302,13 +302,13 @@ export function GoalsPlanningPage() {
       setCriteria(toTextDrafts(detail.criteria));
       markDirty();
       toast.info(
-        formatMessage({ id: "alerts.copiedFromQuarter" }, { quarter, year }),
+        formatMessage({ id: 'alerts.copiedFromQuarter' }, { quarter, year }),
       );
     } catch (e) {
       toast.error(
         e instanceof Error
           ? e.message
-          : formatMessage({ id: "errors.copyFromPreviousQuarterFailed" }),
+          : formatMessage({ id: 'errors.copyFromPreviousQuarterFailed' }),
       );
     } finally {
       setCopying(false);
@@ -317,10 +317,10 @@ export function GoalsPlanningPage() {
 
   if (loading || !evaluation) {
     return (
-      <AppLayout title={formatMessage({ id: "evaluation.goalsTitle" })}>
+      <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
         <LoadingEmpty
           loading={loading}
-          emptyMessage={formatMessage({ id: "errors.evaluationNotFound" })}
+          emptyMessage={formatMessage({ id: 'errors.evaluationNotFound' })}
         />
       </AppLayout>
     );
@@ -328,11 +328,11 @@ export function GoalsPlanningPage() {
 
   if (!editable && !goalsLocked) {
     return (
-      <AppLayout title={formatMessage({ id: "evaluation.goalsTitle" })}>
+      <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
         <div className="card">
-          <p>{formatMessage({ id: "evaluation.notInGoalsPlanningPhase" })}</p>
+          <p>{formatMessage({ id: 'evaluation.notInGoalsPlanningPhase' })}</p>
           <Link to={`/evaluator/evaluations/${evaluation.id}`}>
-            {formatMessage({ id: "evaluation.review" })}
+            {formatMessage({ id: 'evaluation.review' })}
           </Link>
         </div>
       </AppLayout>
@@ -352,8 +352,8 @@ export function GoalsPlanningPage() {
     <AppLayout
       title={
         goalsLocked
-          ? `${formatMessage({ id: "evaluation.goalsTitle" })} — ${evaluation.employeeFullName}`
-          : `${formatMessage({ id: "evaluation.setGoals" })} — ${evaluation.employeeFullName}`
+          ? `${formatMessage({ id: 'evaluation.goalsTitle' })} — ${evaluation.employeeFullName}`
+          : `${formatMessage({ id: 'evaluation.setGoals' })} — ${evaluation.employeeFullName}`
       }
     >
       <GoalsPlanningEmployeeCard
@@ -367,7 +367,7 @@ export function GoalsPlanningPage() {
       {goalsLocked ? (
         <>
           <div className="alert alert-info">
-            {formatMessage({ id: "evaluation.goalsLockedInfo" })}
+            {formatMessage({ id: 'evaluation.goalsLockedInfo' })}
           </div>
           <GoalsReadOnlyOverview evaluation={evaluation} />
           {editable && (
@@ -376,7 +376,7 @@ export function GoalsPlanningPage() {
                 to={`/evaluator/evaluations/${evaluation.id}`}
                 className="btn btn-primary"
               >
-                {formatMessage({ id: "evaluation.continueToEvaluation" })}
+                {formatMessage({ id: 'evaluation.continueToEvaluation' })}
               </Link>
             </div>
           )}
@@ -384,48 +384,48 @@ export function GoalsPlanningPage() {
       ) : (
         <div className="form-page">
           <FormSection
-            title={formatMessage({ id: "evaluation.goalsTitle" })}
-            hint={formatMessage({ id: "evaluation.goalsPlanningHint" })}
+            title={formatMessage({ id: 'evaluation.goalsTitle' })}
+            hint={formatMessage({ id: 'evaluation.goalsPlanningHint' })}
             actions={copyButton}
           >
             <TextListEditor
               items={goals}
               setItems={handleGoalsChange}
               placeholder={formatMessage({
-                id: "evaluation.goalDescriptionPlaceholder",
+                id: 'evaluation.goalDescriptionPlaceholder',
               })}
-              addLabel={formatMessage({ id: "evaluation.addGoal" })}
+              addLabel={formatMessage({ id: 'evaluation.addGoal' })}
             />
           </FormSection>
 
           <div className="form-section-grid">
             <FormSection
-              title={formatMessage({ id: "evaluation.conditionsTitle" })}
-              hint={formatMessage({ id: "evaluation.conditionsHint" })}
+              title={formatMessage({ id: 'evaluation.conditionsTitle' })}
+              hint={formatMessage({ id: 'evaluation.conditionsHint' })}
               variant="secondary"
             >
               <TextListEditor
                 items={conditions}
                 setItems={handleConditionsChange}
                 placeholder={formatMessage({
-                  id: "evaluation.conditionPlaceholder",
+                  id: 'evaluation.conditionPlaceholder',
                 })}
-                addLabel={formatMessage({ id: "evaluation.addCondition" })}
+                addLabel={formatMessage({ id: 'evaluation.addCondition' })}
               />
             </FormSection>
 
             <FormSection
-              title={formatMessage({ id: "evaluation.criteriaTitle" })}
-              hint={formatMessage({ id: "evaluation.criteriaHint" })}
+              title={formatMessage({ id: 'evaluation.criteriaTitle' })}
+              hint={formatMessage({ id: 'evaluation.criteriaHint' })}
               variant="secondary"
             >
               <TextListEditor
                 items={criteria}
                 setItems={handleCriteriaChange}
                 placeholder={formatMessage({
-                  id: "evaluation.criterionPlaceholder",
+                  id: 'evaluation.criterionPlaceholder',
                 })}
-                addLabel={formatMessage({ id: "evaluation.addCriterion" })}
+                addLabel={formatMessage({ id: 'evaluation.addCriterion' })}
               />
             </FormSection>
           </div>

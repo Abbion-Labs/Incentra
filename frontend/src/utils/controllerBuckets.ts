@@ -3,7 +3,11 @@ import { classifyEvaluation, matchesEmployeeSearch } from './evaluationBuckets';
 
 export type ControllerBucket = 'pending' | 'returned' | 'approved';
 
-export const controllerBucketTabs: ControllerBucket[] = ['pending', 'returned', 'approved'];
+export const controllerBucketTabs: ControllerBucket[] = [
+  'pending',
+  'returned',
+  'approved',
+];
 
 export const controllerBucketLabelKeys: Record<ControllerBucket, string> = {
   pending: 'controller.bucket.pending',
@@ -17,7 +21,10 @@ export const controllerBucketTabLabelKeys: Record<ControllerBucket, string> = {
   approved: 'controller.bucketTab.approved',
 };
 
-export const emptyStateByControllerBucketKeys: Record<ControllerBucket, { title: string; description: string }> = {
+export const emptyStateByControllerBucketKeys: Record<
+  ControllerBucket,
+  { title: string; description: string }
+> = {
   pending: {
     title: 'controller.bucketEmpty.pendingTitle',
     description: 'controller.bucketEmpty.pendingDescription',
@@ -37,13 +44,19 @@ export const controllerBucketTabLabels = controllerBucketTabLabelKeys;
 export const emptyStateByControllerBucket = emptyStateByControllerBucketKeys;
 
 export function isNewForController(ev: EvaluationSummary): boolean {
-  return (ev.status === 'Submitted' || ev.status === 'UnderReview') && !ev.controllerViewedAt;
+  return (
+    (ev.status === 'Submitted' || ev.status === 'UnderReview') &&
+    !ev.controllerViewedAt
+  );
 }
 
-export function classifyForController(ev: EvaluationSummary): ControllerBucket | null {
+export function classifyForController(
+  ev: EvaluationSummary,
+): ControllerBucket | null {
   if (ev.status === 'Approved') return 'approved';
   if (classifyEvaluation(ev) === 'returned') return 'returned';
-  if (ev.status === 'Submitted' || ev.status === 'UnderReview') return 'pending';
+  if (ev.status === 'Submitted' || ev.status === 'UnderReview')
+    return 'pending';
   return null;
 }
 

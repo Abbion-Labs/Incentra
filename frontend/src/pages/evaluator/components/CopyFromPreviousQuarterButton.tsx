@@ -21,7 +21,9 @@ export function CopyFromPreviousQuarterButton({
       onClick={onClick}
       disabled={copying || saving || lookupsLoading}
     >
-      {copying ? formatMessage({ id: 'common.loading' }) : formatMessage({ id: 'evaluation.copyFromPreviousQuarter' })}
+      {copying
+        ? formatMessage({ id: 'common.loading' })
+        : formatMessage({ id: 'evaluation.copyFromPreviousQuarter' })}
     </button>
   );
 }

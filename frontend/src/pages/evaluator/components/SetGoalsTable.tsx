@@ -3,7 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import type { EvaluationSummary } from '../../../api/types';
 import { EmptyState } from '../../../components/common/EmptyState';
 import { useIntl } from '../../../i18n';
-import { evaluationDisplayClass, evaluationDisplayLabel } from '../../../utils/evaluationBuckets';
+import {
+  evaluationDisplayClass,
+  evaluationDisplayLabel,
+} from '../../../utils/evaluationBuckets';
 
 interface SetGoalsTableProps {
   evaluations: EvaluationSummary[];
@@ -18,7 +21,10 @@ export function SetGoalsTable({ evaluations, search }: SetGoalsTableProps) {
     navigate(`/evaluator/goals/evaluations/${id}`);
   }
 
-  function handleRowKeyDown(event: KeyboardEvent<HTMLTableRowElement>, id: number) {
+  function handleRowKeyDown(
+    event: KeyboardEvent<HTMLTableRowElement>,
+    id: number,
+  ) {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       openGoals(id);
@@ -28,7 +34,11 @@ export function SetGoalsTable({ evaluations, search }: SetGoalsTableProps) {
   if (evaluations.length === 0) {
     return (
       <EmptyState
-        title={search.trim() ? formatMessage({ id: 'evaluation.noSearchResults' }) : formatMessage({ id: 'evaluation.noGoalsSet' })}
+        title={
+          search.trim()
+            ? formatMessage({ id: 'evaluation.noSearchResults' })
+            : formatMessage({ id: 'evaluation.noGoalsSet' })
+        }
         description={
           search.trim()
             ? formatMessage({ id: 'evaluation.tryDifferentSearch' })
@@ -43,10 +53,18 @@ export function SetGoalsTable({ evaluations, search }: SetGoalsTableProps) {
       <table className="table table--hover table--clickable">
         <thead>
           <tr>
-            <th className="col-text">{formatMessage({ id: 'admin.employees' })}</th>
-            <th className="col-meta">{formatMessage({ id: 'evaluation.period' })}</th>
-            <th className="col-num">{formatMessage({ id: 'evaluation.goalsCount' })}</th>
-            <th className="col-meta">{formatMessage({ id: 'evaluation.statusLabel' })}</th>
+            <th className="col-text">
+              {formatMessage({ id: 'admin.employees' })}
+            </th>
+            <th className="col-meta">
+              {formatMessage({ id: 'evaluation.period' })}
+            </th>
+            <th className="col-num">
+              {formatMessage({ id: 'evaluation.goalsCount' })}
+            </th>
+            <th className="col-meta">
+              {formatMessage({ id: 'evaluation.statusLabel' })}
+            </th>
           </tr>
         </thead>
         <tbody>
@@ -60,10 +78,14 @@ export function SetGoalsTable({ evaluations, search }: SetGoalsTableProps) {
               role="link"
             >
               <td className="cell-primary col-text">{ev.employeeFullName}</td>
-              <td className="cell-muted col-meta">Q{ev.quarter}/{ev.year}</td>
+              <td className="cell-muted col-meta">
+                Q{ev.quarter}/{ev.year}
+              </td>
               <td className="cell-muted col-num">{ev.goalCount ?? 0}</td>
               <td className="col-meta">
-                <span className={evaluationDisplayClass(ev)}>{evaluationDisplayLabel(ev, formatMessage)}</span>
+                <span className={evaluationDisplayClass(ev)}>
+                  {evaluationDisplayLabel(ev, formatMessage)}
+                </span>
               </td>
             </tr>
           ))}

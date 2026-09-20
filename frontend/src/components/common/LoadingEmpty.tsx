@@ -7,6 +7,11 @@ interface LoadingEmptyProps {
 
 export function LoadingEmpty({ loading, emptyMessage }: LoadingEmptyProps) {
   const { formatMessage } = useIntl();
-  const fallbackEmptyMessage = emptyMessage ?? formatMessage({ id: 'common.notFound' });
-  return <div className="empty">{loading ? formatMessage({ id: 'common.loading' }) : fallbackEmptyMessage}</div>;
+  const fallbackEmptyMessage =
+    emptyMessage ?? formatMessage({ id: 'common.notFound' });
+  return (
+    <div className="empty">
+      {loading ? formatMessage({ id: 'common.loading' }) : fallbackEmptyMessage}
+    </div>
+  );
 }

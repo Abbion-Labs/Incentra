@@ -16,6 +16,10 @@ describe('homeNavigation', () => {
       { group: 'evaluator' as const, label: 'evaluator' },
       { group: 'employee' as const, label: 'employee' },
     ]);
-    expect(sorted.map((item) => item.group)).toEqual(['evaluator', 'employee', 'admin']);
+    expect(sorted.map((item) => item.group)).toEqual([
+      'evaluator',
+      'employee',
+      'admin',
+    ]);
   });
 });
