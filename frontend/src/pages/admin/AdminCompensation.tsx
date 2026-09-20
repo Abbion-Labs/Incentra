@@ -8,9 +8,9 @@ import {
   DEFAULT_PREVIEW_PROFILE,
 } from './compensationFormDefaults';
 import { previewCompensationByRating } from './compensationPreview';
-import { useIntl } from '../../i18n';
-import { AdminPageHeader } from './components/AdminPageHeader';
 import { CompensationRatingPreviewChart } from './components/CompensationRatingPreviewChart';
+import { useToast } from '../../hooks';
+import { useIntl } from '../../i18n';
 import { FormLabelWithHint } from './components/FormLabelWithHint';
 
 interface CompensationParamsForm {
@@ -42,6 +42,7 @@ function paramsToForm(params: CompensationParameters): CompensationParamsForm {
 
 export function AdminCompensation() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [orgUnits, setOrgUnits] = useState<OrganizationUnit[]>([]);
   const [organizationUnitId, setOrganizationUnitId] = useState('');
   const [year, setYear] = useState(String(currentYear));
@@ -54,8 +55,6 @@ export function AdminCompensation() {
   const [saving, setSaving] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [calculateAllowNegative, setCalculateAllowNegative] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const loadOrgUnits = useCallback(async () => {
     const units = await api.get<OrganizationUnit[]>('/api/organization-units');
@@ -80,7 +79,6 @@ export function AdminCompensation() {
     if (!orgId || !selectedYear) return;
 
     setLoading(true);
-    setError('');
     try {
       const params = new URLSearchParams({
         organizationUnitId: orgId,
@@ -99,18 +97,18 @@ export function AdminCompensation() {
         setCalculateAllowNegative(DEFAULT_COMPENSATION_PARAMS.allowNegativeVariable);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.compensationParamsLoadFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.compensationParamsLoadFailed' }));
     } finally {
       setLoading(false);
     }
-  }, [loadCalculationStatus]);
+  }, [loadCalculationStatus, formatMessage, toast]);
 
   useEffect(() => {
     loadOrgUnits().catch((e) => {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
       setLoading(false);
     });
-  }, [loadOrgUnits]);
+  }, [loadOrgUnits, formatMessage, toast]);
 
   useEffect(() => {
     if (organizationUnitId) {
@@ -166,13 +164,11 @@ export function AdminCompensation() {
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     if (!organizationUnitId) {
-      setError(formatMessage({ id: 'errors.selectOrganizationUnit' }));
+      toast.warning(formatMessage({ id: 'errors.selectOrganizationUnit' }));
       return;
     }
 
     setSaving(true);
-    setError('');
-    setMessage('');
     try {
       const payload = {
         monetaryPool: Number(form.monetaryPool),
@@ -189,7 +185,7 @@ export function AdminCompensation() {
           ...payload,
           isActive: true,
         });
-        setMessage(formatMessage({ id: 'alerts.parametersSaved' }));
+        toast.success(formatMessage({ id: 'alerts.parametersSaved' }));
       } else {
         const created = await api.post<CompensationParameters>('/api/compensation-parameters', {
           organizationUnitId: Number(organizationUnitId),
@@ -197,12 +193,12 @@ export function AdminCompensation() {
           ...payload,
         });
         setExistingId(created.id);
-        setMessage(formatMessage({ id: 'alerts.parametersCreated' }));
+        toast.success(formatMessage({ id: 'alerts.parametersCreated' }));
       }
 
       await loadParameters(organizationUnitId, year);
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
     } finally {
       setSaving(false);
     }
@@ -210,12 +206,11 @@ export function AdminCompensation() {
 
   async function handleCalculate() {
     if (!existingId) {
-      setError(formatMessage({ id: 'errors.saveParametersBeforeCalculation' }));
+      toast.warning(formatMessage({ id: 'errors.saveParametersBeforeCalculation' }));
       return;
     }
 
     setCalculating(true);
-    setError('');
     try {
       const response = await api.post<{
         employeesCalculated: number;
@@ -227,7 +222,7 @@ export function AdminCompensation() {
         allowNegativeVariable: calculateAllowNegative,
       });
       const count = response.employeesCalculated;
-      setMessage(
+      toast.success(
         formatMessage(
           { id: count > 0 ? 'alerts.calculationCompletedWithResults' : 'alerts.calculationCompleted' },
           { count },
@@ -237,7 +232,7 @@ export function AdminCompensation() {
         await loadCalculationStatus(existingId);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.calculationFailed' }));
+      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.calculationFailed' }));
     } finally {
       setCalculating(false);
     }
@@ -252,11 +247,6 @@ export function AdminCompensation() {
 
   return (
     <div className="card compensation-params">
-      <AdminPageHeader
-        error={error}
-        message={message}
-      />
-
       <div className="compensation-params__layout">
         <form className="admin-form compensation-params__form" onSubmit={handleSave}>
           <div className="form-grid admin-form__grid compensation-params__grid">

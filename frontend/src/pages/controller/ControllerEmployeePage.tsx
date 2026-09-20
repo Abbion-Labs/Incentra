@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import type { EmployeeEvaluationBenchmarks, EvaluationDetail } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { PageBackLink } from '../../components/common/PageBackLink';
 import { AppLayout } from '../../components/AppLayout';
 import { EmployeeAvatar } from '../../components/employee/EmployeeAvatar';
+import { useToast } from '../../hooks';
 import { EvaluationBenchmarkChart } from '../evaluator/components/EvaluationBenchmarkChart';
 import { EmployeeQuarterList } from '../evaluator/components/EmployeeQuarterList';
 import { SelectedEvaluationPanel } from '../evaluator/components/SelectedEvaluationPanel';
@@ -15,13 +15,13 @@ import { formatDate } from '../../utils/formatLocale';
 
 export function ControllerEmployeePage() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const { employeeId } = useParams<{ employeeId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const [benchmarks, setBenchmarks] = useState<EmployeeEvaluationBenchmarks | null>(null);
   const [selectedEvaluation, setSelectedEvaluation] = useState<EvaluationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const selectedEvaluationId = searchParams.get('evaluation')
     ? Number(searchParams.get('evaluation'))
@@ -30,18 +30,17 @@ export function ControllerEmployeePage() {
   const loadBenchmarks = useCallback(async () => {
     if (!employeeId) return;
     setLoading(true);
-    setError('');
     try {
       const data = await api.get<EmployeeEvaluationBenchmarks>(
         `/api/employees/${employeeId}/evaluation-benchmarks`,
       );
       setBenchmarks(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
     } finally {
       setLoading(false);
     }
-  }, [employeeId]);
+  }, [employeeId, formatMessage, toast]);
 
   useEffect(() => {
     loadBenchmarks();
@@ -69,7 +68,7 @@ export function ControllerEmployeePage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.evaluationLoadFailed' }));
+          toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.evaluationLoadFailed' }));
           setSelectedEvaluation(null);
         }
       })
@@ -80,7 +79,7 @@ export function ControllerEmployeePage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedEvaluationId]);
+  }, [selectedEvaluationId, formatMessage, toast]);
 
   function handleSelectEvaluation(id: number) {
     setSearchParams({ evaluation: String(id) });
@@ -100,7 +99,6 @@ export function ControllerEmployeePage() {
   if (!benchmarks) {
     return (
       <AppLayout title={formatMessage({ id: 'admin.employees' })}>
-        <AlertMessages error={error || formatMessage({ id: 'errors.employeeNotFound' })} />
         <PageBackLink to="/controller" label={formatMessage({ id: 'buttons.backToList' })} />
       </AppLayout>
     );
@@ -111,7 +109,6 @@ export function ControllerEmployeePage() {
   return (
     <AppLayout title={employee.fullName}>
       <PageBackLink to="/controller" label={formatMessage({ id: 'controller.backToEmployees' })} />
-      <AlertMessages error={error} />
 
       <div className="employee-profile-layout">
         <aside className="employee-profile-layout__sidebar">

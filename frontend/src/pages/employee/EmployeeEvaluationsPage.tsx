@@ -1,32 +1,41 @@
-import { useMemo, useState } from 'react';
-import type { EvaluationSummary } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
-import { EmptyState } from '../../components/common/EmptyState';
-import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
-import { TableSkeleton } from '../../components/common/LoadingSkeleton';
-import { EvaluationBucketTabs, evaluationBucketTabs } from '../../components/evaluation/EvaluationBucketTabs';
-import { AppLayout } from '../../components/AppLayout';
-import { PeriodFilters, currentYear } from '../../components/PeriodFilters';
-import { useIntl } from '../../i18n';
-import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
-import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
-import { usePagedList } from '../../hooks/usePagedList';
+import { useEffect, useMemo, useState } from "react";
+import type { EvaluationSummary } from "../../api/types";
+import { EmptyState } from "../../components/common/EmptyState";
+import { InfiniteScrollSentinel } from "../../components/common/InfiniteScrollSentinel";
+import { TableSkeleton } from "../../components/common/LoadingSkeleton";
+import {
+  EvaluationBucketTabs,
+  evaluationBucketTabs,
+} from "../../components/evaluation/EvaluationBucketTabs";
+import { AppLayout } from "../../components/AppLayout";
+import { PeriodFilters, currentYear } from "../../components/PeriodFilters";
+import { useIntl } from "../../i18n";
+import { useDebouncedSearch, usePagedList, useToast } from "../../hooks";
+import { useEvaluationBucketCounts } from "../../hooks/useEvaluationBucketCounts";
 import {
   type EvaluationBucket,
   emptyStateByBucketKeys,
-} from '../../utils/evaluationBuckets';
-import { buildEvaluationsPagePath, mapEvaluatorBucketCounts } from '../../utils/evaluationApi';
-import { EmployeeEvaluationListTable } from './components/EmployeeEvaluationListTable';
+} from "../../utils/evaluationBuckets";
+import {
+  buildEvaluationsPagePath,
+  mapEvaluatorBucketCounts,
+} from "../../utils/evaluationApi";
+import { EmployeeEvaluationListTable } from "./components/EmployeeEvaluationListTable";
 
 export function EmployeeEvaluationsPage() {
   const { formatMessage } = useIntl();
-  const [activeTab, setActiveTab] = useState<EvaluationBucket>('unrated');
+  const toast = useToast();
+  const [activeTab, setActiveTab] = useState<EvaluationBucket>("unrated");
   const [year, setYear] = useState(currentYear);
   const [quarter, setQuarter] = useState<number | null>(null);
-  const { input: searchInput, debounced: search, setInput: setSearchInput } = useDebouncedSearch();
+  const {
+    input: searchInput,
+    debounced: search,
+    setInput: setSearchInput,
+  } = useDebouncedSearch();
 
-  const listQueryKey = `${year}|${quarter ?? 'all'}|${activeTab}|${search}`;
-  const countsQueryKey = `${year}|${quarter ?? 'all'}|${search}`;
+  const listQueryKey = `${year}|${quarter ?? "all"}|${activeTab}|${search}`;
+  const countsQueryKey = `${year}|${quarter ?? "all"}|${search}`;
 
   const {
     items: evaluations,
@@ -46,13 +55,21 @@ export function EmployeeEvaluationsPage() {
       }),
   });
 
-  const { counts } = useEvaluationBucketCounts(countsQueryKey, { year, quarter, search });
+  const { counts } = useEvaluationBucketCounts(countsQueryKey, {
+    year,
+    quarter,
+    search,
+  });
   const tabCounts = useMemo(() => mapEvaluatorBucketCounts(counts), [counts]);
 
   const emptyCopy = emptyStateByBucketKeys[activeTab];
 
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
+
   return (
-    <AppLayout title={formatMessage({ id: 'navigation.employeeEvaluations' })}>
+    <AppLayout title={formatMessage({ id: "navigation.employeeEvaluations" })}>
       <div className="card card--filter">
         <PeriodFilters
           year={year}
@@ -62,8 +79,10 @@ export function EmployeeEvaluationsPage() {
           showAllQuartersOption
           search={searchInput}
           onSearchChange={setSearchInput}
-          searchLabel={formatMessage({ id: 'evaluation.search' })}
-          searchPlaceholder={formatMessage({ id: 'evaluation.searchPlaceholder' })}
+          searchLabel={formatMessage({ id: "evaluation.search" })}
+          searchPlaceholder={formatMessage({
+            id: "evaluation.searchPlaceholder",
+          })}
         />
       </div>
 
@@ -73,7 +92,6 @@ export function EmployeeEvaluationsPage() {
         tabs={evaluationBucketTabs}
         counts={tabCounts}
       />
-      <AlertMessages error={error} />
 
       <div className="card card--flush card--table-fill">
         {loading ? (

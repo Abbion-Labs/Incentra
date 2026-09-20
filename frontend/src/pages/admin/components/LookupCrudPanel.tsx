@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { api } from '../../../api/client';
 import type { EducationLevel, JobPosition, OrganizationUnit } from '../../../api/types';
-import { AlertMessages } from '../../../components/common/AlertMessages';
+import { useToast } from '../../../hooks';
 import { useIntl } from '../../../i18n';
 
 type LookupKind = 'org' | 'position' | 'education';
@@ -43,13 +43,12 @@ export function LookupCrudPanel({
   onReload,
 }: LookupCrudPanelProps) {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const config = CONFIG[kind];
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const rows: LookupItem[] =
     kind === 'org' ? orgUnits : kind === 'position' ? positions : educationLevels;
@@ -64,15 +63,11 @@ export function LookupCrudPanel({
     setEditingId(item.id);
     setName(item.name);
     setIsActive(item.isActive);
-    setError('');
-    setMessage('');
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setMessage('');
     try {
       const trimmedName = name.trim();
 
@@ -91,23 +86,23 @@ export function LookupCrudPanel({
             isActive,
           });
         }
-        setMessage(formatMessage({ id: 'alerts.changesSaved' }));
+        toast.success(formatMessage({ id: 'alerts.changesSaved' }));
       } else if (kind === 'org') {
         await api.post(config.endpoint, { name: trimmedName, code: null });
-        setMessage(formatMessage({ id: 'alerts.itemAdded' }));
+        toast.success(formatMessage({ id: 'alerts.itemAdded' }));
       } else {
         const sortedItems = rows as (JobPosition | EducationLevel)[];
         await api.post(config.endpoint, {
           name: trimmedName,
           sortOrder: nextSortOrder(sortedItems),
         });
-        setMessage(formatMessage({ id: 'alerts.itemAdded' }));
+        toast.success(formatMessage({ id: 'alerts.itemAdded' }));
       }
 
       resetForm();
       await onReload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
     } finally {
       setSaving(false);
     }
@@ -115,7 +110,6 @@ export function LookupCrudPanel({
 
   return (
     <div className="card admin-lookup-panel">
-      <AlertMessages error={error} info={message} />
       <form className="admin-lookup-form" onSubmit={handleSubmit}>
         <div className="form-row">
           <label htmlFor={`${kind}-name`}>{formatMessage({ id: 'common.name' })}</label>

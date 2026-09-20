@@ -3,6 +3,7 @@ import { api } from '../../api/client';
 import type { DescriptiveRating } from '../../api/types';
 import { useIntl } from '../../i18n';
 import { formatDescriptiveRatingLabel } from '../../utils/descriptiveRating';
+import { useToast } from '../../hooks';
 import { AdminPageHeader } from './components/AdminPageHeader';
 
 interface RatingFormValues {
@@ -39,26 +40,24 @@ function ratingToForm(rating: DescriptiveRating): RatingFormValues {
 
 export function AdminRatingConfig() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [ratings, setRatings] = useState<DescriptiveRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<RatingFormValues>(emptyForm());
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const items = await api.get<DescriptiveRating[]>('/api/descriptive-ratings');
       setRatings(items);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [formatMessage, toast]);
 
   useEffect(() => {
     load();
@@ -72,15 +71,11 @@ export function AdminRatingConfig() {
   function startCreate() {
     setEditingId(null);
     setForm(emptyForm());
-    setError('');
-    setMessage('');
   }
 
   function startEdit(rating: DescriptiveRating) {
     setEditingId(rating.id);
     setForm(ratingToForm(rating));
-    setError('');
-    setMessage('');
   }
 
   function setField<K extends keyof RatingFormValues>(key: K, value: RatingFormValues[K]) {
@@ -90,8 +85,6 @@ export function AdminRatingConfig() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setMessage('');
     const payload = {
       code: form.code.trim(),
       name: form.name.trim(),
@@ -104,15 +97,15 @@ export function AdminRatingConfig() {
     try {
       if (editingId) {
         await api.put(`/api/descriptive-ratings/${editingId}`, payload);
-        setMessage(formatMessage({ id: 'alerts.descriptiveRatingUpdated' }));
+        toast.success(formatMessage({ id: 'alerts.descriptiveRatingUpdated' }));
       } else {
         await api.post('/api/descriptive-ratings', payload);
-        setMessage(formatMessage({ id: 'alerts.descriptiveRatingAdded' }));
+        toast.success(formatMessage({ id: 'alerts.descriptiveRatingAdded' }));
         startCreate();
       }
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
     } finally {
       setSaving(false);
     }
@@ -121,8 +114,6 @@ export function AdminRatingConfig() {
   return (
     <div className="admin-page">
       <AdminPageHeader
-        error={error}
-        message={message}
         actions={
           editingId ? (
             <button type="button" className="btn btn-secondary" onClick={startCreate}>

@@ -4,8 +4,7 @@ import { api } from '../../api/client';
 import { fetchAllPages } from '../../api/paged';
 import type { AdminUser, EducationLevel, Employee, JobPosition, OrganizationUnit } from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
-import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
-import { usePagedList } from '../../hooks/usePagedList';
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import {
   AdminEmployeeForm,
   emptyEmployeeForm,
@@ -31,6 +30,7 @@ function buildEmployeePayload(values: EmployeeFormValues, includeActive: boolean
 
 export function AdminEmployees() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const navigate = useNavigate();
   const [orgUnits, setOrgUnits] = useState<OrganizationUnit[]>([]);
   const [positions, setPositions] = useState<JobPosition[]>([]);
@@ -38,8 +38,6 @@ export function AdminEmployees() {
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [evaluatorOptions, setEvaluatorOptions] = useState<Employee[]>([]);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const { input: search, debounced: debouncedSearch, setInput: setSearchInput } = useDebouncedSearch();
   const [filterOrgId, setFilterOrgId] = useState('');
@@ -91,15 +89,13 @@ export function AdminEmployees() {
 
   useEffect(() => {
     loadLookups().catch((e) => {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
     });
-  }, [loadLookups]);
+  }, [loadLookups, formatMessage, toast]);
 
   useEffect(() => {
-    if (listError) {
-      setError(listError);
-    }
-  }, [listError]);
+    if (listError) toast.error(listError);
+  }, [listError, toast]);
 
   function openProfile(employeeId: number) {
     navigate(`/evaluator/employees/${employeeId}`, { state: adminEmployeeProfileState() });
@@ -116,8 +112,6 @@ export function AdminEmployees() {
     setEditingId(null);
     setFormValues(emptyEmployeeForm());
     setLinkedUserId('');
-    setError('');
-    setMessage('');
   }
 
   function startEdit(employee: Employee, e?: React.MouseEvent) {
@@ -125,20 +119,16 @@ export function AdminEmployees() {
     setEditingId(employee.id);
     setFormValues(employeeToForm(employee));
     setLinkedUserId(employee.userId ? String(employee.userId) : '');
-    setError('');
-    setMessage('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function handleSubmit() {
     if (!formValues.educationLevelId) {
-      setError(formatMessage({ id: 'errors.educationRequired' }));
+      toast.warning(formatMessage({ id: 'errors.educationRequired' }));
       return;
     }
 
     setSaving(true);
-    setError('');
-    setMessage('');
     try {
       if (editingId) {
         const payload = buildEmployeePayload(formValues, true);
@@ -148,16 +138,16 @@ export function AdminEmployees() {
         if (nextUserId !== currentUserId) {
           await api.put(`/api/employees/${editingId}/user`, { userId: nextUserId });
         }
-        setMessage(formatMessage({ id: 'alerts.employeeUpdated' }));
+        toast.success(formatMessage({ id: 'alerts.employeeUpdated' }));
       } else {
         const payload = buildEmployeePayload(formValues, false);
         await api.post('/api/employees', payload);
-        setMessage(formatMessage({ id: 'alerts.employeeAdded' }));
+        toast.success(formatMessage({ id: 'alerts.employeeAdded' }));
         startCreate();
       }
       await Promise.all([reload(), loadLookups()]);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.saveFailed' }));
     } finally {
       setSaving(false);
     }
@@ -171,8 +161,6 @@ export function AdminEmployees() {
   return (
     <div className="admin-page">
       <AdminPageHeader
-        error={error}
-        message={message}
         actions={
           editingId ? (
             <button type="button" className="btn btn-secondary" onClick={startCreate}>

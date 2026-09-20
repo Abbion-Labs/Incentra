@@ -11,30 +11,29 @@ import {
 } from './components/AdminUserForm';
 import { AdminPageHeader } from './components/AdminPageHeader';
 import { roleLabel } from '../../utils/status';
+import { useToast } from '../../hooks';
 
 export function AdminUsers() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const [formValues, setFormValues] = useState<UserFormValues>(emptyUserForm());
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const list = await api.get<AdminUser[]>('/api/users');
       setUsers(list);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [formatMessage, toast]);
 
   useEffect(() => {
     load();
@@ -43,23 +42,17 @@ export function AdminUsers() {
   function startCreate() {
     setEditingUser(null);
     setFormValues(emptyUserForm());
-    setError('');
-    setMessage('');
   }
 
   function startEdit(user: AdminUser, e?: React.MouseEvent) {
     e?.stopPropagation();
     setEditingUser(user);
     setFormValues(userToForm(user));
-    setError('');
-    setMessage('');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   async function handleSubmit() {
     setSaving(true);
-    setError('');
-    setMessage('');
     try {
       if (editingUser) {
         await api.put(`/api/users/${editingUser.id}`, {
@@ -72,7 +65,7 @@ export function AdminUsers() {
             newPassword: formValues.password,
           });
         }
-        setMessage(formatMessage({ id: 'alerts.userUpdated' }, { email: formValues.email.trim() }));
+        toast.success(formatMessage({ id: 'alerts.userUpdated' }, { email: formValues.email.trim() }));
         startCreate();
       } else {
         await api.post('/api/auth/register', {
@@ -80,7 +73,7 @@ export function AdminUsers() {
           password: formValues.password,
           roleCodes: formValues.roleCodes,
         });
-        setMessage(formatMessage(
+        toast.success(formatMessage(
           { id: 'alerts.userCreated' },
           { email: formValues.email.trim(), roles: formValues.roleCodes.join(', ') },
         ));
@@ -88,7 +81,7 @@ export function AdminUsers() {
       }
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
     } finally {
       setSaving(false);
     }
@@ -97,8 +90,6 @@ export function AdminUsers() {
   return (
     <div className="admin-page">
       <AdminPageHeader
-        error={error}
-        message={message}
         actions={
           editingUser ? (
             <button type="button" className="btn btn-secondary" onClick={startCreate}>

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { fetchAllPages } from '../../api/paged';
 import type { Employee, EvaluatorSettings } from '../../api/types';
+import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { AdminPageHeader } from './components/AdminPageHeader';
 import { adminEvaluatorAnalyticsState } from './adminNavigation';
@@ -54,19 +55,17 @@ function settingsToForm(settings: EvaluatorSettings): SettingsFormValues {
 
 export function AdminEvaluatorSettings() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<EvaluatorSettings[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<SettingsFormValues>(emptyForm());
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
       const [items, emp] = await Promise.all([
         api.get<EvaluatorSettings[]>('/api/evaluator-settings'),
@@ -76,11 +75,11 @@ export function AdminEvaluatorSettings() {
       setSettings(items);
       setEmployees(emp);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [formatMessage, toast]);
 
   useEffect(() => {
     load();
@@ -99,8 +98,6 @@ export function AdminEvaluatorSettings() {
   function startCreate() {
     setEditingId(null);
     setForm(emptyForm());
-    setError('');
-    setMessage('');
   }
 
   function openAnalytics(employeeId: number, e?: React.MouseEvent) {
@@ -114,8 +111,6 @@ export function AdminEvaluatorSettings() {
     e?.stopPropagation();
     setEditingId(item.employeeId);
     setForm(settingsToForm(item));
-    setError('');
-    setMessage('');
   }
 
   function setField<K extends keyof SettingsFormValues>(key: K, value: SettingsFormValues[K]) {
@@ -125,8 +120,6 @@ export function AdminEvaluatorSettings() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setMessage('');
     const payload = {
       employeeId: Number(form.evaluatorId),
       controllerEmployeeId: Number(form.controllerId),
@@ -152,15 +145,15 @@ export function AdminEvaluatorSettings() {
           percentGood: payload.percentGood,
           percentExceeds: payload.percentExceeds,
         });
-        setMessage(formatMessage({ id: 'alerts.settingsUpdated' }));
+        toast.success(formatMessage({ id: 'alerts.settingsUpdated' }));
       } else {
         await api.post('/api/evaluator-settings', payload);
-        setMessage(formatMessage({ id: 'alerts.settingsCreated' }));
+        toast.success(formatMessage({ id: 'alerts.settingsCreated' }));
         startCreate();
       }
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
     } finally {
       setSaving(false);
     }
@@ -169,8 +162,6 @@ export function AdminEvaluatorSettings() {
   return (
     <div className="admin-page">
       <AdminPageHeader
-        error={error}
-        message={message}
         actions={
           editingId ? (
             <button type="button" className="btn btn-secondary" onClick={startCreate}>

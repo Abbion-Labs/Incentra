@@ -3,8 +3,8 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { BrandMark } from '../components/BrandMark';
+import { useToast } from '../hooks';
 import { useIntl } from '../i18n';
-import { localizeApiError } from '../utils/errorLocalization';
 
 const HERO_POINTS = ['auth.heroPointGoals', 'auth.heroPointWorkflow', 'auth.heroPointPayout'] as const;
 
@@ -18,10 +18,10 @@ const DEMO_ACCOUNTS = [
 export function LoginPage() {
   const { formatMessage } = useIntl();
   const { login, user } = useAuth();
+  const toast = useToast();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   if (user) {
@@ -30,14 +30,13 @@ export function LoginPage() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError('');
     setSubmitting(true);
     try {
       await login(email, password);
       navigate('/');
     } catch (err) {
-      setError(err instanceof ApiError
-        ? localizeApiError(err.rawMessage, formatMessage)
+      toast.error(err instanceof ApiError
+        ? err.rawMessage
         : formatMessage({ id: 'auth.loginFailed' }));
     } finally {
       setSubmitting(false);
@@ -47,7 +46,6 @@ export function LoginPage() {
   function fillDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
     setEmail(account.email);
     setPassword(account.password);
-    setError('');
   }
 
   return (
@@ -85,8 +83,6 @@ export function LoginPage() {
             <h2 className="login-card__title">{formatMessage({ id: 'auth.welcome' })}</h2>
             <p className="login-card__subtitle">{formatMessage({ id: 'auth.subtitle' })}</p>
           </header>
-
-          {error && <div className="alert alert-error login-card__alert">{error}</div>}
 
           <form className="login-form" onSubmit={handleSubmit}>
             <div className="form-row login-form__field">

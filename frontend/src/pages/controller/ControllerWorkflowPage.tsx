@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { EvaluationSummary } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
 import { EvaluationBucketTabs } from '../../components/evaluation/EvaluationBucketTabs';
 import { EvaluationSummaryTable, EvaluationSummaryTableCard } from '../../components/evaluation/EvaluationSummaryTable';
 import { AppLayout } from '../../components/AppLayout';
 import { PeriodFilters, currentYear } from '../../components/PeriodFilters';
-import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
-import { usePagedList } from '../../hooks/usePagedList';
 import { useIntl } from '../../i18n';
 import {
   type ControllerBucket,
@@ -20,6 +18,7 @@ import { buildEvaluationsPagePath, mapControllerBucketCounts } from '../../utils
 
 export function ControllerWorkflowPage() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as ControllerBucket | null;
   const initialTab = tabFromUrl && controllerBucketTabs.includes(tabFromUrl) ? tabFromUrl : 'pending';
@@ -53,6 +52,10 @@ export function ControllerWorkflowPage() {
   const tabCounts = useMemo(() => mapControllerBucketCounts(counts), [counts]);
 
   useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
+
+  useEffect(() => {
     if (tabFromUrl && controllerBucketTabs.includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
     }
@@ -79,7 +82,6 @@ export function ControllerWorkflowPage() {
         counts={tabCounts}
         tabLabels={controllerBucketTabLabels}
       />
-      <AlertMessages error={error} />
 
       <EvaluationSummaryTableCard
         loading={loading}

@@ -2,16 +2,13 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import type { Employee, EvaluationDetail } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { ControllerDecisionPanel } from '../../components/evaluation/ControllerDecisionPanel';
 import { EvaluationPlanningOverview } from '../../components/evaluation/EvaluationPlanningOverview';
 import { MeasuresEditorSection, type MeasureDraft } from '../../components/evaluation/MeasuresEditorSection';
 import { TrainingSection } from '../../components/evaluation/TrainingSection';
 import { AppLayout } from '../../components/AppLayout';
-import { useToast } from '../../components/common/Toast';
-import { useEvaluation } from '../../hooks/useEvaluation';
-import { useLookups } from '../../hooks/useLookups';
+import { useEvaluation, useLookups, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { GoalsPlanningEmployeeCard } from '../evaluator/components/GoalsPlanningEmployeeCard';
 import { EvaluationScoresSummary, EvaluationStatusSummary } from '../evaluator/components/EvaluationRatingMeta';
@@ -23,7 +20,7 @@ export function ControllerReviewPage() {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
   const { ratingLevels, measureTypes } = useLookups();
-  const { evaluation, setEvaluation, loading, error, setError } = useEvaluation(id);
+  const { evaluation, setEvaluation, loading, error } = useEvaluation(id);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [saving, setSaving] = useState(false);
   const [controllerComment, setControllerComment] = useState('');
@@ -36,6 +33,10 @@ export function ControllerReviewPage() {
 
   const canReview = evaluation?.status === 'Submitted' || evaluation?.status === 'UnderReview';
   const incompleteRatings = evaluation ? detailHasIncompleteRatings(evaluation) : false;
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   useEffect(() => {
     if (!evaluation?.employeeId) {
@@ -98,7 +99,6 @@ export function ControllerReviewPage() {
   async function approve() {
     if (!evaluation) return;
     setSaving(true);
-    setError('');
     try {
       let current = await startReviewIfNeeded();
       if (current) setEvaluation(current);
@@ -109,7 +109,7 @@ export function ControllerReviewPage() {
       setEvaluation(updated);
       toast.success(formatMessage({ id: 'alerts.evaluationApproved' }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.approveFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.approveFailed' }));
     } finally {
       setSaving(false);
     }
@@ -118,11 +118,10 @@ export function ControllerReviewPage() {
   async function returnForRevision() {
     if (!evaluation) return;
     if (!revisionComment.trim()) {
-      setError(formatMessage({ id: 'errors.revisionCommentRequired' }));
+      toast.warning(formatMessage({ id: 'errors.revisionCommentRequired' }));
       return;
     }
     setSaving(true);
-    setError('');
     try {
       let current = await startReviewIfNeeded();
       if (current) setEvaluation(current);
@@ -137,7 +136,7 @@ export function ControllerReviewPage() {
       toast.success(formatMessage({ id: 'alerts.evaluationReturned' }));
       setRevisionComment('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.returnFailed' }));
+      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.returnFailed' }));
     } finally {
       setSaving(false);
     }
@@ -177,7 +176,6 @@ export function ControllerReviewPage() {
             </div>
           ) : undefined}
         />
-        <AlertMessages error={error} />
 
         <EvaluationPlanningOverview
           evaluation={evaluation}
