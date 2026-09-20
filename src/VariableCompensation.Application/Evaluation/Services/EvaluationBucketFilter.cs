@@ -1,4 +1,5 @@
 using EvaluationEntity = VariableCompensation.Domain.Entities.Evaluation.Evaluation;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Domain.Enums;
 
 namespace VariableCompensation.Application.Evaluation.Services;
@@ -50,11 +51,11 @@ public static class EvaluationBucketFilter
             return query;
         }
 
-        var term = search.Trim().ToLower();
+        var term = EmployeeNameSearch.Normalize(search)!;
         return query.Where(e =>
-            e.Employee.FirstName.ToLower().Contains(term) ||
-            e.Employee.LastName.ToLower().Contains(term) ||
-            e.Evaluator.FirstName.ToLower().Contains(term) ||
-            e.Evaluator.LastName.ToLower().Contains(term));
+            (e.Employee.FirstName + " " + e.Employee.LastName).ToLower().Contains(term) ||
+            (e.Employee.LastName + " " + e.Employee.FirstName).ToLower().Contains(term) ||
+            (e.Evaluator.FirstName + " " + e.Evaluator.LastName).ToLower().Contains(term) ||
+            (e.Evaluator.LastName + " " + e.Evaluator.FirstName).ToLower().Contains(term));
     }
 }
