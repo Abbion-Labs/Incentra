@@ -7,7 +7,11 @@ interface InfiniteScrollSentinelProps {
   onLoadMore: () => void;
 }
 
-export function InfiniteScrollSentinel({ hasMore, isLoading, onLoadMore }: InfiniteScrollSentinelProps) {
+export function InfiniteScrollSentinel({
+  hasMore,
+  isLoading,
+  onLoadMore,
+}: InfiniteScrollSentinelProps) {
   const { formatMessage } = useIntl();
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -32,8 +36,16 @@ export function InfiniteScrollSentinel({ hasMore, isLoading, onLoadMore }: Infin
   if (!hasMore) return null;
 
   return (
-    <div ref={sentinelRef} className="infinite-scroll-sentinel" aria-hidden="true">
-      {isLoading ? <span className="infinite-scroll-sentinel__label">{formatMessage({ id: 'common.loading' })}</span> : null}
+    <div
+      ref={sentinelRef}
+      className="infinite-scroll-sentinel"
+      aria-hidden="true"
+    >
+      {isLoading ? (
+        <span className="infinite-scroll-sentinel__label">
+          {formatMessage({ id: 'common.loading' })}
+        </span>
+      ) : null}
     </div>
   );
 }

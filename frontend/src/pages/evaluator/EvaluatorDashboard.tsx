@@ -1,34 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
-import type { EvaluationSummary } from "../../api/types";
+import { useEffect, useMemo, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
+import type { EvaluationSummary } from '../../api/types';
 import {
   EvaluationBucketTabs,
   evaluationBucketTabs,
-} from "../../components/evaluation/EvaluationBucketTabs";
+} from '../../components/evaluation/EvaluationBucketTabs';
 import {
   EvaluationSummaryTable,
   EvaluationSummaryTableCard,
-} from "../../components/evaluation/EvaluationSummaryTable";
-import { AppLayout } from "../../components/AppLayout";
-import { PeriodFilters, currentYear } from "../../components/PeriodFilters";
-import { useDebouncedSearch, usePagedList, useToast } from "../../hooks";
-import { useEvaluationBucketCounts } from "../../hooks/useEvaluationBucketCounts";
-import { useIntl } from "../../i18n";
-import { type EvaluationBucket } from "../../utils/evaluationBuckets";
+} from '../../components/evaluation/EvaluationSummaryTable';
+import { AppLayout } from '../../components/AppLayout';
+import { PeriodFilters, currentYear } from '../../components/PeriodFilters';
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
+import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
+import { useIntl } from '../../i18n';
+import { type EvaluationBucket } from '../../utils/evaluationBuckets';
 import {
   buildEvaluationsPagePath,
   mapEvaluatorBucketCounts,
-} from "../../utils/evaluationApi";
+} from '../../utils/evaluationApi';
 
 export function EvaluatorDashboard() {
   const { formatMessage } = useIntl();
   const toast = useToast();
   const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get("tab") as EvaluationBucket | null;
+  const tabFromUrl = searchParams.get('tab') as EvaluationBucket | null;
   const initialTab =
     tabFromUrl && evaluationBucketTabs.includes(tabFromUrl)
       ? tabFromUrl
-      : "unrated";
+      : 'unrated';
   const [activeTab, setActiveTab] = useState<EvaluationBucket>(initialTab);
   const [year, setYear] = useState(currentYear);
   const [quarter, setQuarter] = useState<number | null>(null);
@@ -38,8 +38,8 @@ export function EvaluatorDashboard() {
     setInput: setSearchInput,
   } = useDebouncedSearch();
 
-  const listQueryKey = `${year}|${quarter ?? "all"}|${activeTab}|${search}`;
-  const countsQueryKey = `${year}|${quarter ?? "all"}|${search}`;
+  const listQueryKey = `${year}|${quarter ?? 'all'}|${activeTab}|${search}`;
+  const countsQueryKey = `${year}|${quarter ?? 'all'}|${search}`;
 
   const {
     items: evaluations,
@@ -77,7 +77,7 @@ export function EvaluatorDashboard() {
   }, [tabFromUrl]);
 
   return (
-    <AppLayout title={formatMessage({ id: "evaluation.ratingTitle" })}>
+    <AppLayout title={formatMessage({ id: 'evaluation.ratingTitle' })}>
       <div className="card card--filter">
         <PeriodFilters
           year={year}

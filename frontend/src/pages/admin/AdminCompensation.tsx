@@ -1,6 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { api } from '../../api/client';
-import type { CompensationCalculationStatus, CompensationParameters, OrganizationUnit } from '../../api/types';
+import type {
+  CompensationCalculationStatus,
+  CompensationParameters,
+  OrganizationUnit,
+} from '../../api/types';
 import { currentYear } from '../../utils/status';
 import {
   COMPENSATION_FIELD_HINT_KEYS,
@@ -46,10 +50,15 @@ export function AdminCompensation() {
   const [orgUnits, setOrgUnits] = useState<OrganizationUnit[]>([]);
   const [organizationUnitId, setOrganizationUnitId] = useState('');
   const [year, setYear] = useState(String(currentYear));
-  const [form, setForm] = useState<CompensationParamsForm>({ ...DEFAULT_COMPENSATION_PARAMS });
-  const [previewProfile, setPreviewProfile] = useState<PreviewProfileForm>({ ...DEFAULT_PREVIEW_PROFILE });
+  const [form, setForm] = useState<CompensationParamsForm>({
+    ...DEFAULT_COMPENSATION_PARAMS,
+  });
+  const [previewProfile, setPreviewProfile] = useState<PreviewProfileForm>({
+    ...DEFAULT_PREVIEW_PROFILE,
+  });
   const [existingId, setExistingId] = useState<number | null>(null);
-  const [calculationStatus, setCalculationStatus] = useState<CompensationCalculationStatus | null>(null);
+  const [calculationStatus, setCalculationStatus] =
+    useState<CompensationCalculationStatus | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -75,37 +84,52 @@ export function AdminCompensation() {
     }
   }, []);
 
-  const loadParameters = useCallback(async (orgId: string, selectedYear: string) => {
-    if (!orgId || !selectedYear) return;
+  const loadParameters = useCallback(
+    async (orgId: string, selectedYear: string) => {
+      if (!orgId || !selectedYear) return;
 
-    setLoading(true);
-    try {
-      const params = new URLSearchParams({
-        organizationUnitId: orgId,
-        year: selectedYear,
-      });
-      const data = await api.get<CompensationParameters[]>(`/api/compensation-parameters?${params}`);
-      if (data.length > 0) {
-        setExistingId(data[0].id);
-        setForm(paramsToForm(data[0]));
-        setCalculateAllowNegative(data[0].allowNegativeVariable);
-        await loadCalculationStatus(data[0].id);
-      } else {
-        setExistingId(null);
-        setCalculationStatus(null);
-        setForm({ ...DEFAULT_COMPENSATION_PARAMS });
-        setCalculateAllowNegative(DEFAULT_COMPENSATION_PARAMS.allowNegativeVariable);
+      setLoading(true);
+      try {
+        const params = new URLSearchParams({
+          organizationUnitId: orgId,
+          year: selectedYear,
+        });
+        const data = await api.get<CompensationParameters[]>(
+          `/api/compensation-parameters?${params}`,
+        );
+        if (data.length > 0) {
+          setExistingId(data[0].id);
+          setForm(paramsToForm(data[0]));
+          setCalculateAllowNegative(data[0].allowNegativeVariable);
+          await loadCalculationStatus(data[0].id);
+        } else {
+          setExistingId(null);
+          setCalculationStatus(null);
+          setForm({ ...DEFAULT_COMPENSATION_PARAMS });
+          setCalculateAllowNegative(
+            DEFAULT_COMPENSATION_PARAMS.allowNegativeVariable,
+          );
+        }
+      } catch (e) {
+        toast.error(
+          e instanceof Error
+            ? e.message
+            : formatMessage({ id: 'errors.compensationParamsLoadFailed' }),
+        );
+      } finally {
+        setLoading(false);
       }
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.compensationParamsLoadFailed' }));
-    } finally {
-      setLoading(false);
-    }
-  }, [loadCalculationStatus, formatMessage, toast]);
+    },
+    [loadCalculationStatus, formatMessage, toast],
+  );
 
   useEffect(() => {
     loadOrgUnits().catch((e) => {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.generic' }),
+      );
       setLoading(false);
     });
   }, [loadOrgUnits, formatMessage, toast]);
@@ -117,22 +141,26 @@ export function AdminCompensation() {
   }, [organizationUnitId, year, loadParameters]);
 
   const previewPoints = useMemo(() => {
-    const acceptablePerformanceRating = Number(form.acceptablePerformanceRating);
+    const acceptablePerformanceRating = Number(
+      form.acceptablePerformanceRating,
+    );
     const dependencyWeight = Number(form.dependencyWeight);
     const exponent = Number(form.exponent);
     const referencePoints = Number(previewProfile.referencePoints);
-    const referenceSalaryPerPoint = Number(previewProfile.referenceSalaryPerPoint);
+    const referenceSalaryPerPoint = Number(
+      previewProfile.referenceSalaryPerPoint,
+    );
 
     if (
-      !Number.isFinite(acceptablePerformanceRating)
-      || !Number.isFinite(dependencyWeight)
-      || dependencyWeight <= 0
-      || !Number.isFinite(exponent)
-      || exponent <= 0
-      || !Number.isFinite(referencePoints)
-      || referencePoints <= 0
-      || !Number.isFinite(referenceSalaryPerPoint)
-      || referenceSalaryPerPoint <= 0
+      !Number.isFinite(acceptablePerformanceRating) ||
+      !Number.isFinite(dependencyWeight) ||
+      dependencyWeight <= 0 ||
+      !Number.isFinite(exponent) ||
+      exponent <= 0 ||
+      !Number.isFinite(referencePoints) ||
+      referencePoints <= 0 ||
+      !Number.isFinite(referenceSalaryPerPoint) ||
+      referenceSalaryPerPoint <= 0
     ) {
       return [];
     }
@@ -147,7 +175,10 @@ export function AdminCompensation() {
     });
   }, [form, previewProfile]);
 
-  function updateField<K extends keyof CompensationParamsForm>(key: K, value: CompensationParamsForm[K]) {
+  function updateField<K extends keyof CompensationParamsForm>(
+    key: K,
+    value: CompensationParamsForm[K],
+  ) {
     setForm((current) => {
       const next = { ...current, [key]: value };
       if (key === 'allowNegativeVariable') {
@@ -157,7 +188,10 @@ export function AdminCompensation() {
     });
   }
 
-  function updatePreviewField<K extends keyof PreviewProfileForm>(key: K, value: PreviewProfileForm[K]) {
+  function updatePreviewField<K extends keyof PreviewProfileForm>(
+    key: K,
+    value: PreviewProfileForm[K],
+  ) {
     setPreviewProfile((current) => ({ ...current, [key]: value }));
   }
 
@@ -187,18 +221,25 @@ export function AdminCompensation() {
         });
         toast.success(formatMessage({ id: 'alerts.parametersSaved' }));
       } else {
-        const created = await api.post<CompensationParameters>('/api/compensation-parameters', {
-          organizationUnitId: Number(organizationUnitId),
-          year: Number(year),
-          ...payload,
-        });
+        const created = await api.post<CompensationParameters>(
+          '/api/compensation-parameters',
+          {
+            organizationUnitId: Number(organizationUnitId),
+            year: Number(year),
+            ...payload,
+          },
+        );
         setExistingId(created.id);
         toast.success(formatMessage({ id: 'alerts.parametersCreated' }));
       }
 
       await loadParameters(organizationUnitId, year);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : formatMessage({ id: 'errors.saveFailed' }),
+      );
     } finally {
       setSaving(false);
     }
@@ -206,7 +247,9 @@ export function AdminCompensation() {
 
   async function handleCalculate() {
     if (!existingId) {
-      toast.warning(formatMessage({ id: 'errors.saveParametersBeforeCalculation' }));
+      toast.warning(
+        formatMessage({ id: 'errors.saveParametersBeforeCalculation' }),
+      );
       return;
     }
 
@@ -224,7 +267,12 @@ export function AdminCompensation() {
       const count = response.employeesCalculated;
       toast.success(
         formatMessage(
-          { id: count > 0 ? 'alerts.calculationCompletedWithResults' : 'alerts.calculationCompleted' },
+          {
+            id:
+              count > 0
+                ? 'alerts.calculationCompletedWithResults'
+                : 'alerts.calculationCompleted',
+          },
           { count },
         ),
       );
@@ -232,7 +280,11 @@ export function AdminCompensation() {
         await loadCalculationStatus(existingId);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.calculationFailed' }));
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : formatMessage({ id: 'errors.calculationFailed' }),
+      );
     } finally {
       setCalculating(false);
     }
@@ -248,10 +300,15 @@ export function AdminCompensation() {
   return (
     <div className="card compensation-params">
       <div className="compensation-params__layout">
-        <form className="admin-form compensation-params__form" onSubmit={handleSave}>
+        <form
+          className="admin-form compensation-params__form"
+          onSubmit={handleSave}
+        >
           <div className="form-grid admin-form__grid compensation-params__grid">
             <div className="form-row">
-              <label htmlFor="comp-org">{formatMessage({ id: 'common.organizationUnit' })}</label>
+              <label htmlFor="comp-org">
+                {formatMessage({ id: 'common.organizationUnit' })}
+              </label>
               <select
                 id="comp-org"
                 value={organizationUnitId}
@@ -259,22 +316,38 @@ export function AdminCompensation() {
                 required
               >
                 {orgUnits.map((unit) => (
-                  <option key={unit.id} value={unit.id}>{unit.name}</option>
+                  <option key={unit.id} value={unit.id}>
+                    {unit.name}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="form-row">
-              <label htmlFor="comp-year">{formatMessage({ id: 'common.year' })}</label>
-              <select id="comp-year" value={year} onChange={(e) => setYear(e.target.value)} required>
+              <label htmlFor="comp-year">
+                {formatMessage({ id: 'common.year' })}
+              </label>
+              <select
+                id="comp-year"
+                value={year}
+                onChange={(e) => setYear(e.target.value)}
+                required
+              >
                 {yearOptions.map((y) => (
-                  <option key={y} value={y}>{y}</option>
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
                 ))}
               </select>
             </div>
 
             <div className="form-row">
-              <FormLabelWithHint htmlFor="comp-pool" hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.monetaryPool as never })}>
+              <FormLabelWithHint
+                htmlFor="comp-pool"
+                hint={formatMessage({
+                  id: COMPENSATION_FIELD_HINT_KEYS.monetaryPool as never,
+                })}
+              >
                 {formatMessage({ id: 'admin.compensation.monetaryPool' })}
               </FormLabelWithHint>
               <input
@@ -289,20 +362,31 @@ export function AdminCompensation() {
             </div>
 
             <div className="form-row">
-              <label htmlFor="comp-currency">{formatMessage({ id: 'common.currency' })}</label>
+              <label htmlFor="comp-currency">
+                {formatMessage({ id: 'common.currency' })}
+              </label>
               <input
                 id="comp-currency"
                 type="text"
                 maxLength={3}
                 value={form.currency}
-                onChange={(e) => updateField('currency', e.target.value.toUpperCase())}
+                onChange={(e) =>
+                  updateField('currency', e.target.value.toUpperCase())
+                }
                 required
               />
             </div>
 
             <div className="form-row">
-              <FormLabelWithHint htmlFor="comp-threshold" hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.acceptablePerformanceRating as never })}>
-                {formatMessage({ id: 'admin.compensation.acceptablePerformanceThreshold' })}
+              <FormLabelWithHint
+                htmlFor="comp-threshold"
+                hint={formatMessage({
+                  id: COMPENSATION_FIELD_HINT_KEYS.acceptablePerformanceRating as never,
+                })}
+              >
+                {formatMessage({
+                  id: 'admin.compensation.acceptablePerformanceThreshold',
+                })}
               </FormLabelWithHint>
               <input
                 id="comp-threshold"
@@ -311,13 +395,20 @@ export function AdminCompensation() {
                 max="5"
                 step="0.1"
                 value={form.acceptablePerformanceRating}
-                onChange={(e) => updateField('acceptablePerformanceRating', e.target.value)}
+                onChange={(e) =>
+                  updateField('acceptablePerformanceRating', e.target.value)
+                }
                 required
               />
             </div>
 
             <div className="form-row">
-              <FormLabelWithHint htmlFor="comp-exponent" hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.exponent as never })}>
+              <FormLabelWithHint
+                htmlFor="comp-exponent"
+                hint={formatMessage({
+                  id: COMPENSATION_FIELD_HINT_KEYS.exponent as never,
+                })}
+              >
                 Eksponent
               </FormLabelWithHint>
               <input
@@ -332,7 +423,12 @@ export function AdminCompensation() {
             </div>
 
             <div className="form-row">
-              <FormLabelWithHint htmlFor="comp-dependency" hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.dependencyWeight as never })}>
+              <FormLabelWithHint
+                htmlFor="comp-dependency"
+                hint={formatMessage({
+                  id: COMPENSATION_FIELD_HINT_KEYS.dependencyWeight as never,
+                })}
+              >
                 Ponder zavisnosti (bodovi)
               </FormLabelWithHint>
               <input
@@ -341,19 +437,28 @@ export function AdminCompensation() {
                 min="0.01"
                 step="0.01"
                 value={form.dependencyWeight}
-                onChange={(e) => updateField('dependencyWeight', e.target.value)}
+                onChange={(e) =>
+                  updateField('dependencyWeight', e.target.value)
+                }
                 required
               />
             </div>
 
             <div className="form-row">
-              <FormLabelWithHint htmlFor="comp-negative" hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.allowNegativeVariable as never })}>
+              <FormLabelWithHint
+                htmlFor="comp-negative"
+                hint={formatMessage({
+                  id: COMPENSATION_FIELD_HINT_KEYS.allowNegativeVariable as never,
+                })}
+              >
                 Negativna varijabila
               </FormLabelWithHint>
               <select
                 id="comp-negative"
                 value={form.allowNegativeVariable ? '1' : '0'}
-                onChange={(e) => updateField('allowNegativeVariable', e.target.value === '1')}
+                onChange={(e) =>
+                  updateField('allowNegativeVariable', e.target.value === '1')
+                }
               >
                 <option value="0">{formatMessage({ id: 'common.no' })}</option>
                 <option value="1">{formatMessage({ id: 'common.yes' })}</option>
@@ -362,27 +467,47 @@ export function AdminCompensation() {
           </div>
 
           <div className="form-actions compensation-params__actions">
-            <button type="submit" className="btn btn-primary" disabled={saving || loading || isFinalized}>
+            <button
+              type="submit"
+              className="btn btn-primary"
+              disabled={saving || loading || isFinalized}
+            >
               {saving
                 ? formatMessage({ id: 'buttons.saving' })
                 : existingId
                   ? formatMessage({ id: 'buttons.saveChanges' })
-                  : formatMessage({ id: 'admin.compensation.createParameters' })}
+                  : formatMessage({
+                      id: 'admin.compensation.createParameters',
+                    })}
             </button>
             {existingId ? (
               <div className="compensation-params__actions-calc">
-                <div className="form-row compensation-params__calc-row" style={{ margin: 0 }}>
-                  <FormLabelWithHint htmlFor="calc-negative" hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.calculateAllowNegative as never })}>
+                <div
+                  className="form-row compensation-params__calc-row"
+                  style={{ margin: 0 }}
+                >
+                  <FormLabelWithHint
+                    htmlFor="calc-negative"
+                    hint={formatMessage({
+                      id: COMPENSATION_FIELD_HINT_KEYS.calculateAllowNegative as never,
+                    })}
+                  >
                     Negativna varijabila pri kalkulaciji
                   </FormLabelWithHint>
                   <select
                     id="calc-negative"
                     value={calculateAllowNegative ? '1' : '0'}
-                    onChange={(e) => setCalculateAllowNegative(e.target.value === '1')}
+                    onChange={(e) =>
+                      setCalculateAllowNegative(e.target.value === '1')
+                    }
                     disabled={calculating || isFinalized}
                   >
-                    <option value="0">{formatMessage({ id: 'common.no' })}</option>
-                    <option value="1">{formatMessage({ id: 'common.yes' })}</option>
+                    <option value="0">
+                      {formatMessage({ id: 'common.no' })}
+                    </option>
+                    <option value="1">
+                      {formatMessage({ id: 'common.yes' })}
+                    </option>
                   </select>
                 </div>
                 <button
@@ -393,7 +518,9 @@ export function AdminCompensation() {
                 >
                   {calculating
                     ? formatMessage({ id: 'buttons.calculating' })
-                    : formatMessage({ id: 'admin.compensation.calculateCompensation' })}
+                    : formatMessage({
+                        id: 'admin.compensation.calculateCompensation',
+                      })}
                 </button>
               </div>
             ) : null}
@@ -404,7 +531,12 @@ export function AdminCompensation() {
           <div className="compensation-preview-settings">
             <div className="compensation-preview-settings__grid">
               <div className="form-row">
-                <FormLabelWithHint htmlFor="comp-reference-points" hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.referencePoints as never })}>
+                <FormLabelWithHint
+                  htmlFor="comp-reference-points"
+                  hint={formatMessage({
+                    id: COMPENSATION_FIELD_HINT_KEYS.referencePoints as never,
+                  })}
+                >
                   Referentni bodovi
                 </FormLabelWithHint>
                 <input
@@ -414,14 +546,18 @@ export function AdminCompensation() {
                   max="1000"
                   step="1"
                   value={previewProfile.referencePoints}
-                  onChange={(e) => updatePreviewField('referencePoints', e.target.value)}
+                  onChange={(e) =>
+                    updatePreviewField('referencePoints', e.target.value)
+                  }
                 />
               </div>
 
               <div className="form-row">
                 <FormLabelWithHint
                   htmlFor="comp-reference-salary"
-                  hint={formatMessage({ id: COMPENSATION_FIELD_HINT_KEYS.referenceSalaryPerPoint as never })}
+                  hint={formatMessage({
+                    id: COMPENSATION_FIELD_HINT_KEYS.referenceSalaryPerPoint as never,
+                  })}
                 >
                   Zarada po bodu
                 </FormLabelWithHint>
@@ -431,23 +567,36 @@ export function AdminCompensation() {
                   min="1"
                   step="1"
                   value={previewProfile.referenceSalaryPerPoint}
-                  onChange={(e) => updatePreviewField('referenceSalaryPerPoint', e.target.value)}
+                  onChange={(e) =>
+                    updatePreviewField(
+                      'referenceSalaryPerPoint',
+                      e.target.value,
+                    )
+                  }
                 />
               </div>
             </div>
           </div>
 
           {loading ? (
-            <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
+            <div className="empty">
+              {formatMessage({ id: 'common.loading' })}
+            </div>
           ) : previewPoints.length === 0 ? (
             <div className="analytics-chart analytics-chart--empty">
-              <p>{formatMessage({ id: 'admin.compensation.enterValidParamsForChart' })}</p>
+              <p>
+                {formatMessage({
+                  id: 'admin.compensation.enterValidParamsForChart',
+                })}
+              </p>
             </div>
           ) : (
             <CompensationRatingPreviewChart
               points={previewPoints}
               currency={form.currency || 'RSD'}
-              acceptablePerformanceRating={Number(form.acceptablePerformanceRating) || 2.5}
+              acceptablePerformanceRating={
+                Number(form.acceptablePerformanceRating) || 2.5
+              }
               variant="panel"
               hideFooter
             />

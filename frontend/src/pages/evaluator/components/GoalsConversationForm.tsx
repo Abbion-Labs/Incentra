@@ -28,11 +28,19 @@ export function GoalsConversationForm({
       <div className="form-grid form-grid--2">
         <div className="form-row">
           <label>{formatMessage({ id: 'evaluation.conversationNote' })}</label>
-          <textarea rows={3} value={evaluatorComment} onChange={(e) => onEvaluatorCommentChange(e.target.value)} />
+          <textarea
+            rows={3}
+            value={evaluatorComment}
+            onChange={(e) => onEvaluatorCommentChange(e.target.value)}
+          />
         </div>
         <div className="form-row">
           <label>{formatMessage({ id: 'evaluation.conversationDate' })}</label>
-          <input type="datetime-local" value={conversationAt} onChange={(e) => onConversationAtChange(e.target.value)} />
+          <input
+            type="datetime-local"
+            value={conversationAt}
+            onChange={(e) => onConversationAtChange(e.target.value)}
+          />
         </div>
       </div>
       <div className="form-section__footer">

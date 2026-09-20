@@ -23,11 +23,18 @@ export function StickyEditorActions({
               {formatMessage({ id: 'evaluation.submitRequirements' })}
             </span>
           ) : (
-            <span className="sticky-action-bar__ok">{formatMessage({ id: 'evaluation.readyToSubmit' })}</span>
+            <span className="sticky-action-bar__ok">
+              {formatMessage({ id: 'evaluation.readyToSubmit' })}
+            </span>
           )}
         </div>
         <div className="sticky-action-bar__actions">
-          <button type="button" className="btn btn-secondary" onClick={onCancel} disabled={saving}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onCancel}
+            disabled={saving}
+          >
             {formatMessage({ id: 'buttons.back' })}
           </button>
           <button
@@ -35,9 +42,15 @@ export function StickyEditorActions({
             className="btn btn-primary"
             onClick={onSubmit}
             disabled={saving || !submitAllowed}
-            title={!submitAllowed ? formatMessage({ id: 'evaluation.completeRatingsRequired' }) : undefined}
+            title={
+              !submitAllowed
+                ? formatMessage({ id: 'evaluation.completeRatingsRequired' })
+                : undefined
+            }
           >
-            {saving ? formatMessage({ id: 'buttons.submitting' }) : formatMessage({ id: 'buttons.submitToController' })}
+            {saving
+              ? formatMessage({ id: 'buttons.submitting' })
+              : formatMessage({ id: 'buttons.submitToController' })}
           </button>
         </div>
       </div>

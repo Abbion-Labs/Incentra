@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 import type { CompensationAnalyticsSeriesPoint } from '../../../api/types';
 import { useIntl } from '../../../i18n';
-import { chartColor, shortEmployeeLabel } from '../../../utils/compensationAnalytics';
+import {
+  chartColor,
+  shortEmployeeLabel,
+} from '../../../utils/compensationAnalytics';
 import { formatAmount, formatPercent } from '../../../utils/formatLocale';
 import { useAnalyticsChartContainerHeight } from './useAnalyticsChartContainerHeight';
 
@@ -19,7 +22,11 @@ interface TooltipState {
   y: number;
 }
 
-function formatValue(value: number, valueFormat: 'percent' | 'currency', currency: string): string {
+function formatValue(
+  value: number,
+  valueFormat: 'percent' | 'currency',
+  currency: string,
+): string {
   if (valueFormat === 'percent') {
     return formatPercent(value / 100, 1);
   }
@@ -35,10 +42,18 @@ export function CompensationEmployeeBarChart({
 }: CompensationEmployeeBarChartProps) {
   const { formatMessage } = useIntl();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const { ref: containerRef, height, width: containerWidth } = useAnalyticsChartContainerHeight(320);
+  const {
+    ref: containerRef,
+    height,
+    width: containerWidth,
+  } = useAnalyticsChartContainerHeight(320);
 
   const maxValue = useMemo(
-    () => Math.max(...series.map((point) => point.value), valueFormat === 'percent' ? 1 : 1),
+    () =>
+      Math.max(
+        ...series.map((point) => point.value),
+        valueFormat === 'percent' ? 1 : 1,
+      ),
     [series, valueFormat],
   );
 
@@ -51,8 +66,14 @@ export function CompensationEmployeeBarChart({
   }
 
   const barSlotWidth = 48;
-  const padding = { top: 24, right: 24, bottom: 108, left: valueFormat === 'currency' ? 96 : 64 };
-  const minContentWidth = series.length * barSlotWidth + padding.left + padding.right;
+  const padding = {
+    top: 24,
+    right: 24,
+    bottom: 108,
+    left: valueFormat === 'currency' ? 96 : 64,
+  };
+  const minContentWidth =
+    series.length * barSlotWidth + padding.left + padding.right;
   const width = Math.max(containerWidth || 520, minContentWidth);
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -76,10 +97,19 @@ export function CompensationEmployeeBarChart({
 
   return (
     <div className="analytics-chart analytics-chart--responsive analytics-chart--fill">
-      <div ref={containerRef} className="analytics-chart__canvas-wrap analytics-chart__canvas-wrap--fill">
+      <div
+        ref={containerRef}
+        className="analytics-chart__canvas-wrap analytics-chart__canvas-wrap--fill"
+      >
         {tooltip && (
-          <div className="analytics-chart__tooltip" style={{ left: tooltip.x, top: tooltip.y }} role="tooltip">
-            <span className="analytics-chart__tooltip-period">{tooltip.label}</span>
+          <div
+            className="analytics-chart__tooltip"
+            style={{ left: tooltip.x, top: tooltip.y }}
+            role="tooltip"
+          >
+            <span className="analytics-chart__tooltip-period">
+              {tooltip.label}
+            </span>
             <strong>{formatValue(tooltip.value, valueFormat, currency)}</strong>
           </div>
         )}
@@ -90,15 +120,31 @@ export function CompensationEmployeeBarChart({
           preserveAspectRatio="xMinYMin meet"
           role="img"
           aria-label={ariaLabel}
-          style={containerWidth > 0 && width > containerWidth ? { minWidth: width } : undefined}
+          style={
+            containerWidth > 0 && width > containerWidth
+              ? { minWidth: width }
+              : undefined
+          }
         >
           {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
             const value = maxValue * tick;
             const y = padding.top + chartHeight - tick * chartHeight;
             return (
               <g key={tick}>
-                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" />
-                <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#64748b">
+                <line
+                  x1={padding.left}
+                  y1={y}
+                  x2={width - padding.right}
+                  y2={y}
+                  stroke="#e2e8f0"
+                />
+                <text
+                  x={padding.left - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="11"
+                  fill="#64748b"
+                >
                   {formatValue(value, valueFormat, currency)}
                 </text>
               </g>
@@ -115,7 +161,8 @@ export function CompensationEmployeeBarChart({
 
           {series.map((point, index) => {
             const barHeight = (point.value / maxValue) * chartHeight;
-            const x = padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
+            const x =
+              padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
             const y = padding.top + chartHeight - barHeight;
 
             return (

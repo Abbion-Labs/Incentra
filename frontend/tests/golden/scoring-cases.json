@@ -5,10 +5,7 @@
       { "ratingLevelId": 5, "weight": 2 },
       { "ratingLevelId": 6, "weight": 1 }
     ],
-    "measures": [
-      { "ratingLevelId": 5 },
-      { "ratingLevelId": 5 }
-    ],
+    "measures": [{ "ratingLevelId": 5 }, { "ratingLevelId": 5 }],
     "expected": {
       "goalsAverage": 4.33,
       "measuresAverage": 4,
@@ -17,12 +14,8 @@
   },
   {
     "name": "not_rated_blocks_average",
-    "goals": [
-      { "ratingLevelId": 1, "weight": 1 }
-    ],
-    "measures": [
-      { "ratingLevelId": 5 }
-    ],
+    "goals": [{ "ratingLevelId": 1, "weight": 1 }],
+    "measures": [{ "ratingLevelId": 5 }],
     "expected": {
       "goalsAverage": null,
       "measuresAverage": 4,

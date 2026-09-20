@@ -24,22 +24,30 @@ export function AdminUsers() {
   const [formValues, setFormValues] = useState<UserFormValues>(emptyUserForm());
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [configuredEvaluatorIds, setConfiguredEvaluatorIds] = useState<Set<number>>(new Set());
+  const [configuredEvaluatorIds, setConfiguredEvaluatorIds] = useState<
+    Set<number>
+  >(new Set());
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
       const [list, employeeList, settings] = await Promise.all([
         api.get<AdminUser[]>('/api/users'),
-        fetchAllPages<Employee>((page, pageSize) =>
-          `/api/employees?page=${page}&pageSize=${pageSize}&isActive=true`),
+        fetchAllPages<Employee>(
+          (page, pageSize) =>
+            `/api/employees?page=${page}&pageSize=${pageSize}&isActive=true`,
+        ),
         api.get<EvaluatorSettings[]>('/api/evaluator-settings'),
       ]);
       setUsers(list);
       setEmployees(employeeList);
       setConfiguredEvaluatorIds(new Set(settings.map((s) => s.employeeId)));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
     } finally {
       setLoading(false);
     }
@@ -52,7 +60,8 @@ export function AdminUsers() {
   );
 
   const alreadyConfiguredEvaluator =
-    editingUser?.employeeId != null && configuredEvaluatorIds.has(editingUser.employeeId);
+    editingUser?.employeeId != null &&
+    configuredEvaluatorIds.has(editingUser.employeeId);
 
   useEffect(() => {
     load();
@@ -87,7 +96,12 @@ export function AdminUsers() {
             newPassword: formValues.password,
           });
         }
-        toast.success(formatMessage({ id: 'alerts.userUpdated' }, { email: formValues.email.trim() }));
+        toast.success(
+          formatMessage(
+            { id: 'alerts.userUpdated' },
+            { email: formValues.email.trim() },
+          ),
+        );
         startCreate();
       } else {
         await api.post('/api/auth/register', {
@@ -95,15 +109,24 @@ export function AdminUsers() {
           password: formValues.password,
           roleCodes: formValues.roleCodes,
         });
-        toast.success(formatMessage(
-          { id: 'alerts.userCreated' },
-          { email: formValues.email.trim(), roles: formValues.roleCodes.join(', ') },
-        ));
+        toast.success(
+          formatMessage(
+            { id: 'alerts.userCreated' },
+            {
+              email: formValues.email.trim(),
+              roles: formValues.roleCodes.join(', '),
+            },
+          ),
+        );
         startCreate();
       }
       await load();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : formatMessage({ id: 'errors.saveFailed' }),
+      );
     } finally {
       setSaving(false);
     }
@@ -114,7 +137,11 @@ export function AdminUsers() {
       <AdminPageHeader
         actions={
           editingUser ? (
-            <button type="button" className="btn btn-secondary" onClick={startCreate}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={startCreate}
+            >
               {formatMessage({ id: 'admin.users.newUser' })}
             </button>
           ) : null
@@ -140,17 +167,30 @@ export function AdminUsers() {
             <table className="table table--hover table--clickable">
               <thead>
                 <tr>
-                  <th className="col-text">{formatMessage({ id: 'common.email' })}</th>
-                  <th className="col-text">{formatMessage({ id: 'admin.roles' })}</th>
-                  <th className="col-text">{formatMessage({ id: 'admin.users.linkedEmployee' })}</th>
-                  <th className="col-meta table-col--compact">{formatMessage({ id: 'admin.active' })}</th>
-                  <th className="col-actions" aria-label={formatMessage({ id: 'admin.actions' })} />
+                  <th className="col-text">
+                    {formatMessage({ id: 'common.email' })}
+                  </th>
+                  <th className="col-text">
+                    {formatMessage({ id: 'admin.roles' })}
+                  </th>
+                  <th className="col-text">
+                    {formatMessage({ id: 'admin.users.linkedEmployee' })}
+                  </th>
+                  <th className="col-meta table-col--compact">
+                    {formatMessage({ id: 'admin.active' })}
+                  </th>
+                  <th
+                    className="col-actions"
+                    aria-label={formatMessage({ id: 'admin.actions' })}
+                  />
                 </tr>
               </thead>
               <tbody>
                 {users.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="empty">{formatMessage({ id: 'admin.users.noUsers' })}</td>
+                    <td colSpan={5} className="empty">
+                      {formatMessage({ id: 'admin.users.noUsers' })}
+                    </td>
                   </tr>
                 ) : (
                   users.map((user) => (
@@ -167,13 +207,18 @@ export function AdminUsers() {
                     >
                       <td className="cell-primary col-text">{user.email}</td>
                       <td className="col-text">
-                        {ROLE_ORDER
-                          .filter((role) => user.roles.includes(role))
+                        {ROLE_ORDER.filter((role) => user.roles.includes(role))
                           .map((role) => roleLabel(role, formatMessage))
                           .join(', ')}
                       </td>
-                      <td className="col-text">{user.employeeFullName ?? '—'}</td>
-                      <td className="col-meta table-col--compact">{user.isActive ? formatMessage({ id: 'common.yes' }) : formatMessage({ id: 'common.no' })}</td>
+                      <td className="col-text">
+                        {user.employeeFullName ?? '—'}
+                      </td>
+                      <td className="col-meta table-col--compact">
+                        {user.isActive
+                          ? formatMessage({ id: 'common.yes' })
+                          : formatMessage({ id: 'common.no' })}
+                      </td>
                       <td className="col-actions">
                         <button
                           type="button"

@@ -1,4 +1,13 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import { useIntl } from '../../i18n';
 import { localizeApiError } from '../../utils/errorLocalization';
 
@@ -89,30 +98,53 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts((prev) => prev.filter((t) => t.id !== id));
   }, []);
 
-  useEffect(() => () => {
-    timeoutsRef.current.forEach((timeoutId) => window.clearTimeout(timeoutId));
-    timeoutsRef.current.clear();
-  }, []);
+  useEffect(
+    () => () => {
+      timeoutsRef.current.forEach((timeoutId) =>
+        window.clearTimeout(timeoutId),
+      );
+      timeoutsRef.current.clear();
+    },
+    [],
+  );
 
-  const show = useCallback((message: string, variant: ToastVariant = 'info') => {
-    const text = variant === 'error' ? localizeApiError(message, formatMessage) : message;
-    if (!text) return;
+  const show = useCallback(
+    (message: string, variant: ToastVariant = 'info') => {
+      const text =
+        variant === 'error'
+          ? localizeApiError(message, formatMessage)
+          : message;
+      if (!text) return;
 
-    setToasts((prev) => {
-      if (prev.some((t) => t.message === text && t.variant === variant)) {
-        return prev;
-      }
+      setToasts((prev) => {
+        if (prev.some((t) => t.message === text && t.variant === variant)) {
+          return prev;
+        }
 
-      const id = Date.now() + Math.random();
-      timeoutsRef.current.set(id, window.setTimeout(() => dismiss(id), TOAST_DURATION_MS[variant]));
-      return [...prev, { id, message: text, variant }];
-    });
-  }, [dismiss, formatMessage]);
+        const id = Date.now() + Math.random();
+        timeoutsRef.current.set(
+          id,
+          window.setTimeout(() => dismiss(id), TOAST_DURATION_MS[variant]),
+        );
+        return [...prev, { id, message: text, variant }];
+      });
+    },
+    [dismiss, formatMessage],
+  );
 
-  const success = useCallback((message: string) => show(message, 'success'), [show]);
+  const success = useCallback(
+    (message: string) => show(message, 'success'),
+    [show],
+  );
   const info = useCallback((message: string) => show(message, 'info'), [show]);
-  const warning = useCallback((message: string) => show(message, 'warning'), [show]);
-  const error = useCallback((message: string) => show(message, 'error'), [show]);
+  const warning = useCallback(
+    (message: string) => show(message, 'warning'),
+    [show],
+  );
+  const error = useCallback(
+    (message: string) => show(message, 'error'),
+    [show],
+  );
 
   const value = useMemo<ToastContextValue>(
     () => ({ show, success, info, warning, error }),
@@ -124,7 +156,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div className="toast-stack">
         {toasts.map((toast) => {
-          const assertive = toast.variant === 'error' || toast.variant === 'warning';
+          const assertive =
+            toast.variant === 'error' || toast.variant === 'warning';
           return (
             <div
               key={toast.id}

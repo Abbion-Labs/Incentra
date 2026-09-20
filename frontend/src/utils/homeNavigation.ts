@@ -6,9 +6,16 @@ const HOME_ROUTE_PRIORITY: { role: string; path: string }[] = [
   { role: 'ADMIN', path: '/admin/crud/employees' },
 ];
 
-export type NavGroup = 'evaluator' | 'controller' | 'employee' | 'admin' | 'payroll';
+export type NavGroup =
+  'evaluator' | 'controller' | 'employee' | 'admin' | 'payroll';
 
-export const NAV_GROUP_ORDER: NavGroup[] = ['evaluator', 'controller', 'employee', 'admin', 'payroll'];
+export const NAV_GROUP_ORDER: NavGroup[] = [
+  'evaluator',
+  'controller',
+  'employee',
+  'admin',
+  'payroll',
+];
 
 export function resolveHomePath(roles: string[]): string | null {
   for (const entry of HOME_ROUTE_PRIORITY) {
@@ -21,6 +28,7 @@ export function resolveHomePath(roles: string[]): string | null {
 
 export function sortNavByGroup<T extends { group: NavGroup }>(items: T[]): T[] {
   return [...items].sort(
-    (a, b) => NAV_GROUP_ORDER.indexOf(a.group) - NAV_GROUP_ORDER.indexOf(b.group),
+    (a, b) =>
+      NAV_GROUP_ORDER.indexOf(a.group) - NAV_GROUP_ORDER.indexOf(b.group),
   );
 }

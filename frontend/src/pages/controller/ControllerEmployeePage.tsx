@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
-import type { EmployeeEvaluationBenchmarks, EvaluationDetail } from '../../api/types';
+import type {
+  EmployeeEvaluationBenchmarks,
+  EvaluationDetail,
+} from '../../api/types';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { PageBackLink } from '../../components/common/PageBackLink';
 import { AppLayout } from '../../components/AppLayout';
@@ -18,8 +21,10 @@ export function ControllerEmployeePage() {
   const toast = useToast();
   const { employeeId } = useParams<{ employeeId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [benchmarks, setBenchmarks] = useState<EmployeeEvaluationBenchmarks | null>(null);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<EvaluationDetail | null>(null);
+  const [benchmarks, setBenchmarks] =
+    useState<EmployeeEvaluationBenchmarks | null>(null);
+  const [selectedEvaluation, setSelectedEvaluation] =
+    useState<EvaluationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
 
@@ -36,7 +41,11 @@ export function ControllerEmployeePage() {
       );
       setBenchmarks(data);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
     } finally {
       setLoading(false);
     }
@@ -49,7 +58,10 @@ export function ControllerEmployeePage() {
   useEffect(() => {
     if (!benchmarks || selectedEvaluationId) return;
     if (benchmarks.quarters.length > 0) {
-      setSearchParams({ evaluation: String(benchmarks.quarters[0].evaluationId) }, { replace: true });
+      setSearchParams(
+        { evaluation: String(benchmarks.quarters[0].evaluationId) },
+        { replace: true },
+      );
     }
   }, [benchmarks, selectedEvaluationId, setSearchParams]);
 
@@ -68,7 +80,11 @@ export function ControllerEmployeePage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.evaluationLoadFailed' }));
+          toast.error(
+            e instanceof Error
+              ? e.message
+              : formatMessage({ id: 'errors.evaluationLoadFailed' }),
+          );
           setSelectedEvaluation(null);
         }
       })
@@ -85,7 +101,9 @@ export function ControllerEmployeePage() {
     setSearchParams({ evaluation: String(id) });
   }
 
-  const selectedQuarter = benchmarks?.quarters.find((q) => q.evaluationId === selectedEvaluationId);
+  const selectedQuarter = benchmarks?.quarters.find(
+    (q) => q.evaluationId === selectedEvaluationId,
+  );
 
   if (loading && !benchmarks) {
     return (
@@ -99,7 +117,10 @@ export function ControllerEmployeePage() {
   if (!benchmarks) {
     return (
       <AppLayout title={formatMessage({ id: 'admin.employees' })}>
-        <PageBackLink to="/controller" label={formatMessage({ id: 'buttons.backToList' })} />
+        <PageBackLink
+          to="/controller"
+          label={formatMessage({ id: 'buttons.backToList' })}
+        />
       </AppLayout>
     );
   }
@@ -108,7 +129,10 @@ export function ControllerEmployeePage() {
 
   return (
     <AppLayout title={employee.fullName}>
-      <PageBackLink to="/controller" label={formatMessage({ id: 'controller.backToEmployees' })} />
+      <PageBackLink
+        to="/controller"
+        label={formatMessage({ id: 'controller.backToEmployees' })}
+      />
 
       <div className="employee-profile-layout">
         <aside className="employee-profile-layout__sidebar">
@@ -148,7 +172,9 @@ export function ControllerEmployeePage() {
           </div>
 
           <div className="card">
-            <h3 className="form-section__title">{formatMessage({ id: 'evaluation.quarterlyEvaluations' })}</h3>
+            <h3 className="form-section__title">
+              {formatMessage({ id: 'evaluation.quarterlyEvaluations' })}
+            </h3>
             <EmployeeQuarterList
               quarters={quarters}
               selectedEvaluationId={selectedEvaluationId}
@@ -169,7 +195,9 @@ export function ControllerEmployeePage() {
           <SelectedEvaluationPanel
             evaluation={selectedEvaluation}
             loading={detailLoading}
-            getDetailPath={(evaluation) => `/controller/evaluations/${evaluation.id}`}
+            getDetailPath={(evaluation) =>
+              `/controller/evaluations/${evaluation.id}`
+            }
             actionLabel={formatMessage({ id: 'controller.reviewAndDecision' })}
           />
         </div>

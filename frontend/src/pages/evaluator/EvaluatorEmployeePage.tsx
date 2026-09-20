@@ -1,21 +1,21 @@
-import { useCallback, useEffect, useState } from "react";
-import { useLocation, useParams, useSearchParams } from "react-router-dom";
-import { api } from "../../api/client";
+import { useCallback, useEffect, useState } from 'react';
+import { useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { api } from '../../api/client';
 import type {
   EmployeeEvaluationBenchmarks,
   EvaluationDetail,
-} from "../../api/types";
-import { CardSkeleton } from "../../components/common/LoadingSkeleton";
-import { PageBackLink } from "../../components/common/PageBackLink";
-import { AppLayout } from "../../components/AppLayout";
-import { EmployeeAvatarUpload } from "../../components/employee/EmployeeAvatarUpload";
-import { useToast } from "../../hooks";
-import { EvaluationBenchmarkChart } from "./components/EvaluationBenchmarkChart";
-import { EmployeeQuarterList } from "./components/EmployeeQuarterList";
-import { SelectedEvaluationPanel } from "./components/SelectedEvaluationPanel";
-import type { PageBackState } from "../admin/adminNavigation";
-import { useIntl } from "../../i18n";
-import { formatDate } from "../../utils/formatLocale";
+} from '../../api/types';
+import { CardSkeleton } from '../../components/common/LoadingSkeleton';
+import { PageBackLink } from '../../components/common/PageBackLink';
+import { AppLayout } from '../../components/AppLayout';
+import { EmployeeAvatarUpload } from '../../components/employee/EmployeeAvatarUpload';
+import { useToast } from '../../hooks';
+import { EvaluationBenchmarkChart } from './components/EvaluationBenchmarkChart';
+import { EmployeeQuarterList } from './components/EmployeeQuarterList';
+import { SelectedEvaluationPanel } from './components/SelectedEvaluationPanel';
+import type { PageBackState } from '../admin/adminNavigation';
+import { useIntl } from '../../i18n';
+import { formatDate } from '../../utils/formatLocale';
 
 export function EvaluatorEmployeePage() {
   const { formatMessage } = useIntl();
@@ -31,8 +31,8 @@ export function EvaluatorEmployeePage() {
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
 
-  const selectedEvaluationId = searchParams.get("evaluation")
-    ? Number(searchParams.get("evaluation"))
+  const selectedEvaluationId = searchParams.get('evaluation')
+    ? Number(searchParams.get('evaluation'))
     : null;
 
   const loadBenchmarks = useCallback(async () => {
@@ -47,7 +47,7 @@ export function EvaluatorEmployeePage() {
       toast.error(
         e instanceof Error
           ? e.message
-          : formatMessage({ id: "errors.loadFailed" }),
+          : formatMessage({ id: 'errors.loadFailed' }),
       );
     } finally {
       setLoading(false);
@@ -86,7 +86,7 @@ export function EvaluatorEmployeePage() {
           toast.error(
             e instanceof Error
               ? e.message
-              : formatMessage({ id: "errors.evaluationLoadFailed" }),
+              : formatMessage({ id: 'errors.evaluationLoadFailed' }),
           );
           setSelectedEvaluation(null);
         }
@@ -110,7 +110,7 @@ export function EvaluatorEmployeePage() {
 
   if (loading && !benchmarks) {
     return (
-      <AppLayout title={formatMessage({ id: "admin.employees" })}>
+      <AppLayout title={formatMessage({ id: 'admin.employees' })}>
         <CardSkeleton lines={2} />
         <CardSkeleton lines={8} />
       </AppLayout>
@@ -119,10 +119,10 @@ export function EvaluatorEmployeePage() {
 
   if (!benchmarks) {
     return (
-      <AppLayout title={formatMessage({ id: "admin.employees" })}>
+      <AppLayout title={formatMessage({ id: 'admin.employees' })}>
         <PageBackLink
           to="/evaluator"
-          label={formatMessage({ id: "buttons.backToList" })}
+          label={formatMessage({ id: 'buttons.backToList' })}
         />
       </AppLayout>
     );
@@ -156,22 +156,22 @@ export function EvaluatorEmployeePage() {
             </div>
             <dl className="employee-card__meta">
               <div>
-                <dt>{formatMessage({ id: "evaluation.orgUnitShort" })}</dt>
+                <dt>{formatMessage({ id: 'evaluation.orgUnitShort' })}</dt>
                 <dd>{employee.organizationUnitName}</dd>
               </div>
               <div>
-                <dt>{formatMessage({ id: "evaluation.jobPosition" })}</dt>
+                <dt>{formatMessage({ id: 'evaluation.jobPosition' })}</dt>
                 <dd>{employee.jobPositionName}</dd>
               </div>
               {employee.educationLevelName && (
                 <div>
-                  <dt>{formatMessage({ id: "common.education" })}</dt>
+                  <dt>{formatMessage({ id: 'common.education' })}</dt>
                   <dd>{employee.educationLevelName}</dd>
                 </div>
               )}
               {employee.hiredAt && (
                 <div>
-                  <dt>{formatMessage({ id: "common.hiredFrom" })}</dt>
+                  <dt>{formatMessage({ id: 'common.hiredFrom' })}</dt>
                   <dd>{formatDate(employee.hiredAt)}</dd>
                 </div>
               )}
@@ -180,7 +180,7 @@ export function EvaluatorEmployeePage() {
 
           <div className="card">
             <h3 className="form-section__title">
-              {formatMessage({ id: "evaluation.quarterlyEvaluations" })}
+              {formatMessage({ id: 'evaluation.quarterlyEvaluations' })}
             </h3>
             <EmployeeQuarterList
               quarters={quarters}

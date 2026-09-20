@@ -3,7 +3,8 @@ import type { IntlFormatters } from 'react-intl';
 import { statusLabel } from './status';
 import { matchesNameSearch } from './nameSearch';
 
-export type EvaluationBucket = 'planning' | 'unrated' | 'returned' | 'submitted' | 'approved';
+export type EvaluationBucket =
+  'planning' | 'unrated' | 'returned' | 'submitted' | 'approved';
 
 type FormatMessage = IntlFormatters['formatMessage'];
 
@@ -27,12 +28,16 @@ export function effectiveGoalCount(ev: EvaluationSummary): number {
   return ev.goalCount ?? 0;
 }
 
-export function classifyEvaluation(ev: EvaluationSummary): EvaluationBucket | null {
+export function classifyEvaluation(
+  ev: EvaluationSummary,
+): EvaluationBucket | null {
   if (ev.status === 'Approved') return 'approved';
-  if (ev.status === 'Submitted' || ev.status === 'UnderReview') return 'submitted';
+  if (ev.status === 'Submitted' || ev.status === 'UnderReview')
+    return 'submitted';
   if (ev.status === 'Draft') {
     if (ev.controllerComment) return 'returned';
-    if (ev.goalsPlanningComplete ?? effectiveGoalCount(ev) > 0) return 'unrated';
+    if (ev.goalsPlanningComplete ?? effectiveGoalCount(ev) > 0)
+      return 'unrated';
     return 'planning';
   }
   return null;
@@ -50,9 +55,11 @@ export function evaluationDisplayLabel(
   formatMessage: FormatMessage,
 ): string {
   const bucket = classifyEvaluation(ev as EvaluationSummary);
-  if (bucket === 'planning') return formatMessage({ id: 'evaluation.bucket.planning' });
+  if (bucket === 'planning')
+    return formatMessage({ id: 'evaluation.bucket.planning' });
   if (bucket === 'unrated') return formatMessage({ id: 'status.Draft' });
-  if (bucket === 'returned') return formatMessage({ id: 'evaluation.bucket.returned' });
+  if (bucket === 'returned')
+    return formatMessage({ id: 'evaluation.bucket.returned' });
   return statusLabel(ev.status, formatMessage);
 }
 
@@ -66,7 +73,10 @@ export function evaluationDisplayClass(
   return `badge badge-${ev.status.toLowerCase()}`;
 }
 
-export function matchesEmployeeSearch(ev: EvaluationSummary, search: string): boolean {
+export function matchesEmployeeSearch(
+  ev: EvaluationSummary,
+  search: string,
+): boolean {
   return matchesNameSearch(ev.employeeFullName, search);
 }
 
@@ -75,7 +85,10 @@ export function filterByBucket(
   bucket: EvaluationBucket,
   search: string,
 ): EvaluationSummary[] {
-  return evaluations.filter((ev) => classifyEvaluation(ev) === bucket && matchesEmployeeSearch(ev, search));
+  return evaluations.filter(
+    (ev) =>
+      classifyEvaluation(ev) === bucket && matchesEmployeeSearch(ev, search),
+  );
 }
 
 export function countEvaluationsByBucket(
@@ -98,7 +111,10 @@ export function countEvaluationsByBucket(
   return counts;
 }
 
-export const emptyStateByBucketKeys: Record<EvaluationBucket, { title: string; description: string }> = {
+export const emptyStateByBucketKeys: Record<
+  EvaluationBucket,
+  { title: string; description: string }
+> = {
   planning: {
     title: 'evaluation.bucketEmpty.planningTitle',
     description: 'evaluation.bucketEmpty.planningDescription',

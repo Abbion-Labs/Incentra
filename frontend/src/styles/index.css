@@ -26,8 +26,8 @@
   --text-2xl: 1.5rem;
   --sidebar-width: 0px;
   font-family:
-    "Inter",
-    "Segoe UI",
+    'Inter',
+    'Segoe UI',
     system-ui,
     -apple-system,
     sans-serif;
@@ -1799,7 +1799,7 @@ textarea {
   min-width: 0;
 }
 
-.filter-bar-period input[type="number"] {
+.filter-bar-period input[type='number'] {
   width: 5.5rem;
 }
 
@@ -1870,7 +1870,7 @@ textarea {
 }
 
 .evaluation-status-with-history--returned > .badge,
-.evaluation-status-with-history--returned > span[class*="badge"] {
+.evaluation-status-with-history--returned > span[class*='badge'] {
   text-decoration: underline dotted;
   text-underline-offset: 0.2em;
 }
@@ -3816,7 +3816,7 @@ textarea {
   font-size: 0.65rem;
   font-weight: 700;
   font-style: italic;
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: Georgia, 'Times New Roman', serif;
   line-height: 1;
   display: grid;
   place-items: center;
@@ -4241,7 +4241,7 @@ textarea {
 }
 
 .toggle-switch::after {
-  content: "";
+  content: '';
   position: absolute;
   top: 0.15rem;
   left: 0.15rem;

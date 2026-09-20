@@ -1,8 +1,8 @@
 import type { IntlMessage, NestedKeys } from '../i18n/i18n.types';
 
-export type MeasureFormatMessage = (
-  descriptor: { id: NestedKeys<IntlMessage> },
-) => string;
+export type MeasureFormatMessage = (descriptor: {
+  id: NestedKeys<IntlMessage>;
+}) => string;
 
 export const MEASURE_TYPE_DESCRIPTION_KEYS: Record<string, string> = {
   INITIATIVE: 'measures.descriptions.INITIATIVE',
@@ -106,7 +106,11 @@ export function measureRatingOptionLabel(
   formatMessage: MeasureFormatMessage,
 ): string {
   if (level.value <= 0 || level.label === '/') return '/';
-  const comment = getMeasureRatingComment(measureTypeCode, level.value, formatMessage);
+  const comment = getMeasureRatingComment(
+    measureTypeCode,
+    level.value,
+    formatMessage,
+  );
   if (comment) return `${level.value} — ${comment}`;
   return `${level.value} — ${level.label}`;
 }

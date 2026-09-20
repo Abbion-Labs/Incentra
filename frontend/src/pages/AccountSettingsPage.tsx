@@ -12,7 +12,8 @@ import { roleLabel } from '../utils/status';
 export function AccountSettingsPage() {
   const { formatMessage } = useIntl();
   const toast = useToast();
-  const { user, updateEmployeeProfile, updateNotificationPreferences } = useAuth();
+  const { user, updateEmployeeProfile, updateNotificationPreferences } =
+    useAuth();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -33,7 +34,11 @@ export function AccountSettingsPage() {
       const data = await api.get<Employee>(`/api/employees/${user.employeeId}`);
       setEmployee(data);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'account.loadProfileError' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'account.loadProfileError' }),
+      );
     } finally {
       setLoading(false);
     }
@@ -62,7 +67,11 @@ export function AccountSettingsPage() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'account.passwordChangeFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'account.passwordChangeFailed' }),
+      );
     } finally {
       setChangingPassword(false);
     }
@@ -90,9 +99,13 @@ export function AccountSettingsPage() {
     <AppLayout title={formatMessage({ id: 'account.title' })}>
       <div className="account-settings">
         <div className="card account-settings__profile">
-          <h2 className="account-settings__section-title">{formatMessage({ id: 'account.profile' })}</h2>
+          <h2 className="account-settings__section-title">
+            {formatMessage({ id: 'account.profile' })}
+          </h2>
           {loading ? (
-            <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
+            <div className="empty">
+              {formatMessage({ id: 'common.loading' })}
+            </div>
           ) : employee ? (
             <>
               <div className="account-settings__avatar-row">
@@ -124,7 +137,9 @@ export function AccountSettingsPage() {
             <div className="account-settings__no-employee">
               <p className="account-settings__name">{user?.email}</p>
               {primaryRole && (
-                <span className="badge account-settings__role">{roleLabel(primaryRole, formatMessage)}</span>
+                <span className="badge account-settings__role">
+                  {roleLabel(primaryRole, formatMessage)}
+                </span>
               )}
               <p className="card__hint">
                 {formatMessage({ id: 'account.unlinkedInfo' })}
@@ -134,11 +149,17 @@ export function AccountSettingsPage() {
         </div>
 
         <div className="card account-settings__notifications">
-          <h2 className="account-settings__section-title">{formatMessage({ id: 'account.notifications' })}</h2>
+          <h2 className="account-settings__section-title">
+            {formatMessage({ id: 'account.notifications' })}
+          </h2>
           <label className="account-settings__toggle-row">
             <span className="account-settings__toggle-copy">
-              <span className="account-settings__toggle-label">{formatMessage({ id: 'account.emailNotifications' })}</span>
-              <span className="account-settings__toggle-hint">{formatMessage({ id: 'account.emailNotificationsDescription' })}</span>
+              <span className="account-settings__toggle-label">
+                {formatMessage({ id: 'account.emailNotifications' })}
+              </span>
+              <span className="account-settings__toggle-hint">
+                {formatMessage({ id: 'account.emailNotificationsDescription' })}
+              </span>
             </span>
             <input
               type="checkbox"
@@ -153,10 +174,17 @@ export function AccountSettingsPage() {
         </div>
 
         <div className="card account-settings__password">
-          <h2 className="account-settings__section-title">{formatMessage({ id: 'account.passwordChange' })}</h2>
-          <form className="form-grid account-settings__password-form" onSubmit={handlePasswordChange}>
+          <h2 className="account-settings__section-title">
+            {formatMessage({ id: 'account.passwordChange' })}
+          </h2>
+          <form
+            className="form-grid account-settings__password-form"
+            onSubmit={handlePasswordChange}
+          >
             <div className="form-row">
-              <label htmlFor="current-password">{formatMessage({ id: 'common.currentPassword' })}</label>
+              <label htmlFor="current-password">
+                {formatMessage({ id: 'common.currentPassword' })}
+              </label>
               <input
                 id="current-password"
                 type="password"
@@ -167,7 +195,9 @@ export function AccountSettingsPage() {
               />
             </div>
             <div className="form-row">
-              <label htmlFor="new-password">{formatMessage({ id: 'common.newPassword' })}</label>
+              <label htmlFor="new-password">
+                {formatMessage({ id: 'common.newPassword' })}
+              </label>
               <input
                 id="new-password"
                 type="password"
@@ -179,7 +209,9 @@ export function AccountSettingsPage() {
               />
             </div>
             <div className="form-row">
-              <label htmlFor="confirm-password">{formatMessage({ id: 'common.confirmPassword' })}</label>
+              <label htmlFor="confirm-password">
+                {formatMessage({ id: 'common.confirmPassword' })}
+              </label>
               <input
                 id="confirm-password"
                 type="password"
@@ -191,8 +223,14 @@ export function AccountSettingsPage() {
               />
             </div>
             <div className="actions">
-              <button type="submit" className="btn btn-primary" disabled={changingPassword}>
-                {changingPassword ? formatMessage({ id: 'buttons.saving' }) : formatMessage({ id: 'buttons.changePassword' })}
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={changingPassword}
+              >
+                {changingPassword
+                  ? formatMessage({ id: 'buttons.saving' })
+                  : formatMessage({ id: 'buttons.changePassword' })}
               </button>
             </div>
           </form>

@@ -1,7 +1,9 @@
 import { api } from '../api/client';
 import type { EvaluationDetail, EvaluationGoal } from '../api/types';
 
-export async function fetchLatestEvaluation(id: number): Promise<EvaluationDetail> {
+export async function fetchLatestEvaluation(
+  id: number,
+): Promise<EvaluationDetail> {
   return api.get<EvaluationDetail>(`/api/evaluations/${id}`);
 }
 
@@ -21,8 +23,9 @@ export function mergeGoalsForRatingSave(
   const localById = new Map(localGoals.map((goal) => [goal.id, goal]));
 
   return serverGoals.map((serverGoal) => {
-    const local = localById.get(serverGoal.id)
-      ?? localGoals.find((goal) => goal.sortOrder === serverGoal.sortOrder);
+    const local =
+      localById.get(serverGoal.id) ??
+      localGoals.find((goal) => goal.sortOrder === serverGoal.sortOrder);
 
     return {
       description: serverGoal.description,

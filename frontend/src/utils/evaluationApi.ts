@@ -22,7 +22,8 @@ export function buildEvaluationsPagePath(
   if (params.bucket) query.set('bucket', params.bucket);
   if (params.search?.trim()) query.set('search', params.search.trim());
   if (params.status) query.set('status', params.status);
-  if (params.employeeId != null) query.set('employeeId', String(params.employeeId));
+  if (params.employeeId != null)
+    query.set('employeeId', String(params.employeeId));
 
   return `/api/evaluations?${query}`;
 }
@@ -37,7 +38,9 @@ export function buildEvaluationBucketCountsPath(params: {
   if (params.quarter != null) query.set('quarter', String(params.quarter));
   if (params.search?.trim()) query.set('search', params.search.trim());
   const suffix = query.toString();
-  return suffix ? `/api/evaluations/bucket-counts?${suffix}` : '/api/evaluations/bucket-counts';
+  return suffix
+    ? `/api/evaluations/bucket-counts?${suffix}`
+    : '/api/evaluations/bucket-counts';
 }
 
 export function mapEvaluatorBucketCounts(counts: EvaluationBucketCounts) {
@@ -58,7 +61,10 @@ export function mapControllerBucketCounts(counts: EvaluationBucketCounts) {
   };
 }
 
-export function mapGoalsBucketCounts(counts: EvaluationBucketCounts, employeesPending: number) {
+export function mapGoalsBucketCounts(
+  counts: EvaluationBucketCounts,
+  employeesPending: number,
+) {
   return {
     pending: employeesPending,
     set: counts.goalsComplete,

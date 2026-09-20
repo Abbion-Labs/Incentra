@@ -106,9 +106,14 @@ async function tryRefreshToken(): Promise<boolean> {
   return refreshPromise;
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit = {}, isRetry = false): Promise<T> {
+export async function apiFetch<T>(
+  path: string,
+  options: RequestInit = {},
+  isRetry = false,
+): Promise<T> {
   const headers = new Headers(options.headers);
-  const isFormData = typeof FormData !== 'undefined' && options.body instanceof FormData;
+  const isFormData =
+    typeof FormData !== 'undefined' && options.body instanceof FormData;
   if (!isFormData && !headers.has('Content-Type') && options.body) {
     headers.set('Content-Type', 'application/json');
   }
@@ -126,10 +131,10 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, isRet
   const response = await fetch(path, { ...options, headers });
 
   if (
-    response.status === 401
-    && !isRetry
-    && path !== '/api/auth/login'
-    && path !== '/api/auth/refresh'
+    response.status === 401 &&
+    !isRetry &&
+    path !== '/api/auth/login' &&
+    path !== '/api/auth/refresh'
   ) {
     const refreshed = await tryRefreshToken();
     if (refreshed) {
@@ -148,7 +153,10 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, isRet
       const body = await response.json();
       rawMessage = body.error ?? body.title ?? message;
       if (rawMessage === UNEXPECTED_ERROR_CODE) {
-        const traceId = typeof body.traceId === 'string' ? body.traceId.slice(0, TRACE_ID_DISPLAY_LENGTH) : '-';
+        const traceId =
+          typeof body.traceId === 'string'
+            ? body.traceId.slice(0, TRACE_ID_DISPLAY_LENGTH)
+            : '-';
         rawMessage = `${rawMessage}?traceId=${encodeURIComponent(traceId)}`;
       }
       const [rawCode, query] = rawMessage.split('?', 2);
@@ -174,7 +182,10 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}, isRet
 export const api = {
   get: <T>(path: string) => apiFetch<T>(path),
   post: <T>(path: string, body?: unknown) =>
-    apiFetch<T>(path, { method: 'POST', body: body ? JSON.stringify(body) : undefined }),
+    apiFetch<T>(path, {
+      method: 'POST',
+      body: body ? JSON.stringify(body) : undefined,
+    }),
   postForm: <T>(path: string, formData: FormData) =>
     apiFetch<T>(path, { method: 'POST', body: formData }),
   put: <T>(path: string, body: unknown) =>

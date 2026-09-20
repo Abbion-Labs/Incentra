@@ -1,11 +1,17 @@
 import type { EvaluationDetail } from '../../../api/types';
 import { useIntl } from '../../../i18n';
-import { evaluationDisplayClass, evaluationDisplayLabel } from '../../../utils/evaluationBuckets';
+import {
+  evaluationDisplayClass,
+  evaluationDisplayLabel,
+} from '../../../utils/evaluationBuckets';
 import { formatAverageDisplay } from '../../../utils/scoring';
 import { AverageDisplay } from '../../../components/evaluation/AverageDisplay';
 import { EvaluationStatusWithHistory } from '../../../components/evaluation/EvaluationStatusWithHistory';
 import { PeriodPill } from '../../../components/common/PageHeader';
-import { descriptiveRatingColor, formatDescriptiveRatingLabel } from '../../../utils/descriptiveRating';
+import {
+  descriptiveRatingColor,
+  formatDescriptiveRatingLabel,
+} from '../../../utils/descriptiveRating';
 
 export interface EvaluationRatingMetaProps {
   evaluation: EvaluationDetail;
@@ -18,7 +24,10 @@ export function EvaluationStatusSummary({
   evaluation,
   showPeriod = false,
   showStatusHistory = false,
-}: Pick<EvaluationRatingMetaProps, 'evaluation'> & { showPeriod?: boolean; showStatusHistory?: boolean }) {
+}: Pick<EvaluationRatingMetaProps, 'evaluation'> & {
+  showPeriod?: boolean;
+  showStatusHistory?: boolean;
+}) {
   const { formatMessage } = useIntl();
 
   const statusBadge = (
@@ -29,11 +38,14 @@ export function EvaluationStatusSummary({
         controllerComment: evaluation.controllerComment,
       })}
     >
-      {evaluationDisplayLabel({
-        status: evaluation.status,
-        goalCount: evaluation.goals.length,
-        controllerComment: evaluation.controllerComment,
-      }, formatMessage)}
+      {evaluationDisplayLabel(
+        {
+          status: evaluation.status,
+          goalCount: evaluation.goals.length,
+          controllerComment: evaluation.controllerComment,
+        },
+        formatMessage,
+      )}
     </span>
   );
 
@@ -43,10 +55,15 @@ export function EvaluationStatusSummary({
         <dt>{formatMessage({ id: 'evaluation.statusLabel' })}</dt>
         <dd>
           {showStatusHistory ? (
-            <EvaluationStatusWithHistory evaluationId={evaluation.id} evaluation={evaluation}>
+            <EvaluationStatusWithHistory
+              evaluationId={evaluation.id}
+              evaluation={evaluation}
+            >
               {statusBadge}
             </EvaluationStatusWithHistory>
-          ) : statusBadge}
+          ) : (
+            statusBadge
+          )}
         </dd>
       </div>
       {showPeriod && (
@@ -80,13 +97,17 @@ export function EvaluationScoresSummary({
   return (
     <div className="evaluation-scores-summary">
       <div className="evaluation-scores-summary__item">
-        <span className="evaluation-scores-summary__label">{formatMessage({ id: 'evaluation.averageLabel' })}</span>
+        <span className="evaluation-scores-summary__label">
+          {formatMessage({ id: 'evaluation.averageLabel' })}
+        </span>
         <span className="evaluation-scores-summary__value">
           <AverageDisplay value={averageText} />
         </span>
       </div>
       <div className="evaluation-scores-summary__item">
-        <span className="evaluation-scores-summary__label">{formatMessage({ id: 'evaluation.descriptiveLabel' })}</span>
+        <span className="evaluation-scores-summary__label">
+          {formatMessage({ id: 'evaluation.descriptiveLabel' })}
+        </span>
         {!incompleteRatings && descriptiveRatingLabel ? (
           <span
             className="evaluation-scores-summary__descriptive"

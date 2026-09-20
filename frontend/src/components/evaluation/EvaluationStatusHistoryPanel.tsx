@@ -1,7 +1,7 @@
-import type { EvaluationStatusHistoryEntry } from "../../api/types";
-import { useIntl } from "../../i18n";
-import { statusLabel } from "../../utils/status";
-import { formatDateTime } from "../../utils/formatLocale";
+import type { EvaluationStatusHistoryEntry } from '../../api/types';
+import { useIntl } from '../../i18n';
+import { statusLabel } from '../../utils/status';
+import { formatDateTime } from '../../utils/formatLocale';
 
 interface EvaluationStatusHistoryPanelProps {
   items: EvaluationStatusHistoryEntry[];
@@ -18,7 +18,7 @@ export function EvaluationStatusHistoryPanel({
 
   if (loading) {
     return (
-      <p className="empty-inline">{formatMessage({ id: "common.loading" })}</p>
+      <p className="empty-inline">{formatMessage({ id: 'common.loading' })}</p>
     );
   }
 
@@ -29,7 +29,7 @@ export function EvaluationStatusHistoryPanel({
   if (items.length === 0) {
     return (
       <p className="empty-inline">
-        {formatMessage({ id: "evaluation.statusHistoryEmpty" })}
+        {formatMessage({ id: 'evaluation.statusHistoryEmpty' })}
       </p>
     );
   }
@@ -46,14 +46,14 @@ export function EvaluationStatusHistoryPanel({
           <p className="evaluation-status-history__transition">
             {entry.fromStatus
               ? formatMessage(
-                  { id: "evaluation.statusHistoryTransition" },
+                  { id: 'evaluation.statusHistoryTransition' },
                   {
                     from: statusLabel(entry.fromStatus, formatMessage),
                     to: statusLabel(entry.toStatus, formatMessage),
                   },
                 )
               : formatMessage(
-                  { id: "evaluation.statusHistoryInitial" },
+                  { id: 'evaluation.statusHistoryInitial' },
                   { status: statusLabel(entry.toStatus, formatMessage) },
                 )}
           </p>

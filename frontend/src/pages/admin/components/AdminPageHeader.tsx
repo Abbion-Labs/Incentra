@@ -9,9 +9,5 @@ export function AdminPageHeader({ actions }: AdminPageHeaderProps) {
     return null;
   }
 
-  return (
-    <div className="admin-page-header">
-      {actions}
-    </div>
-  );
+  return <div className="admin-page-header">{actions}</div>;
 }

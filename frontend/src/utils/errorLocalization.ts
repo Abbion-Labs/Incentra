@@ -26,7 +26,10 @@ export function getErrorArgs(message: string): Record<string, string> {
   return args;
 }
 
-export function localizeApiError(message: string, formatMessage: FormatMessage): string {
+export function localizeApiError(
+  message: string,
+  formatMessage: FormatMessage,
+): string {
   const code = getErrorCode(message);
   if (!code) return message;
 

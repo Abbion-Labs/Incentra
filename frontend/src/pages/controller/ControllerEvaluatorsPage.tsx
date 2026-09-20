@@ -14,17 +14,29 @@ export function ControllerEvaluatorsPage() {
   const { formatMessage } = useIntl();
   const toast = useToast();
   const navigate = useNavigate();
-  const [evaluators, setEvaluators] = useState<ControllerEvaluatorSummary[]>([]);
+  const [evaluators, setEvaluators] = useState<ControllerEvaluatorSummary[]>(
+    [],
+  );
   const [loading, setLoading] = useState(true);
-  const { input: searchInput, debounced: search, setInput: setSearchInput } = useDebouncedSearch();
+  const {
+    input: searchInput,
+    debounced: search,
+    setInput: setSearchInput,
+  } = useDebouncedSearch();
 
   const load = useCallback(async () => {
     setLoading(true);
     try {
-      const items = await api.get<ControllerEvaluatorSummary[]>('/api/evaluator-settings/my-evaluators');
+      const items = await api.get<ControllerEvaluatorSummary[]>(
+        '/api/evaluator-settings/my-evaluators',
+      );
       setEvaluators(items);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
     } finally {
       setLoading(false);
     }
@@ -38,9 +50,9 @@ export function ControllerEvaluatorsPage() {
     const q = normalizeSearchTerm(search);
     if (!q) return true;
     return (
-      matchesNameSearch(ev.employeeFullName, search)
-      || ev.organizationUnitName.toLowerCase().includes(q)
-      || ev.jobPositionName.toLowerCase().includes(q)
+      matchesNameSearch(ev.employeeFullName, search) ||
+      ev.organizationUnitName.toLowerCase().includes(q) ||
+      ev.jobPositionName.toLowerCase().includes(q)
     );
   });
 
@@ -48,13 +60,17 @@ export function ControllerEvaluatorsPage() {
     <AppLayout title={formatMessage({ id: 'navigation.controllerEvaluators' })}>
       <div className="card card--filter">
         <div className="form-row filter-bar-search">
-          <label htmlFor="evaluator-search">{formatMessage({ id: 'controller.searchEvaluators' })}</label>
+          <label htmlFor="evaluator-search">
+            {formatMessage({ id: 'controller.searchEvaluators' })}
+          </label>
           <input
             id="evaluator-search"
             type="search"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
-            placeholder={formatMessage({ id: 'controller.evaluatorsSearchPlaceholder' })}
+            placeholder={formatMessage({
+              id: 'controller.evaluatorsSearchPlaceholder',
+            })}
           />
         </div>
       </div>
@@ -64,10 +80,16 @@ export function ControllerEvaluatorsPage() {
           <TableSkeleton rows={4} columns={4} />
         ) : filtered.length === 0 ? (
           <EmptyState
-            title={search.trim() ? formatMessage({ id: 'evaluation.noSearchResults' }) : formatMessage({ id: 'controller.noEvaluators' })}
+            title={
+              search.trim()
+                ? formatMessage({ id: 'evaluation.noSearchResults' })
+                : formatMessage({ id: 'controller.noEvaluators' })
+            }
             description={
               search.trim()
-                ? formatMessage({ id: 'controller.searchTryDifferentEvaluator' })
+                ? formatMessage({
+                    id: 'controller.searchTryDifferentEvaluator',
+                  })
                 : formatMessage({ id: 'controller.noEvaluatorsAssigned' })
             }
           />
@@ -76,17 +98,29 @@ export function ControllerEvaluatorsPage() {
             <table className="table table--hover table--clickable">
               <thead>
                 <tr>
-                  <th className="col-text">{formatMessage({ id: 'admin.evaluators' })}</th>
-                  <th className="col-text">{formatMessage({ id: 'evaluation.orgUnitShort' })}</th>
-                  <th className="col-text">{formatMessage({ id: 'evaluation.jobPosition' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'controller.subordinates' })}</th>
+                  <th className="col-text">
+                    {formatMessage({ id: 'admin.evaluators' })}
+                  </th>
+                  <th className="col-text">
+                    {formatMessage({ id: 'evaluation.orgUnitShort' })}
+                  </th>
+                  <th className="col-text">
+                    {formatMessage({ id: 'evaluation.jobPosition' })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({ id: 'controller.subordinates' })}
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((ev) => (
                   <tr
                     key={ev.employeeId}
-                    onClick={() => navigate(`/controller/evaluators/${ev.employeeId}/analytics`)}
+                    onClick={() =>
+                      navigate(
+                        `/controller/evaluators/${ev.employeeId}/analytics`,
+                      )
+                    }
                     tabIndex={0}
                   >
                     <td className="cell-primary col-text">
@@ -103,9 +137,15 @@ export function ControllerEvaluatorsPage() {
                         <span>{ev.employeeFullName}</span>
                       </span>
                     </td>
-                    <td className="cell-muted col-text">{ev.organizationUnitName || '—'}</td>
-                    <td className="cell-muted col-text">{ev.jobPositionName || '—'}</td>
-                    <td className="cell-muted col-num">{ev.subordinateCount}</td>
+                    <td className="cell-muted col-text">
+                      {ev.organizationUnitName || '—'}
+                    </td>
+                    <td className="cell-muted col-text">
+                      {ev.jobPositionName || '—'}
+                    </td>
+                    <td className="cell-muted col-num">
+                      {ev.subordinateCount}
+                    </td>
                   </tr>
                 ))}
               </tbody>

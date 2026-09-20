@@ -9,7 +9,10 @@ export const goalsBucketLabelKeys: Record<GoalsBucket, string> = {
   set: 'evaluation.goalsBucket.set',
 };
 
-export const emptyStateByGoalsBucketKeys: Record<GoalsBucket, { title: string; description: string }> = {
+export const emptyStateByGoalsBucketKeys: Record<
+  GoalsBucket,
+  { title: string; description: string }
+> = {
   pending: {
     title: 'evaluation.goalsBucketEmpty.pendingTitle',
     description: 'evaluation.goalsBucketEmpty.pendingDescription',
@@ -46,7 +49,9 @@ export function countGoalsBuckets(
 ): Record<GoalsBucket, number> {
   const matchesSearch = (name: string) => matchesNameSearch(name, search);
 
-  const setCount = evaluations.filter((ev) => isGoalsSet(ev) && matchesSearch(ev.employeeFullName)).length;
+  const setCount = evaluations.filter(
+    (ev) => isGoalsSet(ev) && matchesSearch(ev.employeeFullName),
+  ).length;
 
   const pendingEmployees = employees.filter((emp) => {
     if (!matchesSearch(emp.fullName)) return false;

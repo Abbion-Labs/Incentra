@@ -28,8 +28,13 @@ export function GoalsPlanningEmployeeCard({
   showStatusHistory = false,
 }: GoalsPlanningEmployeeCardProps) {
   const { formatMessage } = useIntl();
-  const analyticsHint = formatMessage({ id: 'evaluation.viewEmployeeAnalytics' });
-  const avatarEmployee: Pick<Employee, 'fullName' | 'firstName' | 'lastName' | 'avatarUrl'> = employee ?? {
+  const analyticsHint = formatMessage({
+    id: 'evaluation.viewEmployeeAnalytics',
+  });
+  const avatarEmployee: Pick<
+    Employee,
+    'fullName' | 'firstName' | 'lastName' | 'avatarUrl'
+  > = employee ?? {
     fullName: evaluation.employeeFullName,
     firstName: evaluation.employeeFullName.split(' ')[0] ?? '',
     lastName: evaluation.employeeFullName.split(' ').slice(1).join(' '),
@@ -39,15 +44,17 @@ export function GoalsPlanningEmployeeCard({
   const identity = (
     <>
       <EmployeeAvatar employee={avatarEmployee} size="lg" />
-      <span className="goals-employee-card__name">{evaluation.employeeFullName}</span>
+      <span className="goals-employee-card__name">
+        {evaluation.employeeFullName}
+      </span>
     </>
   );
 
-  const asideContent = ratingAside ?? (
-    showStatusHistory ? (
+  const asideContent =
+    ratingAside ??
+    (showStatusHistory ? (
       <EvaluationStatusSummary evaluation={evaluation} showStatusHistory />
-    ) : null
-  );
+    ) : null);
 
   return (
     <div className="card goals-employee-card">
@@ -86,7 +93,10 @@ export function GoalsPlanningEmployeeCard({
               <div className="goals-employee-card__item">
                 <dt>{formatMessage({ id: 'evaluation.period' })}</dt>
                 <dd>
-                  <PeriodPill quarter={evaluation.quarter} year={evaluation.year} />
+                  <PeriodPill
+                    quarter={evaluation.quarter}
+                    year={evaluation.year}
+                  />
                 </dd>
               </div>
             )}

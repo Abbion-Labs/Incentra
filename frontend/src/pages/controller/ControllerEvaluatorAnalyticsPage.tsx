@@ -30,7 +30,11 @@ export function ControllerEvaluatorAnalyticsPage() {
       );
       setAnalytics(data);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : formatMessage({ id: 'errors.analyticsLoadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.analyticsLoadFailed' }),
+      );
       setAnalytics(null);
     } finally {
       setLoading(false);
@@ -41,7 +45,8 @@ export function ControllerEvaluatorAnalyticsPage() {
     load();
   }, [load]);
 
-  const evaluatorName = analytics?.evaluatorFullName ?? formatMessage({ id: 'admin.evaluators' });
+  const evaluatorName =
+    analytics?.evaluatorFullName ?? formatMessage({ id: 'admin.evaluators' });
 
   const backTo = backState?.backTo ?? '/controller/evaluators';
   const backLabel = backState?.backLabelKey
@@ -49,11 +54,18 @@ export function ControllerEvaluatorAnalyticsPage() {
     : formatMessage({ id: 'controller.backToEvaluators' });
 
   return (
-    <AppLayout title={`${formatMessage({ id: 'admin.analytics' })} — ${evaluatorName}`}>
+    <AppLayout
+      title={`${formatMessage({ id: 'admin.analytics' })} — ${evaluatorName}`}
+    >
       <PageBackLink to={backTo} label={backLabel} />
 
       {loading || !analytics ? (
-        <LoadingEmpty loading={loading} emptyMessage={formatMessage({ id: 'controller.analyticsUnavailable' })} />
+        <LoadingEmpty
+          loading={loading}
+          emptyMessage={formatMessage({
+            id: 'controller.analyticsUnavailable',
+          })}
+        />
       ) : (
         <EvaluatorAnalyticsView
           analytics={analytics}

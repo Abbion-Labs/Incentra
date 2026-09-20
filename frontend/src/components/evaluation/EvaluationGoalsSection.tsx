@@ -1,4 +1,8 @@
-import type { EvaluationCondition, EvaluationCriterion, EvaluationGoal } from '../../api/types';
+import type {
+  EvaluationCondition,
+  EvaluationCriterion,
+  EvaluationGoal,
+} from '../../api/types';
 import { useIntl } from '../../i18n';
 import { formatLocalizedRatingDisplay } from '../../utils/ratingLevelLabels';
 
@@ -18,7 +22,9 @@ export function EvaluationTextListSection({
     <div className="card">
       <h2>{title}</h2>
       {items.length === 0 ? (
-        <p className="empty">{emptyMessage ?? formatMessage({ id: 'evaluation.noItems' })}</p>
+        <p className="empty">
+          {emptyMessage ?? formatMessage({ id: 'evaluation.noItems' })}
+        </p>
       ) : (
         <ul>
           {items.map((item) => (
@@ -35,28 +41,51 @@ interface EvaluationGoalsTableProps {
   showComments?: boolean;
 }
 
-export function EvaluationGoalsTable({ goals, showComments = true }: EvaluationGoalsTableProps) {
+export function EvaluationGoalsTable({
+  goals,
+  showComments = true,
+}: EvaluationGoalsTableProps) {
   const { formatMessage } = useIntl();
   return (
     <div className="card">
       <h2>{formatMessage({ id: 'evaluation.goalsTitle' })}</h2>
       {goals.length === 0 ? (
-        <p className="empty">{formatMessage({ id: 'evaluation.noGoalsSet' })}</p>
+        <p className="empty">
+          {formatMessage({ id: 'evaluation.noGoalsSet' })}
+        </p>
       ) : (
         <table className="table">
           <thead>
             <tr>
-              <th className="col-text">{formatMessage({ id: 'common.description' })}</th>
-              <th className="col-meta">{formatMessage({ id: 'evaluation.rating' })}</th>
-              {showComments && <th className="col-text">{formatMessage({ id: 'common.comment' })}</th>}
+              <th className="col-text">
+                {formatMessage({ id: 'common.description' })}
+              </th>
+              <th className="col-meta">
+                {formatMessage({ id: 'evaluation.rating' })}
+              </th>
+              {showComments && (
+                <th className="col-text">
+                  {formatMessage({ id: 'common.comment' })}
+                </th>
+              )}
             </tr>
           </thead>
           <tbody>
             {goals.map((g) => (
               <tr key={g.id}>
                 <td className="col-text">{g.description}</td>
-                <td className="col-meta">{formatLocalizedRatingDisplay(formatMessage, g.ratingLevelValue, g.ratingLevelLabel)}</td>
-                {showComments && <td className="col-text">{g.comment ?? formatMessage({ id: 'common.emptyValue' })}</td>}
+                <td className="col-meta">
+                  {formatLocalizedRatingDisplay(
+                    formatMessage,
+                    g.ratingLevelValue,
+                    g.ratingLevelLabel,
+                  )}
+                </td>
+                {showComments && (
+                  <td className="col-text">
+                    {g.comment ?? formatMessage({ id: 'common.emptyValue' })}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
@@ -88,14 +117,21 @@ export function EvaluationGoalsList({
             {showRatings && g.ratingLevelLabel && (
               <span style={{ color: 'var(--muted)' }}>
                 {' '}
-                — {formatLocalizedRatingDisplay(formatMessage, g.ratingLevelValue, g.ratingLevelLabel)}
+                —{' '}
+                {formatLocalizedRatingDisplay(
+                  formatMessage,
+                  g.ratingLevelValue,
+                  g.ratingLevelLabel,
+                )}
               </span>
             )}
           </li>
         ))}
       </ul>
       {goals.length === 0 && (
-        <p className="empty">{emptyMessage ?? formatMessage({ id: 'evaluation.goalsNotDefined' })}</p>
+        <p className="empty">
+          {emptyMessage ?? formatMessage({ id: 'evaluation.goalsNotDefined' })}
+        </p>
       )}
     </div>
   );

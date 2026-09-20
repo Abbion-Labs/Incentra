@@ -9,23 +9,47 @@ interface EmployeeQuarterListProps {
   onSelect: (evaluationId: number) => void;
 }
 
-function QuarterStatusBadge({ quarter }: { quarter: EmployeeQuarterBenchmark }) {
+function QuarterStatusBadge({
+  quarter,
+}: {
+  quarter: EmployeeQuarterBenchmark;
+}) {
   const { formatMessage } = useIntl();
   if (quarter.status === 'Draft') {
     if (quarter.hasIncompleteRatings) {
-      return <span className="badge badge-unrated">{formatMessage({ id: 'status.Draft' })}</span>;
+      return (
+        <span className="badge badge-unrated">
+          {formatMessage({ id: 'status.Draft' })}
+        </span>
+      );
     }
 
-    return <span className="badge badge-planning">{formatMessage({ id: 'evaluation.bucket.planning' })}</span>;
+    return (
+      <span className="badge badge-planning">
+        {formatMessage({ id: 'evaluation.bucket.planning' })}
+      </span>
+    );
   }
 
-  return <span className={statusClass(quarter.status)}>{statusLabel(quarter.status, formatMessage)}</span>;
+  return (
+    <span className={statusClass(quarter.status)}>
+      {statusLabel(quarter.status, formatMessage)}
+    </span>
+  );
 }
 
-export function EmployeeQuarterList({ quarters, selectedEvaluationId, onSelect }: EmployeeQuarterListProps) {
+export function EmployeeQuarterList({
+  quarters,
+  selectedEvaluationId,
+  onSelect,
+}: EmployeeQuarterListProps) {
   const { formatMessage } = useIntl();
   if (quarters.length === 0) {
-    return <p className="empty-inline">{formatMessage({ id: 'evaluation.employeeNoEvaluations' })}</p>;
+    return (
+      <p className="empty-inline">
+        {formatMessage({ id: 'evaluation.employeeNoEvaluations' })}
+      </p>
+    );
   }
 
   return (
@@ -40,13 +64,19 @@ export function EmployeeQuarterList({ quarters, selectedEvaluationId, onSelect }
               onClick={() => onSelect(q.evaluationId)}
             >
               <div className="quarter-list__period">
-                <strong>Q{q.quarter}/{q.year}</strong>
+                <strong>
+                  Q{q.quarter}/{q.year}
+                </strong>
                 <QuarterStatusBadge quarter={q} />
               </div>
               <div className="quarter-list__meta">
                 {formatMessage({ id: 'evaluation.average' })}:{' '}
                 <AverageDisplay
-                  value={q.hasIncompleteRatings || q.employeeAverage == null ? '/' : q.employeeAverage.toFixed(2)}
+                  value={
+                    q.hasIncompleteRatings || q.employeeAverage == null
+                      ? '/'
+                      : q.employeeAverage.toFixed(2)
+                  }
                 />
               </div>
             </button>

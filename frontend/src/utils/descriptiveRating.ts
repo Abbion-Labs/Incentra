@@ -1,11 +1,14 @@
 import type { DescriptiveRating } from '../api/types';
 import type { IntlMessage, NestedKeys } from '../i18n/i18n.types';
 
-export type DescriptiveRatingFormatMessage = (
-  descriptor: { id: NestedKeys<IntlMessage> },
-) => string;
+export type DescriptiveRatingFormatMessage = (descriptor: {
+  id: NestedKeys<IntlMessage>;
+}) => string;
 
-export const DESCRIPTIVE_RATING_NAME_KEYS: Record<string, NestedKeys<IntlMessage>> = {
+export const DESCRIPTIVE_RATING_NAME_KEYS: Record<
+  string,
+  NestedKeys<IntlMessage>
+> = {
   DOES_NOT_MEET: 'descriptiveRatings.names.DOES_NOT_MEET',
   MEETS: 'descriptiveRatings.names.MEETS',
   GOOD: 'descriptiveRatings.names.GOOD',
@@ -77,7 +80,11 @@ export function descriptiveRatingCodeFromName(
 }
 
 export function resolveDescriptiveRatingCode(
-  options: { code?: string | null; name?: string | null; descriptiveRatingId?: number | null },
+  options: {
+    code?: string | null;
+    name?: string | null;
+    descriptiveRatingId?: number | null;
+  },
   ratings?: DescriptiveRating[],
 ): string | null {
   if (options.code?.trim()) return options.code.trim();
@@ -90,7 +97,11 @@ export function resolveDescriptiveRatingCode(
 
 export function formatDescriptiveRatingLabel(
   formatMessage: DescriptiveRatingFormatMessage,
-  options: { code?: string | null; name?: string | null; descriptiveRatingId?: number | null },
+  options: {
+    code?: string | null;
+    name?: string | null;
+    descriptiveRatingId?: number | null;
+  },
   ratings?: DescriptiveRating[],
 ): string | null {
   const code = resolveDescriptiveRatingCode(options, ratings);
@@ -152,7 +163,7 @@ export function descriptiveRatingClass(
   if (!nameOrCode) return 'badge badge-descriptive-none';
   const code = resolveCodeForStyling(nameOrCode, ratings);
   const variant = code
-    ? DESCRIPTIVE_RATING_CLASS_BY_CODE[code] ?? 'badge-descriptive-default'
+    ? (DESCRIPTIVE_RATING_CLASS_BY_CODE[code] ?? 'badge-descriptive-default')
     : 'badge-descriptive-default';
   return `badge ${variant}`;
 }

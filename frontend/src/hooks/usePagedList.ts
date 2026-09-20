@@ -46,13 +46,20 @@ export function usePagedList<T>({
       setError('');
 
       try {
-        const result = await api.get<PagedResult<T>>(fetchPageRef.current(targetPage, pageSize));
+        const result = await api.get<PagedResult<T>>(
+          fetchPageRef.current(targetPage, pageSize),
+        );
         const pageItems = result.items ?? [];
         setTotalCount(result.totalCount ?? 0);
         setPage(targetPage);
-        setItems((current) => (append ? [...current, ...pageItems] : pageItems));
+        setItems((current) =>
+          append ? [...current, ...pageItems] : pageItems,
+        );
       } catch (e) {
-        const message = e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' });
+        const message =
+          e instanceof Error
+            ? e.message
+            : formatMessage({ id: 'errors.loadFailed' });
         setError(message);
         onError?.(e instanceof Error ? e : new Error(message));
         if (!append) {

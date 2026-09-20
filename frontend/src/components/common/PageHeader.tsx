@@ -8,7 +8,13 @@ interface PageHeaderProps {
   children?: ReactNode;
 }
 
-export function PageHeader({ title, subtitle, badge, meta, children }: PageHeaderProps) {
+export function PageHeader({
+  title,
+  subtitle,
+  badge,
+  meta,
+  children,
+}: PageHeaderProps) {
   return (
     <header className="page-header">
       <div className="page-header__main">
@@ -24,7 +30,13 @@ export function PageHeader({ title, subtitle, badge, meta, children }: PageHeade
   );
 }
 
-export function PeriodPill({ quarter, year }: { quarter: number; year: number }) {
+export function PeriodPill({
+  quarter,
+  year,
+}: {
+  quarter: number;
+  year: number;
+}) {
   return (
     <span className="period-pill">
       Q{quarter}/{year}

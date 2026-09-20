@@ -8,7 +8,12 @@ interface TextListEditorProps {
   addLabel: string;
 }
 
-export function TextListEditor({ items, setItems, placeholder, addLabel }: TextListEditorProps) {
+export function TextListEditor({
+  items,
+  setItems,
+  placeholder,
+  addLabel,
+}: TextListEditorProps) {
   const { formatMessage } = useIntl();
 
   return (
@@ -44,7 +49,9 @@ export function TextListEditor({ items, setItems, placeholder, addLabel }: TextL
       <button
         type="button"
         className="btn btn-secondary btn-sm"
-        onClick={() => setItems([...items, { description: '', sortOrder: items.length }])}
+        onClick={() =>
+          setItems([...items, { description: '', sortOrder: items.length }])
+        }
       >
         {addLabel}
       </button>

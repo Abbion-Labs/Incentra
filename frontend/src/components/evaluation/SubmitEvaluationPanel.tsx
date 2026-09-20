@@ -1,9 +1,14 @@
-import { EvaluationScoresSummary, type EvaluationRatingMetaProps } from '../../pages/evaluator/components/EvaluationRatingMeta';
+import {
+  EvaluationScoresSummary,
+  type EvaluationRatingMetaProps,
+} from '../../pages/evaluator/components/EvaluationRatingMeta';
 import { useIntl } from '../../i18n';
 
 interface SubmitEvaluationPanelProps extends EvaluationRatingMetaProps {
   submitAllowed: boolean;
-  submitRequirementsKey?: 'evaluation.submitRequirements' | 'evaluation.submitRequirementsConditionsNotMet';
+  submitRequirementsKey?:
+    | 'evaluation.submitRequirements'
+    | 'evaluation.submitRequirementsConditionsNotMet';
   saving: boolean;
   onSave: () => void;
   onSubmit: () => void;
@@ -37,11 +42,25 @@ export function SubmitEvaluationPanel({
         </p>
       )}
       <div className="actions">
-        <button type="button" className="btn btn-secondary" onClick={onSave} disabled={saving}>
-          {saving ? formatMessage({ id: 'buttons.saving' }) : formatMessage({ id: 'buttons.save' })}
+        <button
+          type="button"
+          className="btn btn-secondary"
+          onClick={onSave}
+          disabled={saving}
+        >
+          {saving
+            ? formatMessage({ id: 'buttons.saving' })
+            : formatMessage({ id: 'buttons.save' })}
         </button>
-        <button type="button" className="btn btn-primary" onClick={onSubmit} disabled={saving || !submitAllowed}>
-          {saving ? formatMessage({ id: 'buttons.submitting' }) : formatMessage({ id: 'buttons.submitToController' })}
+        <button
+          type="button"
+          className="btn btn-primary"
+          onClick={onSubmit}
+          disabled={saving || !submitAllowed}
+        >
+          {saving
+            ? formatMessage({ id: 'buttons.submitting' })
+            : formatMessage({ id: 'buttons.submitToController' })}
         </button>
       </div>
     </section>

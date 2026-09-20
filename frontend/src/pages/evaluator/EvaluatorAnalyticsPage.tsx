@@ -1,12 +1,12 @@
-import { useCallback, useEffect, useState } from "react";
-import { api } from "../../api/client";
-import type { EvaluatorAnalytics } from "../../api/types";
-import { AppLayout } from "../../components/AppLayout";
-import { LoadingEmpty } from "../../components/common/LoadingEmpty";
-import { EvaluatorAnalyticsView } from "../../components/analytics/EvaluatorAnalyticsView";
-import { useToast } from "../../hooks";
-import { currentYear } from "../../utils/status";
-import { useIntl } from "../../i18n";
+import { useCallback, useEffect, useState } from 'react';
+import { api } from '../../api/client';
+import type { EvaluatorAnalytics } from '../../api/types';
+import { AppLayout } from '../../components/AppLayout';
+import { LoadingEmpty } from '../../components/common/LoadingEmpty';
+import { EvaluatorAnalyticsView } from '../../components/analytics/EvaluatorAnalyticsView';
+import { useToast } from '../../hooks';
+import { currentYear } from '../../utils/status';
+import { useIntl } from '../../i18n';
 
 export function EvaluatorAnalyticsPage() {
   const { formatMessage } = useIntl();
@@ -26,7 +26,7 @@ export function EvaluatorAnalyticsPage() {
       toast.error(
         e instanceof Error
           ? e.message
-          : formatMessage({ id: "errors.analyticsLoadFailed" }),
+          : formatMessage({ id: 'errors.analyticsLoadFailed' }),
       );
       setAnalytics(null);
     } finally {
@@ -39,12 +39,12 @@ export function EvaluatorAnalyticsPage() {
   }, [load]);
 
   return (
-    <AppLayout title={formatMessage({ id: "admin.analytics" })}>
+    <AppLayout title={formatMessage({ id: 'admin.analytics' })}>
       {loading || !analytics ? (
         <LoadingEmpty
           loading={loading}
           emptyMessage={formatMessage({
-            id: "controller.analyticsUnavailable",
+            id: 'controller.analyticsUnavailable',
           })}
         />
       ) : (

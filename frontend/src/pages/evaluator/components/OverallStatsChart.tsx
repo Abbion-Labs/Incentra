@@ -26,7 +26,10 @@ interface TooltipState {
   y: number;
 }
 
-function formatValue(isVariance: boolean, value: number | null | undefined): string {
+function formatValue(
+  isVariance: boolean,
+  value: number | null | undefined,
+): string {
   if (value == null) return '—';
   return isVariance ? value.toFixed(3) : value.toFixed(2);
 }
@@ -46,7 +49,9 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
   const hasData = METRIC_KEYS.some((metric) =>
-    (['selectedYear', 'allYears'] as const).some((period) => stats[period][metric.key] != null),
+    (['selectedYear', 'allYears'] as const).some(
+      (period) => stats[period][metric.key] != null,
+    ),
   );
 
   if (!hasData) {
@@ -60,14 +65,19 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
   const maxRating = Math.max(
     5,
     ...METRIC_KEYS.filter((metric) => !metric.isVariance).flatMap((metric) =>
-      (['selectedYear', 'allYears'] as const).map((period) => stats[period][metric.key] ?? 0),
+      (['selectedYear', 'allYears'] as const).map(
+        (period) => stats[period][metric.key] ?? 0,
+      ),
     ),
   );
 
-  const maxVariance = Math.max(
-    0.001,
-    ...(['selectedYear', 'allYears'] as const).map((period) => stats[period].variance ?? 0),
-  ) * 1.1;
+  const maxVariance =
+    Math.max(
+      0.001,
+      ...(['selectedYear', 'allYears'] as const).map(
+        (period) => stats[period].variance ?? 0,
+      ),
+    ) * 1.1;
 
   const width = 640;
   const height = 280;
@@ -113,10 +123,20 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
     <div className="analytics-chart">
       <div className="analytics-chart__canvas-wrap">
         {tooltip && (
-          <div className="analytics-chart__tooltip" style={{ left: tooltip.x, top: tooltip.y }} role="tooltip">
-            <span className="analytics-chart__tooltip-period">{tooltip.period}</span>
+          <div
+            className="analytics-chart__tooltip"
+            style={{ left: tooltip.x, top: tooltip.y }}
+            role="tooltip"
+          >
+            <span className="analytics-chart__tooltip-period">
+              {tooltip.period}
+            </span>
             <strong>
-              {tooltip.label}: {formatValue(tooltip.label === formatMessage({ id: 'charts.variance' }), tooltip.value)}
+              {tooltip.label}:{' '}
+              {formatValue(
+                tooltip.label === formatMessage({ id: 'charts.variance' }),
+                tooltip.value,
+              )}
             </strong>
           </div>
         )}
@@ -125,14 +145,30 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
           viewBox={`0 0 ${width} ${height}`}
           className="analytics-chart__svg"
           role="img"
-          aria-label={formatMessage({ id: 'charts.statsComparisonAria' }, { year })}
+          aria-label={formatMessage(
+            { id: 'charts.statsComparisonAria' },
+            { year },
+          )}
         >
           {[1, 2, 3, 4, 5].map((tick) => {
-            const y = padding.top + chartHeight - (tick / maxRating) * chartHeight;
+            const y =
+              padding.top + chartHeight - (tick / maxRating) * chartHeight;
             return (
               <g key={`rating-${tick}`}>
-                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" />
-                <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#64748b">
+                <line
+                  x1={padding.left}
+                  y1={y}
+                  x2={width - padding.right}
+                  y2={y}
+                  stroke="#e2e8f0"
+                />
+                <text
+                  x={padding.left - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="11"
+                  fill="#64748b"
+                >
                   {tick}
                 </text>
               </g>
@@ -140,10 +176,17 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
           })}
 
           {varianceAxisTicks.map((tick) => {
-            const y = padding.top + chartHeight - (tick / maxVariance) * chartHeight;
+            const y =
+              padding.top + chartHeight - (tick / maxVariance) * chartHeight;
             return (
               <g key={`variance-${tick}`}>
-                <text x={width - padding.right + 8} y={y + 4} textAnchor="start" fontSize="10" fill="#7c3aed">
+                <text
+                  x={width - padding.right + 8}
+                  y={y + 4}
+                  textAnchor="start"
+                  fontSize="10"
+                  fill="#7c3aed"
+                >
                   {tick.toFixed(2)}
                 </text>
               </g>
@@ -164,29 +207,52 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
             const groupX = padding.left + index * groupWidth + groupWidth / 2;
             return (
               <g key={metric.key}>
-                {(['selectedYear', 'allYears'] as const).map((period, periodIndex) => {
-                  const value = stats[period][metric.key];
-                  if (value == null) return null;
-                  const heightPx = barHeight(value, metric);
-                  const x = groupX - barWidth - 2 + periodIndex * (barWidth + 4);
-                  const y = padding.top + chartHeight - heightPx;
-                  return (
-                    <rect
-                      key={period}
-                      x={x}
-                      y={y}
-                      width={barWidth}
-                      height={heightPx}
-                      rx={3}
-                      fill={PERIOD_COLORS[period]}
-                      opacity={period === 'selectedYear' ? 1 : 0.75}
-                      onMouseEnter={(event) => showTooltip(event, metricLabel, value, periodLabel(period))}
-                      onMouseMove={(event) => showTooltip(event, metricLabel, value, periodLabel(period))}
-                      onMouseLeave={() => setTooltip(null)}
-                    />
-                  );
-                })}
-                <text x={groupX} y={height - 14} textAnchor="middle" fontSize="11" fill="#475569">
+                {(['selectedYear', 'allYears'] as const).map(
+                  (period, periodIndex) => {
+                    const value = stats[period][metric.key];
+                    if (value == null) return null;
+                    const heightPx = barHeight(value, metric);
+                    const x =
+                      groupX - barWidth - 2 + periodIndex * (barWidth + 4);
+                    const y = padding.top + chartHeight - heightPx;
+                    return (
+                      <rect
+                        key={period}
+                        x={x}
+                        y={y}
+                        width={barWidth}
+                        height={heightPx}
+                        rx={3}
+                        fill={PERIOD_COLORS[period]}
+                        opacity={period === 'selectedYear' ? 1 : 0.75}
+                        onMouseEnter={(event) =>
+                          showTooltip(
+                            event,
+                            metricLabel,
+                            value,
+                            periodLabel(period),
+                          )
+                        }
+                        onMouseMove={(event) =>
+                          showTooltip(
+                            event,
+                            metricLabel,
+                            value,
+                            periodLabel(period),
+                          )
+                        }
+                        onMouseLeave={() => setTooltip(null)}
+                      />
+                    );
+                  },
+                )}
+                <text
+                  x={groupX}
+                  y={height - 14}
+                  textAnchor="middle"
+                  fontSize="11"
+                  fill="#475569"
+                >
                   {metricLabel}
                 </text>
               </g>
@@ -198,15 +264,26 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
       <div className="analytics-chart__footer">
         <ul className="analytics-chart__legend analytics-chart__legend--inline">
           <li>
-            <span className="analytics-chart__legend-swatch" style={{ background: '#1e4d8c' }} />
-            <span>{formatMessage({ id: 'charts.selectedYear' }, { year })}</span>
+            <span
+              className="analytics-chart__legend-swatch"
+              style={{ background: '#1e4d8c' }}
+            />
+            <span>
+              {formatMessage({ id: 'charts.selectedYear' }, { year })}
+            </span>
           </li>
           <li>
-            <span className="analytics-chart__legend-swatch" style={{ background: '#64748b' }} />
+            <span
+              className="analytics-chart__legend-swatch"
+              style={{ background: '#64748b' }}
+            />
             <span>{formatMessage({ id: 'charts.allYearsPeriod' })}</span>
           </li>
           <li>
-            <span className="analytics-chart__legend-swatch" style={{ background: '#7c3aed' }} />
+            <span
+              className="analytics-chart__legend-swatch"
+              style={{ background: '#7c3aed' }}
+            />
             <span>{formatMessage({ id: 'charts.varianceRightAxis' })}</span>
           </li>
         </ul>

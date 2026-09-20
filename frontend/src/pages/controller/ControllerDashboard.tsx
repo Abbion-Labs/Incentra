@@ -9,7 +9,10 @@ import { classifyEvaluation } from '../../utils/evaluationBuckets';
 import { currentQuarter, currentYear } from '../../utils/status';
 import { buildEvaluationsPagePath } from '../../utils/evaluationApi';
 import { usePagedList, useToast } from '../../hooks';
-import { ControllerEvaluationTable, ControllerFilters } from './components/ControllerEvaluationTable';
+import {
+  ControllerEvaluationTable,
+  ControllerFilters,
+} from './components/ControllerEvaluationTable';
 
 const statusBucketMap: Record<string, string> = {
   pending: 'pending',
@@ -45,14 +48,20 @@ export function ControllerDashboard() {
   });
 
   const filtered = useMemo(
-    () => evaluations.filter((evaluation) => {
-      if (statusFilter === 'pending') {
-        return evaluation.status === 'Submitted' || evaluation.status === 'UnderReview';
-      }
-      if (statusFilter === 'approved') return evaluation.status === 'Approved';
-      if (statusFilter === 'returned') return classifyEvaluation(evaluation) === 'returned';
-      return true;
-    }),
+    () =>
+      evaluations.filter((evaluation) => {
+        if (statusFilter === 'pending') {
+          return (
+            evaluation.status === 'Submitted' ||
+            evaluation.status === 'UnderReview'
+          );
+        }
+        if (statusFilter === 'approved')
+          return evaluation.status === 'Approved';
+        if (statusFilter === 'returned')
+          return classifyEvaluation(evaluation) === 'returned';
+        return true;
+      }),
     [evaluations, statusFilter],
   );
 
@@ -77,7 +86,9 @@ export function ControllerDashboard() {
         ) : filtered.length === 0 ? (
           <EmptyState
             title={formatMessage({ id: 'controller.dashboardEmptyTitle' })}
-            description={formatMessage({ id: 'controller.dashboardEmptyDescription' })}
+            description={formatMessage({
+              id: 'controller.dashboardEmptyDescription',
+            })}
           />
         ) : (
           <div className="table-panel">

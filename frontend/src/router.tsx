@@ -1,4 +1,9 @@
-import { createBrowserRouter, Navigate, Outlet, useParams } from 'react-router-dom';
+import {
+  createBrowserRouter,
+  Navigate,
+  Outlet,
+  useParams,
+} from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { useIntl } from './i18n';
@@ -42,7 +47,9 @@ function AuthLoadingGate() {
   const { loading } = useAuth();
 
   if (loading) {
-    return <div className="empty">{formatMessage({ id: 'common.loading' })}</div>;
+    return (
+      <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
+    );
   }
 
   return <Outlet />;
@@ -192,7 +199,9 @@ export const router = createBrowserRouter([
       {
         path: '/account',
         element: (
-          <ProtectedRoute roles={['ADMIN', 'EVALUATOR', 'CONTROLLER', 'EMPLOYEE', 'PAYROLL']}>
+          <ProtectedRoute
+            roles={['ADMIN', 'EVALUATOR', 'CONTROLLER', 'EMPLOYEE', 'PAYROLL']}
+          >
             <AccountSettingsPage />
           </ProtectedRoute>
         ),

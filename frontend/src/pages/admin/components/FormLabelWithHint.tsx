@@ -10,9 +10,15 @@ interface FormLabelWithHintProps {
 const TOOLTIP_MAX_WIDTH = 256;
 const VIEWPORT_PADDING = 8;
 
-export function FormLabelWithHint({ htmlFor, hint, children }: FormLabelWithHintProps) {
+export function FormLabelWithHint({
+  htmlFor,
+  hint,
+  children,
+}: FormLabelWithHintProps) {
   const hintRef = useRef<HTMLSpanElement>(null);
-  const [tooltip, setTooltip] = useState<{ top: number; left: number } | null>(null);
+  const [tooltip, setTooltip] = useState<{ top: number; left: number } | null>(
+    null,
+  );
 
   const showTooltip = useCallback(() => {
     const el = hintRef.current;
@@ -47,18 +53,21 @@ export function FormLabelWithHint({ htmlFor, hint, children }: FormLabelWithHint
         onFocus={showTooltip}
         onBlur={hideTooltip}
       >
-        <span className="form-field-hint__icon" aria-hidden="true">i</span>
+        <span className="form-field-hint__icon" aria-hidden="true">
+          i
+        </span>
       </span>
-      {tooltip && createPortal(
-        <span
-          className="form-field-hint__tooltip form-field-hint__tooltip--fixed"
-          style={{ top: tooltip.top, left: tooltip.left }}
-          role="tooltip"
-        >
-          {hint}
-        </span>,
-        document.body,
-      )}
+      {tooltip &&
+        createPortal(
+          <span
+            className="form-field-hint__tooltip form-field-hint__tooltip--fixed"
+            style={{ top: tooltip.top, left: tooltip.left }}
+            role="tooltip"
+          >
+            {hint}
+          </span>,
+          document.body,
+        )}
     </label>
   );
 }

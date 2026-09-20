@@ -16,10 +16,17 @@ interface TooltipState {
   y: number;
 }
 
-export function CompensationDistributionChart({ buckets, ariaLabel }: CompensationDistributionChartProps) {
+export function CompensationDistributionChart({
+  buckets,
+  ariaLabel,
+}: CompensationDistributionChartProps) {
   const { formatMessage } = useIntl();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
-  const { ref: containerRef, height, width: containerWidth } = useAnalyticsChartContainerHeight(320);
+  const {
+    ref: containerRef,
+    height,
+    width: containerWidth,
+  } = useAnalyticsChartContainerHeight(320);
 
   const visibleBuckets = useMemo(() => {
     const first = buckets.findIndex((bucket) => bucket.count > 0);
@@ -55,7 +62,8 @@ export function CompensationDistributionChart({ buckets, ariaLabel }: Compensati
   }
 
   const padding = { top: 24, right: 24, bottom: 108, left: 56 };
-  const minContentWidth = visibleBuckets.length * 80 + padding.left + padding.right;
+  const minContentWidth =
+    visibleBuckets.length * 80 + padding.left + padding.right;
   const width = Math.max(containerWidth || 520, minContentWidth);
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
@@ -79,11 +87,25 @@ export function CompensationDistributionChart({ buckets, ariaLabel }: Compensati
 
   return (
     <div className="analytics-chart analytics-chart--responsive analytics-chart--fill">
-      <div ref={containerRef} className="analytics-chart__canvas-wrap analytics-chart__canvas-wrap--fill">
+      <div
+        ref={containerRef}
+        className="analytics-chart__canvas-wrap analytics-chart__canvas-wrap--fill"
+      >
         {tooltip && (
-          <div className="analytics-chart__tooltip" style={{ left: tooltip.x, top: tooltip.y }} role="tooltip">
-            <span className="analytics-chart__tooltip-period">{tooltip.label}</span>
-            <strong>{formatMessage({ id: 'charts.employeeCount' }, { count: tooltip.count })}</strong>
+          <div
+            className="analytics-chart__tooltip"
+            style={{ left: tooltip.x, top: tooltip.y }}
+            role="tooltip"
+          >
+            <span className="analytics-chart__tooltip-period">
+              {tooltip.label}
+            </span>
+            <strong>
+              {formatMessage(
+                { id: 'charts.employeeCount' },
+                { count: tooltip.count },
+              )}
+            </strong>
           </div>
         )}
 
@@ -93,15 +115,31 @@ export function CompensationDistributionChart({ buckets, ariaLabel }: Compensati
           preserveAspectRatio="xMinYMin meet"
           role="img"
           aria-label={ariaLabel}
-          style={containerWidth > 0 && width > containerWidth ? { minWidth: width } : undefined}
+          style={
+            containerWidth > 0 && width > containerWidth
+              ? { minWidth: width }
+              : undefined
+          }
         >
           {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
             const value = Math.round(maxValue * tick);
             const y = padding.top + chartHeight - tick * chartHeight;
             return (
               <g key={tick}>
-                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" />
-                <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#64748b">
+                <line
+                  x1={padding.left}
+                  y1={y}
+                  x2={width - padding.right}
+                  y2={y}
+                  stroke="#e2e8f0"
+                />
+                <text
+                  x={padding.left - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="11"
+                  fill="#64748b"
+                >
                   {value}
                 </text>
               </g>
@@ -118,7 +156,8 @@ export function CompensationDistributionChart({ buckets, ariaLabel }: Compensati
 
           {visibleBuckets.map((bucket, index) => {
             const barHeight = (bucket.count / maxValue) * chartHeight;
-            const x = padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
+            const x =
+              padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
             const y = padding.top + chartHeight - barHeight;
 
             return (
