@@ -71,6 +71,7 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
             request.ControllerEmployeeId,
             this.employeeRepository,
             this.evaluatorSettingsRepository,
+            this.userRepository,
             cancellationToken);
         if (evaluatorSync.IsFailure)
         {

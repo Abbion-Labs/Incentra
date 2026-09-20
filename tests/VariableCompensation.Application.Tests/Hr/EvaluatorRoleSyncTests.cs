@@ -2,6 +2,8 @@ using FluentAssertions;
 using VariableCompensation.Application.Hr.EvaluatorSettings.Services;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Hr;
+using VariableCompensation.Domain.Entities.Identity;
+using VariableCompensation.Domain.Enums;
 using VariableCompensation.Testing.Common.Fakes;
 
 namespace VariableCompensation.Application.Tests.Hr;
@@ -60,6 +62,23 @@ public class EvaluatorRoleSyncTests
         var result = await Apply(employees, settings, hasRole: true, controllerEmployeeId: 404);
 
         result.Error.Should().Be(ErrorCodes.ControllerNotFound);
+    }
+
+    [Fact]
+    public async Task GrantingTheRole_WithAControllerWhoHasNoControllerRole_IsRejected()
+    {
+        var (employees, settings) = LinkedEmployee();
+        employees.ExistingEmployeeIds.Add(ControllerId);
+
+        var result = await Apply(
+            employees,
+            settings,
+            hasRole: true,
+            controllerEmployeeId: ControllerId,
+            users: Users(controllerHasTheRole: false));
+
+        result.Error.Should().Be(ErrorCodes.ControllerRoleRequired);
+        settings.Store.Should().BeEmpty();
     }
 
     [Fact]
@@ -122,10 +141,35 @@ public class EvaluatorRoleSyncTests
         return (employees, new FakeEvaluatorSettingsRepository());
     }
 
+    private static FakeUserRepository Users(bool controllerHasTheRole = true)
+    {
+        var users = new FakeUserRepository();
+        var user = new User { Id = 99, Email = "controller@local.dev", Employee = new Employee { Id = ControllerId } };
+        if (controllerHasTheRole)
+        {
+            user.UserRoles.Add(new UserRole
+            {
+                RoleId = 4,
+                Role = new Domain.Entities.Lookup.Role { Id = 4, Code = RoleCodes.Controller, Name = "Kontroler" },
+            });
+        }
+
+        users.Users[user.Id] = user;
+        return users;
+    }
+
     private static Task<CSharpFunctionalExtensions.Result> Apply(
         FakeEmployeeRepository employees,
         FakeEvaluatorSettingsRepository settings,
         bool hasRole,
-        long? controllerEmployeeId) =>
-        EvaluatorRoleSync.ApplyAsync(UserId, hasRole, controllerEmployeeId, employees, settings, CancellationToken.None);
+        long? controllerEmployeeId,
+        FakeUserRepository? users = null) =>
+        EvaluatorRoleSync.ApplyAsync(
+            UserId,
+            hasRole,
+            controllerEmployeeId,
+            employees,
+            settings,
+            users ?? Users(),
+            CancellationToken.None);
 }

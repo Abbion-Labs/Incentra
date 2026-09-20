@@ -60,11 +60,16 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
 {
     private readonly IEvaluatorSettingsRepository repository;
     private readonly IEmployeeRepository employeeRepository;
+    private readonly IUserRepository userRepository;
 
-    public UpdateEvaluatorSettingsCommandHandler(IEvaluatorSettingsRepository repository, IEmployeeRepository employeeRepository)
+    public UpdateEvaluatorSettingsCommandHandler(
+        IEvaluatorSettingsRepository repository,
+        IEmployeeRepository employeeRepository,
+        IUserRepository userRepository)
     {
         this.repository = repository;
         this.employeeRepository = employeeRepository;
+        this.userRepository = userRepository;
     }
 
     public async Task<Result<EvaluatorSettingsResponse>> Handle(UpdateEvaluatorSettingsCommand request, CancellationToken cancellationToken)
@@ -90,9 +95,14 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
             return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.EvaluatorSettingsNotFound);
         }
 
-        if (!await this.employeeRepository.ExistsAsync(request.ControllerEmployeeId, cancellationToken))
+        var controllerCheck = await Services.ControllerRoleCheck.EnsureIsAControllerAsync(
+            request.ControllerEmployeeId,
+            this.employeeRepository,
+            this.userRepository,
+            cancellationToken);
+        if (controllerCheck.IsFailure)
         {
-            return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.ControllerNotFound);
+            return Result.Failure<EvaluatorSettingsResponse>(controllerCheck.Error);
         }
 
         entity.ControllerEmployeeId = request.ControllerEmployeeId;

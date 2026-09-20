@@ -53,11 +53,16 @@ export function AdminUsers() {
     }
   }, [formatMessage, toast]);
 
-  // An evaluator cannot be their own controller.
-  const controllerOptions = useMemo(
-    () => employees.filter((e) => e.id !== editingUser?.employeeId),
-    [employees, editingUser],
-  );
+  // Only real controllers, and an evaluator cannot be their own.
+  const controllerOptions = useMemo(() => {
+    const controllerEmployeeIds = new Set(
+      users.filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
+        .map((u) => u.employeeId as number),
+    );
+    return employees.filter(
+      (e) => controllerEmployeeIds.has(e.id) && e.id !== editingUser?.employeeId,
+    );
+  }, [employees, users, editingUser]);
 
   const alreadyConfiguredEvaluator =
     editingUser?.employeeId != null &&
