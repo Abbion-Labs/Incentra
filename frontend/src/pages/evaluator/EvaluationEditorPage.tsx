@@ -12,11 +12,10 @@ import { EvaluationPlanningOverview } from '../../components/evaluation/Evaluati
 import { MeasuresEditorSection } from '../../components/evaluation/MeasuresEditorSection';
 import { SubmitEvaluationPanel } from '../../components/evaluation/SubmitEvaluationPanel';
 import { TrainingSection } from '../../components/evaluation/TrainingSection';
-import { EvaluationAutosaveIndicator, type AutosaveStatus } from '../../components/evaluation/EvaluationAutosaveIndicator';
+import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import { AppLayout } from '../../components/AppLayout';
 import { useEvaluation } from '../../hooks/useEvaluation';
 import { useLookups } from '../../hooks/useLookups';
-import { useAutosave } from '../../hooks/useAutosave';
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard';
 import { findNotRatedLevelId, hasLocalIncompleteRatings, calculateComponentAverage, calculateOverallAverage, canSubmitEvaluationDraft } from '../../utils/scoring';
 import { descriptiveRatingNameFromAverage } from '../../utils/descriptiveRating';
@@ -44,7 +43,6 @@ export function EvaluationEditorPage() {
   const [conditionsFulfilled, setConditionsFulfilled] = useState(true);
   const [conditionsNotMetComment, setConditionsNotMetComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
-  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>('idle');
 
   const editable = evaluation?.status === 'Draft';
   const notRatedLevelId = findNotRatedLevelId(ratingLevels);
@@ -52,7 +50,6 @@ export function EvaluationEditorPage() {
   const markDirty = useCallback(() => {
     if (!editable) return;
     setIsDirty(true);
-    setAutosaveStatus('dirty');
   }, [editable]);
 
   useUnsavedChangesGuard(
@@ -83,7 +80,6 @@ export function EvaluationEditorPage() {
   useEffect(() => {
     if (!evaluation) return;
     setIsDirty(false);
-    setAutosaveStatus('idle');
 
     const hydratedMeasures: MeasureDraft[] = evaluation.measures.length > 0
       ? evaluation.measures.map((m) => {
@@ -161,8 +157,6 @@ export function EvaluationEditorPage() {
     if (!evaluation) return null;
     if (!options?.silent) {
       setSaving(true);
-    } else {
-      setAutosaveStatus('saving');
     }
     setError('');
     try {
@@ -215,15 +209,11 @@ export function EvaluationEditorPage() {
 
       setEvaluation(current);
       setIsDirty(false);
-      setAutosaveStatus('saved');
       if (!options?.silent) {
         toast.success(formatMessage({ id: 'alerts.evaluationSaved' }));
       }
       return current;
     } catch (e) {
-      if (options?.silent) {
-        setAutosaveStatus('dirty');
-      }
       try {
         const latest = await fetchLatestEvaluation(evaluation.id);
         setEvaluation(latest);
@@ -252,12 +242,6 @@ export function EvaluationEditorPage() {
     trainingsAttended,
   ]);
 
-  useAutosave({
-    enabled: editable,
-    isDirty,
-    onSave: async () => (await persistEvaluation({ silent: true })) !== null,
-  });
-
   async function saveAll() {
     await persistEvaluation();
   }
@@ -277,7 +261,6 @@ export function EvaluationEditorPage() {
       });
       setEvaluation(updated);
       setIsDirty(false);
-      setAutosaveStatus('idle');
       toast.success(formatMessage({ id: 'alerts.evaluationSubmitted' }));
       setConfirmSubmit(false);
     } catch (e) {
@@ -356,7 +339,7 @@ export function EvaluationEditorPage() {
           ) : undefined}
         />
         <AlertMessages error={error} />
-        {editable && <EvaluationAutosaveIndicator status={autosaveStatus} />}
+        <UnsavedChangesIndicator visible={editable && isDirty} />
 
         <EvaluationPlanningOverview
           evaluation={evaluation}

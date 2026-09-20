@@ -276,8 +276,6 @@
     "conversationNote": "Napomena sa razgovora",
     "settingGoals": "Postavljanje...",
     "unsavedChanges": "Nesačuvane izmene",
-    "autosaving": "Automatsko čuvanje...",
-    "autosaved": "Automatski sačuvano",
     "statusHistoryTitle": "Istorija statusa",
     "statusHistoryEmpty": "Nema zabeleženih promena statusa.",
     "statusHistoryTransition": "{from} → {to}",

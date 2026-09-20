@@ -1762,18 +1762,10 @@ textarea {
   }
 }
 
-.evaluation-autosave-status {
+.evaluation-unsaved-status {
   margin: 0 0 0.75rem;
   font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.evaluation-autosave-status--dirty {
   color: var(--warning);
-}
-
-.evaluation-autosave-status--saved {
-  color: var(--success);
 }
 
 .evaluation-status-history__list {

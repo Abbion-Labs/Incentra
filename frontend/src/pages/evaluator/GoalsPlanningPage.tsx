@@ -9,9 +9,8 @@ import { TextListEditor } from '../../components/forms/TextListEditor';
 import { AppLayout } from '../../components/AppLayout';
 import { useLookups } from '../../hooks/useLookups';
 import { useToast } from '../../components/common/Toast';
-import { useAutosave } from '../../hooks/useAutosave';
 import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard';
-import { EvaluationAutosaveIndicator, type AutosaveStatus } from '../../components/evaluation/EvaluationAutosaveIndicator';
+import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import { defaultConversationDatetime, hasValidPlanningDraft, isGoalsPlanningComplete, toTextDrafts, type TextItemDraft } from '../../utils/goalsPlanning';
 import { fetchLatestEvaluation } from '../../utils/evaluationSave';
 import { previousQuarter } from '../../utils/status';
@@ -42,7 +41,6 @@ export function GoalsPlanningPage() {
   const [conversationAt, setConversationAt] = useState('');
   const [evaluatorComment, setEvaluatorComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
-  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>('idle');
 
   const editable = evaluation?.status === 'Draft';
   const goalsLocked = evaluation ? isGoalsPlanningComplete(evaluation) : false;
@@ -51,7 +49,6 @@ export function GoalsPlanningPage() {
   const markDirty = useCallback(() => {
     if (!canEditPlanning) return;
     setIsDirty(true);
-    setAutosaveStatus('dirty');
   }, [canEditPlanning]);
 
   const { allowNextNavigation } = useUnsavedChangesGuard(
@@ -86,7 +83,6 @@ export function GoalsPlanningPage() {
           : [{ description: '', sortOrder: 0 }],
       );
       setIsDirty(false);
-      setAutosaveStatus('idle');
     } catch (e) {
       setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
     } finally {
@@ -123,14 +119,10 @@ export function GoalsPlanningPage() {
     markDirty();
   }, [markDirty]);
 
-  const persistPlanningDraft = useCallback(async (options?: { silent?: boolean }): Promise<boolean> => {
+  const persistPlanningDraft = useCallback(async (): Promise<boolean> => {
     if (!evaluation || !canEditPlanning) return false;
 
-    if (!options?.silent) {
-      setSaving(true);
-    } else {
-      setAutosaveStatus('saving');
-    }
+    setSaving(true);
     setError('');
     try {
       const server = await fetchLatestEvaluation(evaluation.id);
@@ -164,12 +156,8 @@ export function GoalsPlanningPage() {
 
       setEvaluation(current);
       setIsDirty(false);
-      setAutosaveStatus('saved');
       return true;
     } catch (e) {
-      if (options?.silent) {
-        setAutosaveStatus('dirty');
-      }
       try {
         const latest = await fetchLatestEvaluation(evaluation.id);
         setEvaluation(latest);
@@ -179,17 +167,9 @@ export function GoalsPlanningPage() {
       setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.saveFailed' }));
       return false;
     } finally {
-      if (!options?.silent) {
-        setSaving(false);
-      }
+      setSaving(false);
     }
   }, [canEditPlanning, conditions, conversationAt, criteria, evaluation, evaluatorComment, formatMessage, goals]);
-
-  useAutosave({
-    enabled: canEditPlanning,
-    isDirty,
-    onSave: () => persistPlanningDraft({ silent: true }),
-  });
 
   async function saveAll(): Promise<boolean> {
     if (!evaluation || !canEditPlanning) return false;
@@ -300,7 +280,7 @@ export function GoalsPlanningPage() {
         showStatusHistory
       />
       <AlertMessages error={error} info={info} />
-      {canEditPlanning && <EvaluationAutosaveIndicator status={autosaveStatus} />}
+      <UnsavedChangesIndicator visible={canEditPlanning && isDirty} />
 
       {goalsLocked ? (
         <>
