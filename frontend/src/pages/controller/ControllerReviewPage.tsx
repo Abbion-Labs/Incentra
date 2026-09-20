@@ -100,7 +100,7 @@ export function ControllerReviewPage() {
     if (!evaluation) return;
     setSaving(true);
     try {
-      let current = await startReviewIfNeeded();
+      const current = await startReviewIfNeeded();
       if (current) setEvaluation(current);
       const updated = await api.post<EvaluationDetail>(`/api/evaluations/${evaluation.id}/approve`, {
         version: current?.version ?? evaluation.version,
@@ -123,7 +123,7 @@ export function ControllerReviewPage() {
     }
     setSaving(true);
     try {
-      let current = await startReviewIfNeeded();
+      const current = await startReviewIfNeeded();
       if (current) setEvaluation(current);
       const updated = await api.post<EvaluationDetail>(
         `/api/evaluations/${evaluation.id}/return-for-revision`,
