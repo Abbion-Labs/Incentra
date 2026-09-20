@@ -22,25 +22,11 @@ export const MEASURE_TYPE_NAME_KEYS: Record<string, NestedKeys<IntlMessage>> = {
   ADDITIONAL: 'measures.names.ADDITIONAL',
 };
 
-const KNOWN_MEASURE_NAME_TO_CODE: Record<string, string> = {
-  Preduzimljivost: 'INITIATIVE',
-  'Stvaralačka sposobnost': 'CREATIVITY',
-  Samostalnost: 'INDEPENDENCE',
-  'Preciznost i savesnost': 'PRECISION',
-  'Kvalitet saradnje': 'COLLABORATION',
-  'Dodatna merila': 'ADDITIONAL',
-};
-
-export function measureTypeCodeFromName(name: string | null | undefined): string | null {
-  if (!name?.trim()) return null;
-  return KNOWN_MEASURE_NAME_TO_CODE[name.trim()] ?? null;
-}
-
 export function formatMeasureTypeName(
   formatMessage: MeasureFormatMessage,
   options: { code?: string | null; name?: string | null },
 ): string {
-  const code = options.code?.trim() || measureTypeCodeFromName(options.name);
+  const code = options.code?.trim();
   if (code && MEASURE_TYPE_NAME_KEYS[code]) {
     return formatMessage({ id: MEASURE_TYPE_NAME_KEYS[code] });
   }

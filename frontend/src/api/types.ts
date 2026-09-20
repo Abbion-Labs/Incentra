@@ -121,6 +121,7 @@ export interface EvaluationMeasure {
   id: number;
   measureTypeId: number;
   measureTypeName: string;
+  measureTypeCode: string;
   ratingComment: string | null;
   ratingLevelId: number;
   ratingLevelValue: number;

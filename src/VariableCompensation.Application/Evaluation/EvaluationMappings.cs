@@ -103,6 +103,7 @@ internal static class EvaluationMappings
             Id = entity.Id,
             MeasureTypeId = entity.MeasureTypeId,
             MeasureTypeName = entity.MeasureType?.Name ?? string.Empty,
+            MeasureTypeCode = entity.MeasureType?.Code ?? string.Empty,
             RatingComment = entity.RatingComment,
             RatingLevelId = entity.RatingLevelId,
             RatingLevelValue = entity.RatingLevel?.Value ?? 0,

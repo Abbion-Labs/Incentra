@@ -107,6 +107,8 @@ public sealed class EvaluationMeasureResponse
 
     public string MeasureTypeName { get; init; } = string.Empty;
 
+    public string MeasureTypeCode { get; init; } = string.Empty;
+
     public string? RatingComment { get; init; }
 
     public long RatingLevelId { get; init; }
