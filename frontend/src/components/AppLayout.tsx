@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useIntl } from '../i18n';
+import { BrandMark } from './BrandMark';
 import { LocaleSwitcher } from './LocaleSwitcher';
 import { roleLabel } from '../utils/status';
 import { sortNavByGroup, type NavGroup } from '../utils/homeNavigation';
@@ -92,7 +93,9 @@ export function AppLayout({ title, children }: { title: string; children: React.
           )}
           <div className="topbar__brand">
             <Link to="/" className="app-brand">
-              <span className="app-brand__mark" aria-hidden>VN</span>
+              <span className="app-brand__mark">
+                <BrandMark />
+              </span>
               <span className="app-brand__text">
                 <span className="app-brand__name">{formatMessage({ id: 'navigation.brand' })}</span>
                 <span className="topbar__page">{title}</span>
