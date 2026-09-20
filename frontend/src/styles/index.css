@@ -269,46 +269,6 @@ textarea {
   border-right: 1px solid var(--border);
   padding: 1rem 0;
   overflow: hidden;
-  transition:
-    width 0.2s ease,
-    padding 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.sidebar--collapsed {
-  width: 0;
-  padding: 0;
-  border-right-color: transparent;
-  pointer-events: none;
-}
-
-.sidebar-toggle {
-  flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease,
-    color 0.15s ease;
-}
-
-.sidebar-toggle:hover {
-  background: var(--primary-soft);
-  border-color: #c7d7eb;
-  color: var(--primary);
-}
-
-.sidebar-toggle__icon {
-  font-size: 1.1rem;
-  line-height: 1;
 }
 
 .sidebar a {

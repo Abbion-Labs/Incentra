@@ -2,8 +2,6 @@
   "navigation": {
     "brand": "Incentra",
     "main": "Glavna navigacija",
-    "showMenu": "Prikaži navigaciju",
-    "hideMenu": "Sakrij navigaciju",
     "myAccount": "Moj nalog",
     "logout": "Odjava",
     "evaluatorEmployees": "Zaposleni",

@@ -1,5 +1,4 @@
 import { Link, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useIntl } from '../i18n';
@@ -10,16 +9,7 @@ import { sortNavByGroup, type NavGroup } from '../utils/homeNavigation';
 import { SidebarNavIcon, type SidebarNavIconName } from './SidebarNavIcon';
 import { TopbarUserAvatar } from './common/TopbarUserAvatar';
 
-const SIDEBAR_STORAGE_KEY = 'vn-sidebar-collapsed';
 const SIDEBAR_WIDTH = '220px';
-
-function readSidebarCollapsed(): boolean {
-  try {
-    return localStorage.getItem(SIDEBAR_STORAGE_KEY) === '1';
-  } catch {
-    return false;
-  }
-}
 
 interface NavItem {
   to: string;
@@ -126,16 +116,6 @@ export function AppLayout({
   const { user, logout, hasRole } = useAuth();
   const { formatMessage } = useIntl();
   const location = useLocation();
-  const [sidebarCollapsed, setSidebarCollapsed] =
-    useState(readSidebarCollapsed);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(SIDEBAR_STORAGE_KEY, sidebarCollapsed ? '1' : '0');
-    } catch {
-      // ignore storage errors
-    }
-  }, [sidebarCollapsed]);
 
   const visibleNav = sortNavByGroup(
     navItems.filter((item) => item.roles.some((r) => hasRole(r))),
@@ -145,40 +125,16 @@ export function AppLayout({
     .join(', ');
   const showSidebar = visibleNav.length > 1;
   const shellStyle = {
-    '--sidebar-width': showSidebar && !sidebarCollapsed ? SIDEBAR_WIDTH : '0px',
+    '--sidebar-width': showSidebar ? SIDEBAR_WIDTH : '0px',
   } as CSSProperties;
-  const sidebarOpen = showSidebar && !sidebarCollapsed;
 
   return (
     <div
-      className={`app-shell${sidebarOpen ? ' app-shell--sidebar-open' : ''}`}
+      className={`app-shell${showSidebar ? ' app-shell--sidebar-open' : ''}`}
       style={shellStyle}
     >
       <header className="topbar">
         <div className="topbar__start">
-          {showSidebar && (
-            <button
-              type="button"
-              className="sidebar-toggle"
-              onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-              aria-expanded={!sidebarCollapsed}
-              aria-controls="app-sidebar"
-              aria-label={
-                sidebarCollapsed
-                  ? formatMessage({ id: 'navigation.showMenu' })
-                  : formatMessage({ id: 'navigation.hideMenu' })
-              }
-              title={
-                sidebarCollapsed
-                  ? formatMessage({ id: 'navigation.showMenu' })
-                  : formatMessage({ id: 'navigation.hideMenu' })
-              }
-            >
-              <span className="sidebar-toggle__icon" aria-hidden>
-                {sidebarCollapsed ? '☰' : '‹'}
-              </span>
-            </button>
-          )}
           <div className="topbar__brand">
             <Link to="/" className="app-brand">
               <span className="app-brand__mark">
@@ -227,9 +183,8 @@ export function AppLayout({
         {showSidebar && (
           <nav
             id="app-sidebar"
-            className={`sidebar ${sidebarCollapsed ? 'sidebar--collapsed' : ''}`}
+            className="sidebar"
             aria-label={formatMessage({ id: 'navigation.main' })}
-            aria-hidden={sidebarCollapsed}
           >
             {visibleNav.map((item) => (
               <Link
