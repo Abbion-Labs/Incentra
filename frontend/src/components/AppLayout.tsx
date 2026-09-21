@@ -51,7 +51,7 @@ const navItems: NavItem[] = [
     to: '/evaluator/analytics',
     labelKey: 'navigation.analytics',
     icon: 'analytics',
-    roles: ['EVALUATOR', 'ADMIN'],
+    roles: ['EVALUATOR'],
     group: 'evaluator',
     match: (p) => p.startsWith('/evaluator/analytics'),
   },
