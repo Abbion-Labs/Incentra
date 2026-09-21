@@ -31,12 +31,17 @@ export function usePagedList<T>({
   fetchPageRef.current = fetchPage;
   const pageRef = useRef(page);
   pageRef.current = page;
+  // Brzo menjanje taba/filtera pokreće više zahteva paralelno; samo poslednji sme da upiše stanje.
+  const requestIdRef = useRef(0);
 
   const hasMore = items.length < totalCount;
 
   const loadPage = useCallback(
     async (targetPage: number, append: boolean) => {
       if (!enabled) return;
+
+      const requestId = ++requestIdRef.current;
+      const isLatest = () => requestId === requestIdRef.current;
 
       if (append) {
         setLoadingMore(true);
@@ -49,6 +54,7 @@ export function usePagedList<T>({
         const result = await api.get<PagedResult<T>>(
           fetchPageRef.current(targetPage, pageSize),
         );
+        if (!isLatest()) return;
         const pageItems = result.items ?? [];
         setTotalCount(result.totalCount ?? 0);
         setPage(targetPage);
@@ -56,6 +62,7 @@ export function usePagedList<T>({
           append ? [...current, ...pageItems] : pageItems,
         );
       } catch (e) {
+        if (!isLatest()) return;
         const message =
           e instanceof Error
             ? e.message
@@ -67,8 +74,10 @@ export function usePagedList<T>({
           setTotalCount(0);
         }
       } finally {
-        setLoading(false);
-        setLoadingMore(false);
+        if (isLatest()) {
+          setLoading(false);
+          setLoadingMore(false);
+        }
       }
     },
     [enabled, onError, pageSize],
@@ -85,6 +94,9 @@ export function usePagedList<T>({
 
   useEffect(() => {
     if (!enabled) {
+      requestIdRef.current += 1;
+      setLoading(false);
+      setLoadingMore(false);
       setItems([]);
       setTotalCount(0);
       setPage(1);
