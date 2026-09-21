@@ -28,7 +28,14 @@ public static class DependencyInjection
         return services;
     }
 
-    public static async Task MigrateAndSeedAsync(IServiceProvider services)
+    public static async Task MigrateDatabaseAsync(IServiceProvider services)
+    {
+        using var scope = services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        await context.Database.MigrateAsync();
+    }
+
+    public static async Task SeedDatabaseAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
