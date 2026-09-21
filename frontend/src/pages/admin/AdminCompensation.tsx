@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../../api/client';
 import type {
   CompensationCalculationStatus,
@@ -64,6 +64,8 @@ export function AdminCompensation() {
   const [saving, setSaving] = useState(false);
   const [calculating, setCalculating] = useState(false);
   const [calculateAllowNegative, setCalculateAllowNegative] = useState(false);
+  // Brza promena jedinice/godine pokreće više zahteva; samo poslednji sme da upiše parametre.
+  const parametersRequestRef = useRef(0);
 
   const loadOrgUnits = useCallback(async () => {
     const units = await api.get<OrganizationUnit[]>('/api/organization-units');
@@ -73,20 +75,22 @@ export function AdminCompensation() {
     }
   }, []);
 
-  const loadCalculationStatus = useCallback(async (parametersId: number) => {
+  const fetchCalculationStatus = useCallback(async (parametersId: number) => {
     try {
-      const status = await api.get<CompensationCalculationStatus>(
+      return await api.get<CompensationCalculationStatus>(
         `/api/compensation-parameters/${parametersId}/calculation-status`,
       );
-      setCalculationStatus(status);
     } catch {
-      setCalculationStatus(null);
+      return null;
     }
   }, []);
 
   const loadParameters = useCallback(
     async (orgId: string, selectedYear: string) => {
       if (!orgId || !selectedYear) return;
+
+      const requestId = ++parametersRequestRef.current;
+      const isLatest = () => requestId === parametersRequestRef.current;
 
       setLoading(true);
       try {
@@ -97,11 +101,14 @@ export function AdminCompensation() {
         const data = await api.get<CompensationParameters[]>(
           `/api/compensation-parameters?${params}`,
         );
+        if (!isLatest()) return;
         if (data.length > 0) {
           setExistingId(data[0].id);
           setForm(paramsToForm(data[0]));
           setCalculateAllowNegative(data[0].allowNegativeVariable);
-          await loadCalculationStatus(data[0].id);
+          const status = await fetchCalculationStatus(data[0].id);
+          if (!isLatest()) return;
+          setCalculationStatus(status);
         } else {
           setExistingId(null);
           setCalculationStatus(null);
@@ -111,16 +118,17 @@ export function AdminCompensation() {
           );
         }
       } catch (e) {
+        if (!isLatest()) return;
         toast.error(
           e instanceof Error
             ? e.message
             : formatMessage({ id: 'errors.compensationParamsLoadFailed' }),
         );
       } finally {
-        setLoading(false);
+        if (isLatest()) setLoading(false);
       }
     },
-    [loadCalculationStatus, formatMessage, toast],
+    [fetchCalculationStatus, formatMessage, toast],
   );
 
   useEffect(() => {
@@ -277,7 +285,7 @@ export function AdminCompensation() {
         ),
       );
       if (existingId) {
-        await loadCalculationStatus(existingId);
+        setCalculationStatus(await fetchCalculationStatus(existingId));
       }
     } catch (err) {
       toast.error(
@@ -291,6 +299,10 @@ export function AdminCompensation() {
   }
 
   const isFinalized = calculationStatus?.isFinalized ?? false;
+  // Snimanje i obračun posle završetka ponovo učitavaju parametre za jedinicu/godinu
+  // iz trenutka klika, pa se izbor zaključava dok traju.
+  const selectionLocked = saving || calculating;
+  const actionsDisabled = saving || calculating || loading || isFinalized;
 
   const yearOptions = useMemo(() => {
     const base = currentYear;
@@ -313,6 +325,7 @@ export function AdminCompensation() {
                 id="comp-org"
                 value={organizationUnitId}
                 onChange={(e) => setOrganizationUnitId(e.target.value)}
+                disabled={selectionLocked}
                 required
               >
                 {orgUnits.map((unit) => (
@@ -331,6 +344,7 @@ export function AdminCompensation() {
                 id="comp-year"
                 value={year}
                 onChange={(e) => setYear(e.target.value)}
+                disabled={selectionLocked}
                 required
               >
                 {yearOptions.map((y) => (
@@ -470,7 +484,7 @@ export function AdminCompensation() {
             <button
               type="submit"
               className="btn btn-primary"
-              disabled={saving || loading || isFinalized}
+              disabled={actionsDisabled}
             >
               {saving
                 ? formatMessage({ id: 'buttons.saving' })
@@ -500,7 +514,7 @@ export function AdminCompensation() {
                     onChange={(e) =>
                       setCalculateAllowNegative(e.target.value === '1')
                     }
-                    disabled={calculating || isFinalized}
+                    disabled={actionsDisabled}
                   >
                     <option value="0">
                       {formatMessage({ id: 'common.no' })}
@@ -513,7 +527,7 @@ export function AdminCompensation() {
                 <button
                   type="button"
                   className="btn btn-accent"
-                  disabled={calculating || isFinalized}
+                  disabled={actionsDisabled}
                   onClick={handleCalculate}
                 >
                   {calculating
