@@ -1,4 +1,11 @@
-import { Fragment, useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { api } from '../../api/client';
 
@@ -83,6 +90,9 @@ export function AdminSalaries() {
 
   const [historyLoading, setHistoryLoading] = useState(false);
 
+  // Brzi klikovi na „Istorija“ pokreću više zahteva; samo poslednji sme da upiše istoriju.
+  const historyRequestRef = useRef(0);
+
   const listQueryKey = debouncedSearch;
 
   const {
@@ -158,14 +168,26 @@ export function AdminSalaries() {
     if (listError) toast.error(listError);
   }, [listError, toast]);
 
+  function closeHistory() {
+    historyRequestRef.current += 1;
+
+    setHistoryEmployeeId(null);
+
+    setHistory([]);
+
+    setHistoryLoading(false);
+  }
+
   async function loadHistory(employeeId: number) {
     if (historyEmployeeId === employeeId) {
-      setHistoryEmployeeId(null);
-
-      setHistory([]);
+      closeHistory();
 
       return;
     }
+
+    const requestId = ++historyRequestRef.current;
+
+    const isLatest = () => requestId === historyRequestRef.current;
 
     setHistoryEmployeeId(employeeId);
 
@@ -176,8 +198,12 @@ export function AdminSalaries() {
         `/api/employee-salaries/${employeeId}/history`,
       );
 
+      if (!isLatest()) return;
+
       setHistory(rows);
     } catch (e) {
+      if (!isLatest()) return;
+
       toast.error(
         e instanceof Error
           ? e.message
@@ -188,7 +214,7 @@ export function AdminSalaries() {
 
       setHistory([]);
     } finally {
-      setHistoryLoading(false);
+      if (isLatest()) setHistoryLoading(false);
     }
   }
 
@@ -228,9 +254,7 @@ export function AdminSalaries() {
 
       setAddEffectiveFrom(todayIso());
 
-      setHistoryEmployeeId(null);
-
-      setHistory([]);
+      closeHistory();
 
       setWithoutSalary([]);
 
