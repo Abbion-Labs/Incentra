@@ -6,6 +6,9 @@ interface ConfirmDialogProps {
   message: string;
   confirmLabel?: string;
   cancelLabel?: string;
+  /** Dok akcija traje, dugmad su blokirana da bi se sprečio dupli klik. */
+  busy?: boolean;
+  busyLabel?: string;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -16,6 +19,8 @@ export function ConfirmDialog({
   message,
   confirmLabel,
   cancelLabel,
+  busy = false,
+  busyLabel,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
@@ -23,7 +28,11 @@ export function ConfirmDialog({
   if (!open) return null;
 
   return (
-    <div className="dialog-backdrop" role="presentation" onClick={onCancel}>
+    <div
+      className="dialog-backdrop"
+      role="presentation"
+      onClick={busy ? undefined : onCancel}
+    >
       <div
         className="dialog"
         role="dialog"
@@ -37,11 +46,19 @@ export function ConfirmDialog({
             type="button"
             className="btn btn-secondary"
             onClick={onCancel}
+            disabled={busy}
           >
             {cancelLabel ?? formatMessage({ id: 'buttons.cancel' })}
           </button>
-          <button type="button" className="btn btn-primary" onClick={onConfirm}>
-            {confirmLabel ?? formatMessage({ id: 'buttons.confirm' })}
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={onConfirm}
+            disabled={busy}
+          >
+            {busy && busyLabel
+              ? busyLabel
+              : (confirmLabel ?? formatMessage({ id: 'buttons.confirm' }))}
           </button>
         </div>
       </div>
