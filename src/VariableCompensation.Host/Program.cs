@@ -6,7 +6,14 @@ using VariableCompensation.Host.Middleware;
 using VariableCompensation.Infrastructure;
 using VariableCompensation.Infrastructure.Storage;
 
-var builder = WebApplication.CreateBuilder(args);
+const string migrateArgument = "--migrate";
+var migrateAndExit = args.Any(argument =>
+    string.Equals(argument, migrateArgument, StringComparison.OrdinalIgnoreCase));
+var hostArguments = args
+    .Where(argument => !string.Equals(argument, migrateArgument, StringComparison.OrdinalIgnoreCase))
+    .ToArray();
+
+var builder = WebApplication.CreateBuilder(hostArguments);
 
 builder.Host.UseSerilog((context, configuration) =>
     configuration.ReadFrom.Configuration(context.Configuration));
@@ -18,6 +25,13 @@ builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 
 var app = builder.Build();
+
+if (migrateAndExit)
+{
+    await VariableCompensation.Infrastructure.DependencyInjection.MigrateDatabaseAsync(app.Services);
+    await VariableCompensation.Infrastructure.DependencyInjection.SeedDatabaseAsync(app.Services);
+    return;
+}
 
 var avatarStorageProvider =
     builder.Configuration[$"{EmployeeAvatarStorageOptions.SectionName}:Provider"]
@@ -41,10 +55,5 @@ app.UseSerilogRequestLogging();
 app.UseExceptionHandler();
 app.MapHealthChecks("/health");
 app.MapApiEndpoints();
-
-if (!app.Environment.IsEnvironment("Testing"))
-{
-    await VariableCompensation.Infrastructure.DependencyInjection.MigrateAndSeedAsync(app.Services);
-}
 
 app.Run();
