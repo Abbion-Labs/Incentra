@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import type { EvaluationBucketCounts } from '../api/types';
 import { buildEvaluationBucketCountsPath } from '../utils/evaluationApi';
@@ -25,10 +25,16 @@ export function useEvaluationBucketCounts(
 ) {
   const [counts, setCounts] = useState<EvaluationBucketCounts>(emptyCounts);
   const [loading, setLoading] = useState(false);
+  // Samo odgovor poslednjeg zahteva sme da upiše brojače (brza promena filtera).
+  const requestIdRef = useRef(0);
 
   const load = useCallback(async () => {
+    const requestId = ++requestIdRef.current;
+    const isLatest = () => requestId === requestIdRef.current;
+
     if (!enabled) {
       setCounts(emptyCounts);
+      setLoading(false);
       return;
     }
 
@@ -37,11 +43,11 @@ export function useEvaluationBucketCounts(
       const result = await api.get<EvaluationBucketCounts>(
         buildEvaluationBucketCountsPath(params),
       );
-      setCounts(result);
+      if (isLatest()) setCounts(result);
     } catch {
-      setCounts(emptyCounts);
+      if (isLatest()) setCounts(emptyCounts);
     } finally {
-      setLoading(false);
+      if (isLatest()) setLoading(false);
     }
   }, [enabled, params.quarter, params.search, params.year]);
 
