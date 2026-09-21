@@ -103,7 +103,7 @@ export const router = createBrowserRouter([
       {
         path: '/evaluator/analytics',
         element: (
-          <ProtectedRoute roles={['EVALUATOR', 'ADMIN']}>
+          <ProtectedRoute roles={['EVALUATOR']}>
             <EvaluatorAnalyticsPage />
           </ProtectedRoute>
         ),
