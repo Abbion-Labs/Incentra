@@ -85,6 +85,9 @@ export function AdminRatingConfig() {
   }
 
   function startEdit(rating: DescriptiveRating) {
+    // Dok traje snimanje red se ne menja: posle dodavanja se forma resetuje,
+    // pa bi se novi izbor izgubio.
+    if (saving) return;
     setEditingId(rating.id);
     setForm(ratingToForm(rating));
   }
@@ -348,6 +351,7 @@ export function AdminRatingConfig() {
                         type="button"
                         className="btn btn-secondary btn-sm"
                         onClick={() => startEdit(rating)}
+                        disabled={saving}
                       >
                         {formatMessage({ id: 'buttons.edit' })}
                       </button>

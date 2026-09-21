@@ -118,6 +118,40 @@ describe('AdminCompensation', () => {
     expect(calculate).toHaveProperty('disabled', true);
   });
 
+  it('locks parameter fields while saving', async () => {
+    renderPage({
+      [paramsPath(1)]: [parameters(11, 1)],
+      '/api/compensation-parameters/11/calculation-status': draftStatus(11),
+    });
+    const pool = await screen.findByDisplayValue('987654');
+    const save = screen.getByRole('button', { name: 'buttons.saveChanges' });
+    await waitFor(() => expect(save).toHaveProperty('disabled', false));
+    expect(pool).toHaveProperty('disabled', false);
+    vi.spyOn(api, 'put').mockReturnValue(new Promise(() => undefined));
+
+    fireEvent.click(save);
+
+    expect(pool).toHaveProperty('disabled', true);
+    expect(screen.getByLabelText('common.currency')).toHaveProperty(
+      'disabled',
+      true,
+    );
+  });
+
+  it('locks parameter fields while a new selection loads', async () => {
+    const pending = renderPage({
+      [paramsPath(1)]: [parameters(11, 1)],
+      '/api/compensation-parameters/11/calculation-status': draftStatus(11),
+    });
+    const pool = await screen.findByDisplayValue('987654');
+    await waitFor(() => expect(pool).toHaveProperty('disabled', false));
+
+    selectOrg(2);
+    await waitFor(() => expect(pending.has(paramsPath(2))).toBe(true));
+
+    expect(pool).toHaveProperty('disabled', true);
+  });
+
   it('locks unit and year selection while saving', async () => {
     renderPage({
       [paramsPath(1)]: [parameters(11, 1)],

@@ -124,6 +124,8 @@ export function AdminEvaluatorSettings() {
 
   function startEdit(item: EvaluatorSettings, e?: React.MouseEvent) {
     e?.stopPropagation();
+    // Dok traje snimanje red se ne menja, isto kao u ostalim admin listama.
+    if (saving) return;
     setEditingId(item.employeeId);
     setForm(settingsToForm(item));
   }
@@ -420,6 +422,7 @@ export function AdminEvaluatorSettings() {
                           type="button"
                           className="btn btn-secondary btn-sm"
                           onClick={(e) => startEdit(item, e)}
+                          disabled={saving}
                         >
                           {formatMessage({ id: 'buttons.edit' })}
                         </button>

@@ -271,6 +271,9 @@ export function AdminSalaries() {
   }
 
   function startEdit(row: EmployeeSalary) {
+    // Posle snimanja se forma zatvara, pa bi se izbor drugog reda izgubio.
+    if (saving) return;
+
     setEditingId(row.employeeId);
 
     setEditPoints(String(row.points));
@@ -707,6 +710,7 @@ export function AdminSalaries() {
                                   type="button"
                                   className="btn btn-secondary btn-sm"
                                   onClick={() => startEdit(row)}
+                                  disabled={saving}
                                 >
                                   Novi unos
                                 </button>

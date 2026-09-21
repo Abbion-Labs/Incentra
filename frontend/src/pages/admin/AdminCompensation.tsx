@@ -303,6 +303,9 @@ export function AdminCompensation() {
   // iz trenutka klika, pa se izbor zaključava dok traju.
   const selectionLocked = saving || calculating;
   const actionsDisabled = saving || calculating || loading || isFinalized;
+  // Posle snimanja/obračuna i pri promeni izbora forma se puni sa servera, pa bi se
+  // vrednosti otkucane u međuvremenu tiho izgubile.
+  const fieldsLocked = saving || calculating || loading;
 
   const yearOptions = useMemo(() => {
     const base = currentYear;
@@ -366,6 +369,7 @@ export function AdminCompensation() {
               </FormLabelWithHint>
               <input
                 id="comp-pool"
+                disabled={fieldsLocked}
                 type="number"
                 min="1"
                 step="1"
@@ -381,6 +385,7 @@ export function AdminCompensation() {
               </label>
               <input
                 id="comp-currency"
+                disabled={fieldsLocked}
                 type="text"
                 maxLength={3}
                 value={form.currency}
@@ -404,6 +409,7 @@ export function AdminCompensation() {
               </FormLabelWithHint>
               <input
                 id="comp-threshold"
+                disabled={fieldsLocked}
                 type="number"
                 min="1"
                 max="5"
@@ -427,6 +433,7 @@ export function AdminCompensation() {
               </FormLabelWithHint>
               <input
                 id="comp-exponent"
+                disabled={fieldsLocked}
                 type="number"
                 min="0.1"
                 step="0.1"
@@ -447,6 +454,7 @@ export function AdminCompensation() {
               </FormLabelWithHint>
               <input
                 id="comp-dependency"
+                disabled={fieldsLocked}
                 type="number"
                 min="0.01"
                 step="0.01"
@@ -469,6 +477,7 @@ export function AdminCompensation() {
               </FormLabelWithHint>
               <select
                 id="comp-negative"
+                disabled={fieldsLocked}
                 value={form.allowNegativeVariable ? '1' : '0'}
                 onChange={(e) =>
                   updateField('allowNegativeVariable', e.target.value === '1')

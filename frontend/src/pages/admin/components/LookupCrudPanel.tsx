@@ -68,6 +68,8 @@ export function LookupCrudPanel({
   }
 
   function startEdit(item: LookupItem) {
+    // Posle snimanja forma se resetuje, pa bi se izbor drugog reda izgubio.
+    if (saving) return;
     setEditingId(item.id);
     setName(item.name);
     setIsActive(item.isActive);
@@ -203,6 +205,7 @@ export function LookupCrudPanel({
                     type="button"
                     className="btn btn-secondary btn-sm"
                     onClick={() => startEdit(item)}
+                    disabled={saving}
                   >
                     {formatMessage({ id: 'buttons.edit' })}
                   </button>

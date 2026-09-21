@@ -155,6 +155,9 @@ export function AdminEmployees() {
 
   function startEdit(employee: Employee, e?: React.MouseEvent) {
     e?.stopPropagation();
+    // Dok traje snimanje red se ne menja: posle dodavanja se forma resetuje,
+    // pa bi se novi izbor izgubio.
+    if (saving) return;
     setEditingId(employee.id);
     setFormValues(employeeToForm(employee));
     setLinkedUserId(employee.userId ? String(employee.userId) : '');
@@ -382,6 +385,7 @@ export function AdminEmployees() {
                             type="button"
                             className="btn btn-secondary btn-sm"
                             onClick={(e) => startEdit(employee, e)}
+                            disabled={saving}
                           >
                             {formatMessage({ id: 'buttons.edit' })}
                           </button>

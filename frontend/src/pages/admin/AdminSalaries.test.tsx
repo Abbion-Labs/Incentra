@@ -1,7 +1,8 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { IntlProvider } from 'react-intl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import { api } from '../../api/client';
 import type { EmployeeSalary, PagedResult } from '../../api/types';
 import { ToastProvider } from '../../components/common/Toast';
 import { mockApiGetDeferred } from '../../test/deferredApi';
@@ -102,5 +103,43 @@ describe('AdminSalaries history', () => {
       pending.get(boraHistoryPath)!.resolve([salary(2, 'Bora Borić', 222)]);
     });
     expect(screen.getByText('222')).toBeTruthy();
+  });
+});
+
+describe('AdminSalaries editing', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it('keeps the current row in edit mode while its salary is saving', async () => {
+    mockApiGetDeferred({
+      '/api/employee-salaries?page=1&pageSize=30': list,
+    });
+    render(
+      <IntlProvider locale="sr" messages={{}} onError={() => undefined}>
+        <ToastProvider>
+          <AdminSalaries />
+        </ToastProvider>
+      </IntlProvider>,
+    );
+    const user = userEvent.setup();
+    await screen.findByText('Ana Anić');
+    await user.click(
+      rowOf('Ana Anić').getByRole('button', { name: 'Novi unos' }),
+    );
+    vi.spyOn(api, 'put').mockReturnValue(new Promise(() => undefined));
+
+    await user.click(
+      rowOf('Ana Anić').getByRole('button', { name: 'buttons.save' }),
+    );
+    const boraNewEntry = rowOf('Bora Borić').getByRole('button', {
+      name: 'Novi unos',
+    });
+    expect(boraNewEntry).toHaveProperty('disabled', true);
+    fireEvent.click(boraNewEntry);
+
+    expect(
+      rowOf('Ana Anić').getByRole('button', { name: 'buttons.save' }),
+    ).toBeTruthy();
   });
 });

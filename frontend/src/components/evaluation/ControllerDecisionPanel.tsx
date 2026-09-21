@@ -32,6 +32,7 @@ export function ControllerDecisionPanel({
             rows={3}
             value={controllerComment}
             onChange={(e) => onControllerCommentChange(e.target.value)}
+            disabled={saving}
           />
         </div>
         <div className="form-row">
@@ -43,6 +44,7 @@ export function ControllerDecisionPanel({
             rows={3}
             value={revisionComment}
             onChange={(e) => onRevisionCommentChange(e.target.value)}
+            disabled={saving}
             placeholder={formatMessage({
               id: 'controller.revisionCommentPlaceholder',
             })}

@@ -81,6 +81,8 @@ export function AdminUsers() {
 
   function startEdit(user: AdminUser, e?: React.MouseEvent) {
     e?.stopPropagation();
+    // Posle snimanja forma se resetuje, pa bi se izbor drugog reda izgubio.
+    if (saving) return;
     setEditingUser(user);
     setFormValues(userToForm(user));
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -231,6 +233,7 @@ export function AdminUsers() {
                           type="button"
                           className="btn btn-secondary btn-sm"
                           onClick={(e) => startEdit(user, e)}
+                          disabled={saving}
                         >
                           {formatMessage({ id: 'buttons.edit' })}
                         </button>
