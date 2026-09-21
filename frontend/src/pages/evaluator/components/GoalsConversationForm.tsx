@@ -4,6 +4,8 @@ interface GoalsConversationFormProps {
   conversationAt: string;
   evaluatorComment: string;
   saving: boolean;
+  /** Kopiranje iz prethodnog kvartala još menja ciljeve, pa se čuvanje čeka. */
+  copying: boolean;
   lookupsLoading: boolean;
   canSubmit: boolean;
   onConversationAtChange: (value: string) => void;
@@ -15,6 +17,7 @@ export function GoalsConversationForm({
   conversationAt,
   evaluatorComment,
   saving,
+  copying,
   lookupsLoading,
   canSubmit,
   onConversationAtChange,
@@ -48,7 +51,7 @@ export function GoalsConversationForm({
           type="button"
           className="btn btn-primary"
           onClick={onSave}
-          disabled={saving || lookupsLoading || !canSubmit}
+          disabled={saving || copying || lookupsLoading || !canSubmit}
         >
           {saving
             ? formatMessage({ id: 'evaluation.settingGoals' })

@@ -441,45 +441,51 @@ export function EvaluationEditorPage() {
         />
         <UnsavedChangesIndicator visible={editable && isDirty} />
 
-        <EvaluationPlanningOverview
-          evaluation={evaluation}
-          ratingLevels={ratingLevels}
-          editable={editable}
-          onEvaluationChange={handleEvaluationChange}
-          showConditionsToggle={editable}
-          conditionsFulfilled={conditionsFulfilled}
-          conditionsNotMetComment={conditionsNotMetComment}
-          onConditionsFulfilledChange={handleConditionsFulfilledChange}
-          onConditionsNotMetCommentChange={handleConditionsNotMetCommentChange}
-        />
+        {/* Dok traje snimanje/slanje polja su zaključana: odgovor servera ponovo puni
+            formu, pa bi se izmene unete u međuvremenu tiho izgubile. */}
+        <fieldset className="form-page__fieldset" disabled={saving}>
+          <EvaluationPlanningOverview
+            evaluation={evaluation}
+            ratingLevels={ratingLevels}
+            editable={editable}
+            onEvaluationChange={handleEvaluationChange}
+            showConditionsToggle={editable}
+            conditionsFulfilled={conditionsFulfilled}
+            conditionsNotMetComment={conditionsNotMetComment}
+            onConditionsFulfilledChange={handleConditionsFulfilledChange}
+            onConditionsNotMetCommentChange={
+              handleConditionsNotMetCommentChange
+            }
+          />
 
-        {conditionsFulfilled && (
-          <>
-            <MeasuresEditorSection
-              measures={measures}
-              measureTypes={measureTypes}
-              ratingLevels={ratingLevels}
-              editable={editable}
-              onMeasuresChange={handleMeasuresChange}
-            />
+          {conditionsFulfilled && (
+            <>
+              <MeasuresEditorSection
+                measures={measures}
+                measureTypes={measureTypes}
+                ratingLevels={ratingLevels}
+                editable={editable}
+                onMeasuresChange={handleMeasuresChange}
+              />
 
-            <TrainingSection
-              trainingsAttended={trainingsAttended}
-              missingKnowledgeSkills={missingKnowledgeSkills}
-              selfDevelopmentSuggestions={selfDevelopmentSuggestions}
-              evaluatorComment={trainingEvaluatorComment}
-              editable={editable}
-              onTrainingsAttendedChange={handleTrainingsAttendedChange}
-              onMissingKnowledgeSkillsChange={
-                handleMissingKnowledgeSkillsChange
-              }
-              onSelfDevelopmentSuggestionsChange={
-                handleSelfDevelopmentSuggestionsChange
-              }
-              onEvaluatorCommentChange={handleTrainingEvaluatorCommentChange}
-            />
-          </>
-        )}
+              <TrainingSection
+                trainingsAttended={trainingsAttended}
+                missingKnowledgeSkills={missingKnowledgeSkills}
+                selfDevelopmentSuggestions={selfDevelopmentSuggestions}
+                evaluatorComment={trainingEvaluatorComment}
+                editable={editable}
+                onTrainingsAttendedChange={handleTrainingsAttendedChange}
+                onMissingKnowledgeSkillsChange={
+                  handleMissingKnowledgeSkillsChange
+                }
+                onSelfDevelopmentSuggestionsChange={
+                  handleSelfDevelopmentSuggestionsChange
+                }
+                onEvaluatorCommentChange={handleTrainingEvaluatorCommentChange}
+              />
+            </>
+          )}
+        </fieldset>
 
         {editable ? (
           <SubmitEvaluationPanel
@@ -518,6 +524,8 @@ export function EvaluationEditorPage() {
               id: 'evaluation.submitToControllerConfirm',
             })}
             confirmLabel={formatMessage({ id: 'buttons.submit' })}
+            busy={saving}
+            busyLabel={formatMessage({ id: 'buttons.submitting' })}
             onConfirm={submitEvaluation}
             onCancel={() => setConfirmSubmit(false)}
           />

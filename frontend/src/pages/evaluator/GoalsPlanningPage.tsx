@@ -434,6 +434,7 @@ export function GoalsPlanningPage() {
             conversationAt={conversationAt}
             evaluatorComment={evaluatorComment}
             saving={saving}
+            copying={copying}
             lookupsLoading={lookupsLoading}
             canSubmit={hasValidPlanningDraft(goals, conditions, criteria)}
             onConversationAtChange={handleConversationAtChange}

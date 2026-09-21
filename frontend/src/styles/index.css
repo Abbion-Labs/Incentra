@@ -593,6 +593,14 @@ textarea {
   min-width: 0;
 }
 
+/* Grupiše polja da bi se zaključala zajedno (disabled) bez promene izgleda. */
+.form-page__fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
 .form-section {
   margin-bottom: 1rem;
   min-width: 0;
