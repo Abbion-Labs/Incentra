@@ -4,8 +4,7 @@
   "git": {
     "deploymentEnabled": {
       "**/*": false,
-      "main": true,
-      "chore/profile-startup": true
+      "main": true
     }
   },
   "services": {
