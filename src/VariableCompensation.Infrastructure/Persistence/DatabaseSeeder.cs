@@ -9,8 +9,6 @@ public static class DatabaseSeeder
 {
     public static async Task SeedAsync(AppDbContext context, ISensitiveDataEncryptionService encryption)
     {
-        await context.Database.MigrateAsync();
-
         if (!await context.Roles.AnyAsync())
         {
             context.Roles.AddRange(
