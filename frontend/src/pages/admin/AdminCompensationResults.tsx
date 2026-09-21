@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import { fetchAllPages } from '../../api/paged';
@@ -44,6 +44,9 @@ export function AdminCompensationResults() {
     useState<CompensationCalculationStatus | null>(null);
   const [exporting, setExporting] = useState(false);
   const [finalizing, setFinalizing] = useState(false);
+  const [metaLoading, setMetaLoading] = useState(false);
+  // Brza promena jedinice/godine pokreće više zahteva; samo poslednji sme da upiše parametre.
+  const metaRequestRef = useRef(0);
   const yearOptions = useMemo(() => {
     const base = currentYear;
     return [base - 1, base, base + 1];
@@ -96,16 +99,22 @@ export function AdminCompensationResults() {
 
   const loadParametersMeta = useCallback(
     async (orgId: string, selectedYear: string) => {
+      const requestId = ++metaRequestRef.current;
+      const isLatest = () => requestId === metaRequestRef.current;
+
+      setMetaLoading(true);
       try {
         const parameters = await api.get<CompensationParameters[]>(
           `/api/compensation-parameters?organizationUnitId=${orgId}&year=${selectedYear}`,
         );
+        if (!isLatest()) return;
         if (parameters.length > 0) {
           setParametersId(parameters[0].id);
           setCurrency(parameters[0].currency || 'RSD');
           const status = await api.get<CompensationCalculationStatus>(
             `/api/compensation-parameters/${parameters[0].id}/calculation-status`,
           );
+          if (!isLatest()) return;
           setCalculationStatus(status);
         } else {
           setParametersId(null);
@@ -113,9 +122,12 @@ export function AdminCompensationResults() {
           setCurrency('RSD');
         }
       } catch {
+        if (!isLatest()) return;
         setParametersId(null);
         setCalculationStatus(null);
         setCurrency('RSD');
+      } finally {
+        if (isLatest()) setMetaLoading(false);
       }
     },
     [],
@@ -281,6 +293,7 @@ export function AdminCompensationResults() {
               id="results-org"
               value={organizationUnitId}
               onChange={(e) => setOrganizationUnitId(e.target.value)}
+              disabled={finalizing}
             >
               {orgUnits.map((unit) => (
                 <option key={unit.id} value={unit.id}>
@@ -297,6 +310,7 @@ export function AdminCompensationResults() {
               id="results-year"
               value={year}
               onChange={(e) => setYear(e.target.value)}
+              disabled={finalizing}
             >
               {yearOptions.map((y) => (
                 <option key={y} value={y}>
@@ -325,7 +339,7 @@ export function AdminCompensationResults() {
               type="button"
               className="btn btn-secondary btn-sm"
               onClick={handleExport}
-              disabled={exporting || loading || totalCount === 0}
+              disabled={exporting || loading || metaLoading || totalCount === 0}
             >
               {exporting
                 ? formatMessage({ id: 'admin.compensationResults.exporting' })
@@ -355,7 +369,7 @@ export function AdminCompensationResults() {
             <button
               type="button"
               className="btn btn-primary btn-sm"
-              disabled={finalizing}
+              disabled={finalizing || metaLoading}
               onClick={handleFinalize}
             >
               {finalizing

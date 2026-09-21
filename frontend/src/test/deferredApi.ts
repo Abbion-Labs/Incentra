@@ -6,15 +6,23 @@ export interface DeferredRequest {
   reject: (error: Error) => void;
 }
 
+type ImmediateResponses =
+  Record<string, unknown> | ((path: string) => unknown | undefined);
+
 /**
  * Zamenjuje `api.get` obećanjima koja test ručno razrešava, po putanji zahteva,
  * da bi se odgovori mogli pustiti obrnutim redosledom. Putanje iz `immediate`
- * odmah vraćaju zadatu vrednost.
+ * (mapa ili funkcija koja vraća `undefined` za ostale) odmah vraćaju vrednost.
  */
-export function mockApiGetDeferred(immediate: Record<string, unknown> = {}) {
+export function mockApiGetDeferred(immediate: ImmediateResponses = {}) {
+  const lookup =
+    typeof immediate === 'function'
+      ? immediate
+      : (path: string) => immediate[path];
   const pending = new Map<string, DeferredRequest>();
   vi.spyOn(api, 'get').mockImplementation((path: string) => {
-    if (path in immediate) return Promise.resolve(immediate[path] as never);
+    const value = lookup(path);
+    if (value !== undefined) return Promise.resolve(value as never);
     return new Promise<never>((resolve, reject) => {
       pending.set(path, {
         resolve: resolve as DeferredRequest['resolve'],
