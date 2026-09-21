@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api/client';
 import type {
@@ -28,6 +28,8 @@ export function AdminCompensationAnalytics() {
     null,
   );
   const [loading, setLoading] = useState(true);
+  // Brza promena filtera pokreće više zahteva; samo poslednji sme da upiše grafikon.
+  const analyticsRequestRef = useRef(0);
 
   const yearOptions = useMemo(() => {
     const base = currentYear;
@@ -54,6 +56,9 @@ export function AdminCompensationAnalytics() {
     ) => {
       if (!selectedYear) return;
 
+      const requestId = ++analyticsRequestRef.current;
+      const isLatest = () => requestId === analyticsRequestRef.current;
+
       setLoading(true);
       try {
         const params = new URLSearchParams({
@@ -67,8 +72,10 @@ export function AdminCompensationAnalytics() {
         const data = await api.get<CompensationAnalytics>(
           `/api/compensation-results/analytics?${params}`,
         );
+        if (!isLatest()) return;
         setAnalytics(data);
       } catch (e) {
+        if (!isLatest()) return;
         toast.error(
           e instanceof Error
             ? e.message
@@ -76,7 +83,7 @@ export function AdminCompensationAnalytics() {
         );
         setAnalytics(null);
       } finally {
-        setLoading(false);
+        if (isLatest()) setLoading(false);
       }
     },
     [formatMessage, toast],

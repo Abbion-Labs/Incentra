@@ -2,28 +2,9 @@ import type { ReactNode } from 'react';
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { api } from '../api/client';
 import type { PagedResult } from '../api/types';
+import { mockApiGetDeferred } from '../test/deferredApi';
 import { usePagedList } from './usePagedList';
-
-type Deferred = {
-  resolve: (value: PagedResult<string>) => void;
-  reject: (error: Error) => void;
-};
-
-function mockApiGet() {
-  const pending = new Map<string, Deferred>();
-  vi.spyOn(api, 'get').mockImplementation(
-    (path: string) =>
-      new Promise((resolve, reject) => {
-        pending.set(path, {
-          resolve: resolve as Deferred['resolve'],
-          reject,
-        });
-      }),
-  );
-  return pending;
-}
 
 function page(items: string[]): PagedResult<string> {
   return {
@@ -58,7 +39,7 @@ describe('usePagedList', () => {
   });
 
   it('ignores a stale response that arrives after the latest one', async () => {
-    const pending = mockApiGet();
+    const pending = mockApiGetDeferred();
     const { result, rerender } = renderTabList('approved');
     const approvedPath = '/api/evaluations?bucket=approved&page=1&pageSize=30';
     const unratedPath = '/api/evaluations?bucket=unrated&page=1&pageSize=30';
@@ -81,7 +62,7 @@ describe('usePagedList', () => {
   });
 
   it('stays loading until the latest request settles', async () => {
-    const pending = mockApiGet();
+    const pending = mockApiGetDeferred();
     const { result, rerender } = renderTabList('approved');
     const approvedPath = '/api/evaluations?bucket=approved&page=1&pageSize=30';
     const unratedPath = '/api/evaluations?bucket=unrated&page=1&pageSize=30';
