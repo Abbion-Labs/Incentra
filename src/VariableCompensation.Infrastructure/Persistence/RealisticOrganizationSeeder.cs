@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Application.Evaluation.Services;
@@ -81,17 +82,43 @@ internal static class RealisticOrganizationSeeder
 
     public static async Task EnsureAsync(AppDbContext context, ISensitiveDataEncryptionService encryption)
     {
-        if (!await IsRealisticSeedPresentAsync(context))
+        var totalTimer = Stopwatch.StartNew();
+        var stageTimer = Stopwatch.StartNew();
+
+        var seedPresent = await IsRealisticSeedPresentAsync(context);
+        Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder seed-state check took {stageTimer.ElapsedMilliseconds} ms; present={seedPresent}");
+
+        if (!seedPresent)
         {
+            stageTimer.Restart();
             await WipeTransactionalDataAsync(context);
+            Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder wipe took {stageTimer.ElapsedMilliseconds} ms");
+
+            stageTimer.Restart();
             await SeedOrganizationUnitsAsync(context);
+            Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder organization units took {stageTimer.ElapsedMilliseconds} ms");
+
+            stageTimer.Restart();
             await SeedEmployeesAsync(context);
+            Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder employees took {stageTimer.ElapsedMilliseconds} ms");
+
+            stageTimer.Restart();
             await SeedSalariesAsync(context, encryption);
+            Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder salaries took {stageTimer.ElapsedMilliseconds} ms");
+
+            stageTimer.Restart();
             await SeedCompensationParametersAsync(context);
+            Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder compensation parameters took {stageTimer.ElapsedMilliseconds} ms");
+
+            stageTimer.Restart();
             await SeedEvaluationsAsync(context);
+            Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder evaluations took {stageTimer.ElapsedMilliseconds} ms");
         }
 
+        stageTimer.Restart();
         await SeedUsersAsync(context);
+        Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder users took {stageTimer.ElapsedMilliseconds} ms");
+        Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder total took {totalTimer.ElapsedMilliseconds} ms");
     }
 
     private static async Task<bool> IsRealisticSeedPresentAsync(AppDbContext context)
