@@ -27,6 +27,25 @@ const SERIES_KEYS = [
   },
 ];
 
+// Small counts get a tick for every whole number. Above that the axis steps
+// by 5, and moves on to 10, 20, 50, 100… once reaching the peak would take
+// more than MAX_Y_INTERVALS steps.
+const SMALL_PEAK = 5;
+const MIN_STEP_ABOVE_SMALL_PEAK = 5;
+const MAX_Y_INTERVALS = 10;
+
+function yAxisStep(peak: number): number {
+  if (peak <= SMALL_PEAK) return 1;
+
+  const minStep = Math.max(peak / MAX_Y_INTERVALS, MIN_STEP_ABOVE_SMALL_PEAK);
+  const magnitude = 10 ** Math.floor(Math.log10(minStep));
+  return (
+    [1, 2, 5]
+      .map((factor) => factor * magnitude)
+      .find((step) => step >= minStep) ?? 10 * magnitude
+  );
+}
+
 interface TooltipState {
   label: string;
   value: number;
@@ -43,7 +62,7 @@ export function RatingCountComparisonChart({
   const { formatMessage } = useIntl();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  const maxValue = useMemo(() => {
+  const { maxValue, yTicks } = useMemo(() => {
     const peak = items.reduce((max, item) => {
       const localMax = Math.max(
         item.previousYearCount,
@@ -52,7 +71,12 @@ export function RatingCountComparisonChart({
       );
       return Math.max(max, localMax);
     }, 0);
-    return Math.max(peak, 1);
+    const step = yAxisStep(peak);
+    const intervals = Math.max(Math.ceil(peak / step), 1);
+    return {
+      maxValue: intervals * step,
+      yTicks: Array.from({ length: intervals + 1 }, (_, index) => index * step),
+    };
   }, [items]);
 
   if (items.length === 0) {
@@ -115,7 +139,7 @@ export function RatingCountComparisonChart({
             id: 'analytics.ratingCountComparisonAria',
           })}
         >
-          {Array.from({ length: maxValue + 1 }, (_, tick) => {
+          {yTicks.map((tick) => {
             const y =
               padding.top + chartHeight - (tick / maxValue) * chartHeight;
             return (
