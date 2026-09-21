@@ -17,14 +17,22 @@ cp .env.example .env
 docker compose up -d
 ```
 
-### 2. Pokreni API
+### 2. Inicijalizuj bazu (prvi put i nakon novih migracija)
 
 ```bash
 cd src/VariableCompensation.Host
+dotnet run -- --migrate
+```
+
+Komanda primenjuje EF migracije i seed podatke, a zatim se završava. Ne pokreće HTTP server.
+
+### 3. Pokreni API
+
+```bash
 dotnet run
 ```
 
-### 3. Proveri
+### 4. Proveri
 
 - Health: http://localhost:5000/health
 - API health: http://localhost:5000/api/health
@@ -55,7 +63,13 @@ dotnet ef database update \
   --startup-project src/VariableCompensation.Host
 ```
 
-Migracije se automatski primenjuju pri pokretanju aplikacije (`MigrateAndSeedAsync`).
+Migracije i seed se ne izvršavaju pri normalnom pokretanju API-ja. Pokrenite ih eksplicitno jednom pri prvom podizanju baze i nakon dodavanja novih migracija:
+
+```bash
+dotnet run --project src/VariableCompensation.Host -- --migrate
+```
+
+Za Vercel/Docker isti one-off režim može da se pokrene prosleđivanjem argumenta `--migrate` kontejneru. Nakon završetka procesa, standardni start kontejnera pokreće samo HTTP server.
 
 ## pgAdmin
 
@@ -106,7 +120,7 @@ U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
 
 ## HR modul (Faza 4)
 
-Lookup podaci se seed-uju pri pokretanju (org. jedinice, radna mesta, nivoi obrazovanja).
+Lookup podaci se seed-uju tokom eksplicitnog `--migrate` one-off pokretanja (org. jedinice, radna mesta, nivoi obrazovanja).
 
 Svi GET endpointi zahtevaju JWT. POST/PUT zahtevaju `ADMIN` ulogu.
 
@@ -316,7 +330,7 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 - Zaposleni: `marko@local.dev` / `Marko123!` (Marko Marković)
 - Plate/varijabila: korisnik sa `PAYROLL` ulogom (kreirati u administraciji ako nije u seed-u)
 
-Demo seed pri pokretanju API-ja kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
+Demo seed tokom `--migrate` one-off pokretanja kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
 
 ## Skladištenje avatara
 
