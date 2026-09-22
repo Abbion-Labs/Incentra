@@ -17,22 +17,14 @@ cp .env.example .env
 docker compose up -d
 ```
 
-### 2. Inicijalizuj bazu (prvi put i nakon novih migracija)
+### 2. Pokreni API
 
 ```bash
 cd src/VariableCompensation.Host
-dotnet run -- --migrate
-```
-
-Komanda primenjuje EF migracije i seed podatke, a zatim se završava. Ne pokreće HTTP server.
-
-### 3. Pokreni API
-
-```bash
 dotnet run
 ```
 
-### 4. Proveri
+### 3. Proveri
 
 - Health: http://localhost:5000/health
 - API health: http://localhost:5000/api/health
@@ -63,13 +55,9 @@ dotnet ef database update \
   --startup-project src/VariableCompensation.Host
 ```
 
-Migracije i seed se ne izvršavaju pri normalnom pokretanju API-ja. Pokrenite ih eksplicitno jednom pri prvom podizanju baze i nakon dodavanja novih migracija:
+Migracije i seed se pokreću kroz `MigrateAndSeedAsync` pri pokretanju aplikacije. Podrazumevana `DbInit:Policy` je `OnStart`, pa lokalni razvoj inicijalizaciju izvršava pri svakom pokretanju.
 
-```bash
-dotnet run --project src/VariableCompensation.Host -- --migrate
-```
-
-Za Vercel/Docker isti one-off režim može da se pokrene prosleđivanjem argumenta `--migrate` kontejneru. Nakon završetka procesa, standardni start kontejnera pokreće samo HTTP server.
+Na Vercelu je `DbInit__Policy=OnDeploy`. Tada se migracija i seed izvršavaju samo jednom za isti `VERCEL_DEPLOYMENT_ID`; ostale instance tog deployment-a proveravaju zapis u tabeli `deployment_initializations` i preskaču inicijalizaciju.
 
 ## pgAdmin
 
@@ -120,7 +108,7 @@ U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
 
 ## HR modul (Faza 4)
 
-Lookup podaci se seed-uju tokom eksplicitnog `--migrate` one-off pokretanja (org. jedinice, radna mesta, nivoi obrazovanja).
+Lookup podaci se seed-uju pri inicijalizaciji baze (org. jedinice, radna mesta, nivoi obrazovanja).
 
 Svi GET endpointi zahtevaju JWT. POST/PUT zahtevaju `ADMIN` ulogu.
 
@@ -330,7 +318,7 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 - Zaposleni: `marko@local.dev` / `Marko123!` (Marko Marković)
 - Plate/varijabila: korisnik sa `PAYROLL` ulogom (kreirati u administraciji ako nije u seed-u)
 
-Demo seed tokom `--migrate` one-off pokretanja kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
+Demo seed pri inicijalizaciji baze kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
 
 ## Skladištenje avatara
 
@@ -378,6 +366,7 @@ Email__Username
 Email__Password
 Email__FromAddress
 Email__FrontendBaseUrl
+DbInit__Policy
 ```
 
 ### SMTP konfiguracija
