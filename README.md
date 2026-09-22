@@ -97,11 +97,11 @@ Seed admin nalog:
 Endpointi:
 - `POST /api/auth/login` — javno
 - `POST /api/auth/refresh` — javno; refresh token čita iz kolačića
-- `POST /api/auth/logout` — javno; revokuje refresh token i briše kolačić
+- `POST /api/auth/logout` — javno; odjavljuje celu sesiju i briše kolačić
 - `GET /api/auth/me` — zahteva JWT (`Authorize`)
-- `POST /api/auth/register` — samo `ADMIN` role
+- `POST /api/auth/register` — samo `ADMIN` role; vraća profil novog korisnika, bez tokena
 
-Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud/users`) pri kreiranju ili izmeni korisnika izaberite jednu ili više uloga (checkbox). Nakon promene uloga, korisnik se mora ponovo prijaviti da bi JWT sadržao nove uloge.
+Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud/users`) pri kreiranju ili izmeni korisnika izaberite jednu ili više uloga (checkbox). Promena uloga odmah odjavljuje sve sesije tog korisnika, pa se mora ponovo prijaviti da bi JWT sadržao nove uloge.
 
 ### Tokeni
 
@@ -112,6 +112,21 @@ Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud
 
 Refresh token se **ne vraća u telu odgovora**, pa ga skripte na stranici ne mogu pročitati. `SameSite=Strict` znači da se kolačić nikad ne šalje sa tuđeg sajta, pa poseban CSRF token nije potreban.
 
+#### Sesije
+
+Svaka prijava otvara **sesiju**. Svi refresh tokeni nastali iz te prijave nose isti `SessionId`, a access token ga nosi u claim-u `sid`.
+
+- **Svaki zahtev proverava sesiju** (jedan upit po indeksu): sesija mora imati bar jedan važeći refresh token, a korisnik mora biti aktivan. Zato odjava, deaktivacija naloga, promena uloga i promena lozinke deluju **odmah**, a ne tek kad access token istekne. Access token bez `sid`-a se odbija.
+- **Odjava** gasi celu sesiju, sa svim tabovima tog browsera. Tabovi se međusobno obaveštavaju (`BroadcastChannel`), pa se odjava ili prijava u jednom tabu odmah vidi i u ostalima.
+- **Promena sopstvene lozinke** odjavljuje sve ostale uređaje, a trenutni ostaje prijavljen. Admin reset lozinke, promena uloga i deaktivacija odjavljuju sve sesije korisnika.
+
+#### Rotacija i ukraden token
+
+Refresh token se menja pri svakoj upotrebi, a zamena je atomična: dva istovremena refresh-a istim tokenom ne mogu oba da ga iskoriste.
+
+- Ako isti token stigne ponovo **u roku od 30 sekundi** posle zamene, dobija novi token u istoj sesiji. To pokriva reload stranice dok je odgovor na refresh još bio na putu.
+- Ako stigne **kasnije**, to znači da postoji kopija tokena: **cela sesija se odjavljuje** (i kod napadača i kod korisnika), a u log ide upozorenje.
+
 Podešavanja:
 
 - `RefreshCookie__Secure` — kolačić se šalje samo preko HTTPS-a. Podrazumevano je `true` i u produkciji se **ne podešava**. Isključen je jedino u `appsettings.Development.json`, jer lokalni razvoj radi preko HTTP-a, gde bi browser odbio `Secure` kolačić.
@@ -119,8 +134,9 @@ Podešavanja:
   > Namerno se ne izvodi iz `Request.IsHttps`: iza Vercel proxy-ja backend prima običan HTTP (proxy završava TLS), pa bi se `Secure` tiho isključio u produkciji.
 - Kolačić radi dok su frontend i API na istom domenu (lokalno preko Vite proxy-ja, na Vercelu preko `/api` rewrite-a). Ako API pređe na poseban domen, traži `SameSite=None`, CORS sa kredencijalima i zasebnu CSRF zaštitu.
 - `POST /api/auth/refresh` i `/logout` primarno čitaju kolačić, a kao rezervu prihvataju i `{ "refreshToken": "..." }` u telu, radi Swagger-a i ručnog testiranja.
+- `Jwt__RefreshTokenReuseGraceSeconds` — koliko dugo posle zamene token sme ponovo da stigne (podrazumevano `30`).
 
-> **Pri prelasku na kolačić svi prijavljeni korisnici moraju jednom ponovo da se prijave**, jer su im tokeni ostali u `localStorage`, koji se više ne koristi. Frontend te stare ključeve briše pri učitavanju.
+> **Pri prelasku na kolačić i sesije svi prijavljeni korisnici moraju jednom ponovo da se prijave.** Tokeni su im ostali u `localStorage`, koji se više ne koristi (frontend te ključeve briše pri učitavanju), migracija `AddRefreshTokenSessions` briše stare refresh tokene, a stari access tokeni nemaju `sid`.
 
 U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
 
