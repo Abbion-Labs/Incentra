@@ -18,6 +18,30 @@ public interface IUserRepository
 
     Task RevokeAllRefreshTokensAsync(long userId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Signs out every session of the user except <paramref name="keptSessionId"/>.
+    /// </summary>
+    Task RevokeOtherSessionsAsync(long userId, Guid keptSessionId, CancellationToken cancellationToken);
+
+    Task RevokeSessionAsync(Guid sessionId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Whether the session has not ended: the user is still active and one of the session's refresh tokens is
+    /// neither revoked nor expired.
+    /// </summary>
+    Task<bool> IsSessionActiveAsync(long userId, Guid sessionId, DateTime now, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Revokes <paramref name="current"/> and stores <paramref name="successor"/> together. Returns false, and
+    /// stores nothing, when <paramref name="current"/> has been revoked in the meantime, for example by a
+    /// concurrent refresh with the same token.
+    /// </summary>
+    Task<bool> TryRotateRefreshTokenAsync(
+        RefreshToken current,
+        RefreshToken successor,
+        DateTime now,
+        CancellationToken cancellationToken);
+
     Task<RefreshToken?> FindRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken);
 
     Task DeleteExpiredRefreshTokensAsync(long userId, CancellationToken cancellationToken);

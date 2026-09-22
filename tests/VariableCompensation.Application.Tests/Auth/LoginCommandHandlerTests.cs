@@ -28,7 +28,7 @@ public class LoginCommandHandlerTests
             IsActive = true,
         };
         this.passwordHasher.Verify("correct", "hash").Returns(true);
-        this.jwtTokenService.GenerateAccessToken(Arg.Any<User>(), Arg.Any<IEnumerable<string>>()).Returns("access");
+        this.jwtTokenService.GenerateAccessToken(Arg.Any<User>(), Arg.Any<IEnumerable<string>>(), Arg.Any<Guid>()).Returns("access");
         this.jwtTokenService.GenerateRefreshToken().Returns("refresh");
 
         var limiter = new InMemoryLoginAttemptLimiter(

@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Auth.Commands.Login;
@@ -14,15 +15,21 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
     private readonly IUserRepository userRepository;
     private readonly IEmployeeRepository employeeRepository;
     private readonly IJwtTokenService jwtTokenService;
+    private readonly TimeProvider timeProvider;
+    private readonly ILogger<RefreshTokenCommandHandler> logger;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepository,
         IEmployeeRepository employeeRepository,
-        IJwtTokenService jwtTokenService)
+        IJwtTokenService jwtTokenService,
+        TimeProvider timeProvider,
+        ILogger<RefreshTokenCommandHandler> logger)
     {
         this.userRepository = userRepository;
         this.employeeRepository = employeeRepository;
         this.jwtTokenService = jwtTokenService;
+        this.timeProvider = timeProvider;
+        this.logger = logger;
     }
 
     public async Task<Result<AuthResponse>> Handle(RefreshTokenCommand request, CancellationToken cancellationToken)
@@ -32,9 +39,10 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             return Result.Failure<AuthResponse>(ErrorCodes.RefreshTokenRequired);
         }
 
+        var now = this.timeProvider.GetUtcNow().UtcDateTime;
         var tokenHash = LoginCommandHandler.HashToken(request.RefreshToken);
         var storedToken = await this.userRepository.FindRefreshTokenByHashAsync(tokenHash, cancellationToken);
-        if (storedToken is null || storedToken.RevokedAt is not null || storedToken.ExpiresAt <= DateTime.UtcNow)
+        if (storedToken is null || storedToken.ExpiresAt <= now)
         {
             return Result.Failure<AuthResponse>(ErrorCodes.RefreshTokenInvalid);
         }
@@ -45,30 +53,69 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             return Result.Failure<AuthResponse>(ErrorCodes.UserInactive);
         }
 
-        storedToken.RevokedAt = DateTime.UtcNow;
+        await this.userRepository.DeleteExpiredRefreshTokensAsync(user.Id, cancellationToken);
 
-        var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
-        var accessToken = this.jwtTokenService.GenerateAccessToken(user, roles);
         var refreshTokenPlain = this.jwtTokenService.GenerateRefreshToken();
-        var newRefreshToken = new Domain.Entities.Identity.RefreshToken
+        var successor = new Domain.Entities.Identity.RefreshToken
         {
             UserId = user.Id,
+            SessionId = storedToken.SessionId,
             TokenHash = LoginCommandHandler.HashToken(refreshTokenPlain),
             ExpiresAt = this.jwtTokenService.GetRefreshTokenExpiry()
         };
 
-        await this.userRepository.AddRefreshTokenAsync(newRefreshToken, cancellationToken);
-        await this.userRepository.SaveChangesAsync(cancellationToken);
+        if (storedToken.RevokedAt is null
+            && await this.userRepository.TryRotateRefreshTokenAsync(storedToken, successor, now, cancellationToken))
+        {
+            return await this.CreateResponseAsync(user, successor, refreshTokenPlain, cancellationToken);
+        }
 
+        // The token has been exchanged before, or a concurrent refresh with it got there first a moment ago.
+        var exchangedAt = storedToken.RevokedAt ?? now;
+
+        if (!await this.userRepository.IsSessionActiveAsync(user.Id, storedToken.SessionId, now, cancellationToken))
+        {
+            // Signed out, the password was changed, or a replay was already caught: the session is over.
+            return Result.Failure<AuthResponse>(ErrorCodes.RefreshTokenInvalid);
+        }
+
+        if (now - exchangedAt <= this.jwtTokenService.RefreshTokenReuseGracePeriod)
+        {
+            // Almost certainly the same browser: the page was reloaded before the previous response arrived, or
+            // two tabs refreshed at once. It carries on in the same session.
+            await this.userRepository.AddRefreshTokenAsync(successor, cancellationToken);
+            await this.userRepository.SaveChangesAsync(cancellationToken);
+            return await this.CreateResponseAsync(user, successor, refreshTokenPlain, cancellationToken);
+        }
+
+        // An exchanged token came back long after its successor took over, so a copy of it is in someone else's
+        // hands. There is no telling which side is the copy, so the session ends for both.
+        await this.userRepository.RevokeSessionAsync(storedToken.SessionId, cancellationToken);
+        await this.userRepository.SaveChangesAsync(cancellationToken);
+        this.logger.LogWarning(
+            "A refresh token of user {UserId} was presented again after it had been exchanged; session {SessionId} was signed out.",
+            user.Id,
+            storedToken.SessionId);
+
+        return Result.Failure<AuthResponse>(ErrorCodes.RefreshTokenInvalid);
+    }
+
+    private async Task<AuthResponse> CreateResponseAsync(
+        User user,
+        Domain.Entities.Identity.RefreshToken refreshToken,
+        string refreshTokenPlain,
+        CancellationToken cancellationToken)
+    {
+        var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
         var employee = await this.employeeRepository.FindByUserIdAsync(user.Id, cancellationToken);
 
-        return Result.Success(new AuthResponse
+        return new AuthResponse
         {
-            AccessToken = accessToken,
+            AccessToken = this.jwtTokenService.GenerateAccessToken(user, roles, refreshToken.SessionId),
             RefreshToken = refreshTokenPlain,
             AccessTokenExpiresAt = this.jwtTokenService.GetAccessTokenExpiry(),
-            RefreshTokenExpiresAt = newRefreshToken.ExpiresAt,
+            RefreshTokenExpiresAt = refreshToken.ExpiresAt,
             User = LoginCommandHandler.MapProfile(user, roles, employee)
-        });
+        };
     }
 }

@@ -62,17 +62,52 @@ public sealed class UserRepository : IUserRepository, IRoleLookup
         return await this.FindByIdWithRolesAsync(userId.Value, cancellationToken);
     }
 
-    public async Task RevokeAllRefreshTokensAsync(long userId, CancellationToken cancellationToken)
-    {
-        var tokens = await this.context.RefreshTokens
-            .Where(rt => rt.UserId == userId && rt.RevokedAt == null)
-            .ToListAsync(cancellationToken);
+    public Task RevokeAllRefreshTokensAsync(long userId, CancellationToken cancellationToken) =>
+        this.RevokeAsync(this.context.RefreshTokens.Where(rt => rt.UserId == userId), cancellationToken);
 
-        var now = DateTime.UtcNow;
-        foreach (var token in tokens)
+    public Task RevokeOtherSessionsAsync(long userId, Guid keptSessionId, CancellationToken cancellationToken) =>
+        this.RevokeAsync(
+            this.context.RefreshTokens.Where(rt => rt.UserId == userId && rt.SessionId != keptSessionId),
+            cancellationToken);
+
+    public Task RevokeSessionAsync(Guid sessionId, CancellationToken cancellationToken) =>
+        this.RevokeAsync(this.context.RefreshTokens.Where(rt => rt.SessionId == sessionId), cancellationToken);
+
+    public Task<bool> IsSessionActiveAsync(long userId, Guid sessionId, DateTime now, CancellationToken cancellationToken) =>
+        this.context.RefreshTokens.AnyAsync(
+            rt => rt.UserId == userId
+                && rt.SessionId == sessionId
+                && rt.RevokedAt == null
+                && rt.ExpiresAt > now
+                && rt.User.IsActive,
+            cancellationToken);
+
+    public async Task<bool> TryRotateRefreshTokenAsync(
+        RefreshToken current,
+        RefreshToken successor,
+        DateTime now,
+        CancellationToken cancellationToken)
+    {
+        await using var transaction = await this.context.Database.BeginTransactionAsync(cancellationToken);
+
+        // Conditional, so two refreshes racing with one token cannot both redeem it: the later update waits
+        // for the earlier transaction to commit, then no longer matches the row.
+        var revoked = await this.context.RefreshTokens
+            .Where(rt => rt.Id == current.Id && rt.RevokedAt == null)
+            .ExecuteUpdateAsync(setters => setters.SetProperty(rt => rt.RevokedAt, now), cancellationToken);
+        if (revoked == 0)
         {
-            token.RevokedAt = now;
+            return false;
         }
+
+        // Keeps the tracked entity in step with the row without scheduling a second update for it.
+        current.RevokedAt = now;
+        this.context.Entry(current).State = EntityState.Unchanged;
+
+        await this.context.RefreshTokens.AddAsync(successor, cancellationToken);
+        await this.context.SaveChangesAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+        return true;
     }
 
     public Task<RefreshToken?> FindRefreshTokenByHashAsync(string tokenHash, CancellationToken cancellationToken) =>
@@ -96,5 +131,16 @@ public sealed class UserRepository : IUserRepository, IRoleLookup
     {
         var role = await this.context.Roles.AsNoTracking().FirstOrDefaultAsync(r => r.Code == roleCode, cancellationToken);
         return role?.Id;
+    }
+
+    private async Task RevokeAsync(IQueryable<RefreshToken> tokens, CancellationToken cancellationToken)
+    {
+        var active = await tokens.Where(rt => rt.RevokedAt == null).ToListAsync(cancellationToken);
+
+        var now = DateTime.UtcNow;
+        foreach (var token in active)
+        {
+            token.RevokedAt = now;
+        }
     }
 }

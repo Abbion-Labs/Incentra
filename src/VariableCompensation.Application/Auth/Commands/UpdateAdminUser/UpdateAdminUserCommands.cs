@@ -97,6 +97,7 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
         }
 
         var previousRoleIds = user.UserRoles.Select(ur => ur.RoleId).OrderBy(id => id).ToList();
+        var wasActive = user.IsActive;
         user.Email = email;
         user.IsActive = request.IsActive;
         user.UpdatedAt = DateTime.UtcNow;
@@ -104,7 +105,10 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
 
         var updatedRoleIds = roleIdsResult.Value.OrderBy(id => id).ToList();
         var rolesChanged = !previousRoleIds.SequenceEqual(updatedRoleIds);
-        if (rolesChanged)
+
+        // A deactivated account must not come back signed in if it is ever reactivated.
+        var deactivated = wasActive && !user.IsActive;
+        if (rolesChanged || deactivated)
         {
             await this.userRepository.RevokeAllRefreshTokensAsync(user.Id, cancellationToken);
         }
