@@ -5,7 +5,9 @@ using Microsoft.Extensions.DependencyInjection;
 using VariableCompensation.Application;
 using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Application.Abstractions.Storage;
+using VariableCompensation.Infrastructure.Deployment;
 using VariableCompensation.Infrastructure.Persistence;
+using VariableCompensation.Infrastructure.Persistence.Initialization;
 using VariableCompensation.Infrastructure.Storage;
 
 namespace VariableCompensation.Infrastructure;
@@ -23,24 +25,54 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
+        AddDatabaseInitialization(services, configuration, connectionString);
         services.AddAuthInfrastructure(configuration);
 
         return services;
     }
 
-    public static async Task MigrateDatabaseAsync(IServiceProvider services)
+    public static async Task MigrateAndSeedAsync(IServiceProvider services)
     {
         using var scope = services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        await context.Database.MigrateAsync();
+        var serviceProvider = scope.ServiceProvider;
+        var policy = serviceProvider.GetRequiredService<IDbInitPolicy>();
+        var context = serviceProvider.GetRequiredService<AppDbContext>();
+        var encryption = serviceProvider.GetRequiredService<ISensitiveDataEncryptionService>();
+
+        await policy.RunAsync(async () =>
+        {
+            await MigrateDatabaseAsync(context);
+            await SeedDatabaseAsync(context, encryption);
+        });
     }
 
-    public static async Task SeedDatabaseAsync(IServiceProvider services)
+    private static Task MigrateDatabaseAsync(AppDbContext context) =>
+        context.Database.MigrateAsync();
+
+    private static Task SeedDatabaseAsync(
+        AppDbContext context,
+        ISensitiveDataEncryptionService encryption) =>
+        DatabaseSeeder.SeedAsync(context, encryption);
+
+    private static void AddDatabaseInitialization(
+        IServiceCollection services,
+        IConfiguration configuration,
+        string connectionString)
     {
-        using var scope = services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var encryption = scope.ServiceProvider.GetRequiredService<ISensitiveDataEncryptionService>();
-        await DatabaseSeeder.SeedAsync(context, encryption);
+        var policyName = configuration["DbInit:Policy"] ?? "OnStart";
+
+        services.AddSingleton<IDeployIdProvider, VercelDeployIdProvider>();
+        services.AddSingleton<IDeployInitStore>(
+            _ => new PostgresDeployInitStore(connectionString));
+        services.AddScoped<OnStartDbInitPolicy>();
+        services.AddScoped<OnDeployDbInitPolicy>();
+        services.AddScoped<IDbInitPolicy>(serviceProvider => policyName switch
+        {
+            "OnStart" => serviceProvider.GetRequiredService<OnStartDbInitPolicy>(),
+            "OnDeploy" => serviceProvider.GetRequiredService<OnDeployDbInitPolicy>(),
+            _ => throw new InvalidOperationException(
+                $"Unsupported DbInit policy '{policyName}'. Expected 'OnStart' or 'OnDeploy'."),
+        });
     }
 
     private static void AddEmployeeAvatarStorage(IServiceCollection services, IConfiguration configuration)
