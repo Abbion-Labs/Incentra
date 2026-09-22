@@ -4,6 +4,11 @@ public interface ICurrentUserService
 {
     long? UserId { get; }
 
+    /// <summary>
+    /// The sign-in the current access token was issued for.
+    /// </summary>
+    Guid? SessionId { get; }
+
     bool IsAuthenticated { get; }
 
     IReadOnlyList<string> Roles { get; }

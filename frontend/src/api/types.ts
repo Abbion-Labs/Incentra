@@ -12,7 +12,6 @@ export interface UserProfile {
 
 export interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
   user: UserProfile;
 }
 

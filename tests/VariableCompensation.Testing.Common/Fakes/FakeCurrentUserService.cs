@@ -7,6 +7,8 @@ public sealed class FakeCurrentUserService : ICurrentUserService
 {
     public long? UserId { get; set; } = 1;
 
+    public Guid? SessionId { get; set; }
+
     public bool IsAuthenticated { get; set; } = true;
 
     public IReadOnlyList<string> Roles { get; set; } = [];

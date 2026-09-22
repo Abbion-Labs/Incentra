@@ -60,12 +60,14 @@ public sealed class LoginCommandHandler : IRequestHandler<LoginCommand, Result<A
 
     private async Task<AuthResponse> IssueTokensAsync(User user, CancellationToken cancellationToken)
     {
+        var sessionId = Guid.NewGuid();
         var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
-        var accessToken = this.jwtTokenService.GenerateAccessToken(user, roles);
+        var accessToken = this.jwtTokenService.GenerateAccessToken(user, roles, sessionId);
         var refreshTokenPlain = this.jwtTokenService.GenerateRefreshToken();
         var refreshToken = new Domain.Entities.Identity.RefreshToken
         {
             UserId = user.Id,
+            SessionId = sessionId,
             TokenHash = HashToken(refreshTokenPlain),
             ExpiresAt = this.jwtTokenService.GetRefreshTokenExpiry()
         };

@@ -48,6 +48,8 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.ToTable("refresh_tokens");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.TokenHash).HasMaxLength(255).IsRequired();
+        builder.HasIndex(x => x.TokenHash).IsUnique();
+        builder.HasIndex(x => x.SessionId);
         builder.HasIndex(x => x.ExpiresAt);
         builder.HasOne(x => x.User).WithMany(x => x.RefreshTokens).HasForeignKey(x => x.UserId).OnDelete(DeleteBehavior.Cascade);
     }
