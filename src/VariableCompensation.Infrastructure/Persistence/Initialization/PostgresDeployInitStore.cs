@@ -11,9 +11,8 @@ public sealed class PostgresDeployInitStore(string connectionString) : IDeployIn
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();
 
-        await EnsureTableAsync(connection);
-
-        if (await IsInitializedAsync(connection, deployId))
+        if (await TableExistsAsync(connection)
+            && await IsInitializedAsync(connection, deployId))
         {
             return;
         }
@@ -21,6 +20,8 @@ public sealed class PostgresDeployInitStore(string connectionString) : IDeployIn
         await SetLockAsync(connection, acquire: true);
         try
         {
+            await EnsureTableAsync(connection);
+
             if (await IsInitializedAsync(connection, deployId))
             {
                 return;
@@ -33,6 +34,16 @@ public sealed class PostgresDeployInitStore(string connectionString) : IDeployIn
         {
             await SetLockAsync(connection, acquire: false);
         }
+    }
+
+    private static async Task<bool> TableExistsAsync(NpgsqlConnection connection)
+    {
+        const string sql = """
+            SELECT to_regclass('public.deployment_initializations') IS NOT NULL;
+            """;
+
+        await using var command = new NpgsqlCommand(sql, connection);
+        return (bool)(await command.ExecuteScalarAsync() ?? false);
     }
 
     private static async Task EnsureTableAsync(NpgsqlConnection connection)
