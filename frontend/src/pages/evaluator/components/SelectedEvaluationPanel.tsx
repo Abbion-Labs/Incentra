@@ -5,7 +5,11 @@ import { AverageDisplay } from '../../../components/evaluation/AverageDisplay';
 import { PeriodPill } from '../../../components/common/PageHeader';
 import { CardSkeleton } from '../../../components/common/LoadingSkeleton';
 import { useIntl } from '../../../i18n';
-import { classifyEvaluation, evaluationDisplayClass, evaluationDisplayLabel } from '../../../utils/evaluationBuckets';
+import {
+  classifyEvaluation,
+  evaluationDisplayClass,
+  evaluationDisplayLabel,
+} from '../../../utils/evaluationBuckets';
 import {
   detailHasIncompleteRatings,
   formatComponentAverage,
@@ -33,7 +37,9 @@ export function SelectedEvaluationPanel({
   if (!evaluation) {
     return (
       <div className="card card--muted">
-        <p className="empty-inline">{formatMessage({ id: 'evaluation.selectFromQuarterList' })}</p>
+        <p className="empty-inline">
+          {formatMessage({ id: 'evaluation.selectFromQuarterList' })}
+        </p>
       </div>
     );
   }
@@ -44,9 +50,11 @@ export function SelectedEvaluationPanel({
     : bucket === 'planning'
       ? `/evaluator/goals/evaluations/${evaluation.id}`
       : `/evaluator/evaluations/${evaluation.id}`;
-  const buttonLabel = actionLabel ?? (bucket === 'planning'
-    ? formatMessage({ id: 'evaluation.setGoals' })
-    : formatMessage({ id: 'evaluation.viewFull' }));
+  const buttonLabel =
+    actionLabel ??
+    (bucket === 'planning'
+      ? formatMessage({ id: 'evaluation.setGoals' })
+      : formatMessage({ id: 'evaluation.viewFull' }));
   const incomplete = detailHasIncompleteRatings(evaluation);
 
   return (
@@ -63,11 +71,14 @@ export function SelectedEvaluationPanel({
               controllerComment: evaluation.controllerComment,
             })}
           >
-            {evaluationDisplayLabel({
-              status: evaluation.status,
-              goalCount: evaluation.goals.length,
-              controllerComment: evaluation.controllerComment,
-            }, formatMessage)}
+            {evaluationDisplayLabel(
+              {
+                status: evaluation.status,
+                goalCount: evaluation.goals.length,
+                controllerComment: evaluation.controllerComment,
+              },
+              formatMessage,
+            )}
           </span>
         </div>
       </div>
@@ -77,7 +88,11 @@ export function SelectedEvaluationPanel({
           <dt>{formatMessage({ id: 'evaluation.goalsAverage' })}</dt>
           <dd>
             <AverageDisplay
-              value={formatComponentAverage(incomplete, evaluation.goalsAverage, evaluation.goals.length > 0)}
+              value={formatComponentAverage(
+                incomplete,
+                evaluation.goalsAverage,
+                evaluation.goals.length > 0,
+              )}
             />
           </dd>
         </div>
@@ -85,7 +100,11 @@ export function SelectedEvaluationPanel({
           <dt>{formatMessage({ id: 'evaluation.measuresAverage' })}</dt>
           <dd>
             <AverageDisplay
-              value={formatComponentAverage(incomplete, evaluation.measuresAverage, evaluation.measures.length > 0)}
+              value={formatComponentAverage(
+                incomplete,
+                evaluation.measuresAverage,
+                evaluation.measures.length > 0,
+              )}
             />
           </dd>
         </div>
@@ -100,7 +119,9 @@ export function SelectedEvaluationPanel({
           <dd>
             <DescriptiveRatingBadge
               name={incomplete ? null : evaluation.descriptiveRatingName}
-              descriptiveRatingId={incomplete ? undefined : evaluation.descriptiveRatingId}
+              descriptiveRatingId={
+                incomplete ? undefined : evaluation.descriptiveRatingId
+              }
             />
           </dd>
         </div>

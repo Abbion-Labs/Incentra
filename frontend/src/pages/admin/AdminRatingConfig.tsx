@@ -3,6 +3,7 @@ import { api } from '../../api/client';
 import type { DescriptiveRating } from '../../api/types';
 import { useIntl } from '../../i18n';
 import { formatDescriptiveRatingLabel } from '../../utils/descriptiveRating';
+import { useToast } from '../../hooks';
 import { AdminPageHeader } from './components/AdminPageHeader';
 
 interface RatingFormValues {
@@ -32,66 +33,72 @@ function ratingToForm(rating: DescriptiveRating): RatingFormValues {
     minAverage: rating.minAverage != null ? String(rating.minAverage) : '',
     maxAverage: rating.maxAverage != null ? String(rating.maxAverage) : '',
     sortOrder: String(rating.sortOrder),
-    recommendedSharePercent: String(Math.round(rating.recommendedShare * 1000) / 10),
+    recommendedSharePercent: String(
+      Math.round(rating.recommendedShare * 1000) / 10,
+    ),
     isActive: rating.isActive,
   };
 }
 
 export function AdminRatingConfig() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [ratings, setRatings] = useState<DescriptiveRating[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<RatingFormValues>(emptyForm());
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
-      const items = await api.get<DescriptiveRating[]>('/api/descriptive-ratings');
+      const items = await api.get<DescriptiveRating[]>(
+        '/api/descriptive-ratings',
+      );
       setRatings(items);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [formatMessage, toast]);
 
   useEffect(() => {
     load();
   }, [load]);
 
   const totalRecommendedPercent = useMemo(
-    () => ratings.filter((r) => r.isActive).reduce((sum, r) => sum + r.recommendedShare * 100, 0),
+    () =>
+      ratings
+        .filter((r) => r.isActive)
+        .reduce((sum, r) => sum + r.recommendedShare * 100, 0),
     [ratings],
   );
 
   function startCreate() {
     setEditingId(null);
     setForm(emptyForm());
-    setError('');
-    setMessage('');
   }
 
   function startEdit(rating: DescriptiveRating) {
     setEditingId(rating.id);
     setForm(ratingToForm(rating));
-    setError('');
-    setMessage('');
   }
 
-  function setField<K extends keyof RatingFormValues>(key: K, value: RatingFormValues[K]) {
+  function setField<K extends keyof RatingFormValues>(
+    key: K,
+    value: RatingFormValues[K],
+  ) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setMessage('');
     const payload = {
       code: form.code.trim(),
       name: form.name.trim(),
@@ -104,15 +111,19 @@ export function AdminRatingConfig() {
     try {
       if (editingId) {
         await api.put(`/api/descriptive-ratings/${editingId}`, payload);
-        setMessage(formatMessage({ id: 'alerts.descriptiveRatingUpdated' }));
+        toast.success(formatMessage({ id: 'alerts.descriptiveRatingUpdated' }));
       } else {
         await api.post('/api/descriptive-ratings', payload);
-        setMessage(formatMessage({ id: 'alerts.descriptiveRatingAdded' }));
+        toast.success(formatMessage({ id: 'alerts.descriptiveRatingAdded' }));
         startCreate();
       }
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : formatMessage({ id: 'errors.saveFailed' }),
+      );
     } finally {
       setSaving(false);
     }
@@ -121,21 +132,30 @@ export function AdminRatingConfig() {
   return (
     <div className="admin-page">
       <AdminPageHeader
-        error={error}
-        message={message}
         actions={
           editingId ? (
-            <button type="button" className="btn btn-secondary" onClick={startCreate}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={startCreate}
+            >
               {formatMessage({ id: 'admin.ratingConfig.newDescriptiveRating' })}
             </button>
           ) : null
         }
       />
 
-      <form className="card admin-form admin-rating-form" onSubmit={handleSubmit}>
-        <div className={`admin-rating-form__grid${editingId ? ' admin-rating-form__grid--editing' : ''}`}>
+      <form
+        className="card admin-form admin-rating-form"
+        onSubmit={handleSubmit}
+      >
+        <div
+          className={`admin-rating-form__grid${editingId ? ' admin-rating-form__grid--editing' : ''}`}
+        >
           <div className="form-row">
-            <label htmlFor="rating-code">{formatMessage({ id: 'admin.ratingConfig.code' })}</label>
+            <label htmlFor="rating-code">
+              {formatMessage({ id: 'admin.ratingConfig.code' })}
+            </label>
             <input
               id="rating-code"
               value={form.code}
@@ -145,7 +165,9 @@ export function AdminRatingConfig() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="rating-name">{formatMessage({ id: 'common.name' })}</label>
+            <label htmlFor="rating-name">
+              {formatMessage({ id: 'common.name' })}
+            </label>
             <input
               id="rating-name"
               value={form.name}
@@ -154,7 +176,9 @@ export function AdminRatingConfig() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="rating-min">{formatMessage({ id: 'admin.ratingConfig.minAverage' })}</label>
+            <label htmlFor="rating-min">
+              {formatMessage({ id: 'admin.ratingConfig.minAverage' })}
+            </label>
             <input
               id="rating-min"
               type="number"
@@ -167,7 +191,9 @@ export function AdminRatingConfig() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="rating-max">{formatMessage({ id: 'admin.ratingConfig.maxAverage' })}</label>
+            <label htmlFor="rating-max">
+              {formatMessage({ id: 'admin.ratingConfig.maxAverage' })}
+            </label>
             <input
               id="rating-max"
               type="number"
@@ -180,7 +206,9 @@ export function AdminRatingConfig() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="rating-sort">{formatMessage({ id: 'admin.ratingConfig.sortOrder' })}</label>
+            <label htmlFor="rating-sort">
+              {formatMessage({ id: 'admin.ratingConfig.sortOrder' })}
+            </label>
             <input
               id="rating-sort"
               type="number"
@@ -190,7 +218,9 @@ export function AdminRatingConfig() {
             />
           </div>
           <div className="form-row">
-            <label htmlFor="rating-share">{formatMessage({ id: 'admin.ratingConfig.recommendedShare' })}</label>
+            <label htmlFor="rating-share">
+              {formatMessage({ id: 'admin.ratingConfig.recommendedShare' })}
+            </label>
             <input
               id="rating-share"
               type="number"
@@ -198,13 +228,17 @@ export function AdminRatingConfig() {
               min="0"
               max="100"
               value={form.recommendedSharePercent}
-              onChange={(e) => setField('recommendedSharePercent', e.target.value)}
+              onChange={(e) =>
+                setField('recommendedSharePercent', e.target.value)
+              }
               required
             />
           </div>
           {editingId && (
             <div className="form-row">
-              <label htmlFor="rating-active">{formatMessage({ id: 'admin.active' })}</label>
+              <label htmlFor="rating-active">
+                {formatMessage({ id: 'admin.active' })}
+              </label>
               <select
                 id="rating-active"
                 value={form.isActive ? '1' : '0'}
@@ -225,7 +259,11 @@ export function AdminRatingConfig() {
                 : formatMessage({ id: 'buttons.add' })}
           </button>
           {editingId && (
-            <button type="button" className="btn btn-secondary" onClick={startCreate}>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={startCreate}
+            >
               {formatMessage({ id: 'buttons.cancel' })}
             </button>
           )}
@@ -236,10 +274,17 @@ export function AdminRatingConfig() {
         <div className="admin-rating-summary">
           <p className="card__hint">
             {formatMessage({ id: 'admin.ratingConfig.totalRecommendedActive' })}{' '}
-            <strong className={Math.abs(totalRecommendedPercent - 100) > 0.5 ? 'text-warning' : ''}>
+            <strong
+              className={
+                Math.abs(totalRecommendedPercent - 100) > 0.5
+                  ? 'text-warning'
+                  : ''
+              }
+            >
               {totalRecommendedPercent.toFixed(1)}%
             </strong>
-            {Math.abs(totalRecommendedPercent - 100) > 0.5 && formatMessage({ id: 'admin.ratingConfig.idealShareHint' })}
+            {Math.abs(totalRecommendedPercent - 100) > 0.5 &&
+              formatMessage({ id: 'admin.ratingConfig.idealShareHint' })}
           </p>
         </div>
         {loading ? (
@@ -249,26 +294,55 @@ export function AdminRatingConfig() {
             <table className="table table--hover">
               <thead>
                 <tr>
-                  <th className="col-text">{formatMessage({ id: 'common.name' })}</th>
-                  <th className="col-meta">{formatMessage({ id: 'admin.ratingConfig.code' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.ratingConfig.averageRange' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.ratingConfig.recommendedPercent' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.ratingConfig.sortOrder' })}</th>
-                  <th className="col-meta table-col--compact">{formatMessage({ id: 'admin.active' })}</th>
-                  <th className="col-actions" aria-label={formatMessage({ id: 'admin.actions' })} />
+                  <th className="col-text">
+                    {formatMessage({ id: 'common.name' })}
+                  </th>
+                  <th className="col-meta">
+                    {formatMessage({ id: 'admin.ratingConfig.code' })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({ id: 'admin.ratingConfig.averageRange' })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.ratingConfig.recommendedPercent',
+                    })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({ id: 'admin.ratingConfig.sortOrder' })}
+                  </th>
+                  <th className="col-meta table-col--compact">
+                    {formatMessage({ id: 'admin.active' })}
+                  </th>
+                  <th
+                    className="col-actions"
+                    aria-label={formatMessage({ id: 'admin.actions' })}
+                  />
                 </tr>
               </thead>
               <tbody>
                 {ratings.map((rating) => (
                   <tr key={rating.id}>
-                    <td className="col-text">{formatDescriptiveRatingLabel(formatMessage, { code: rating.code, name: rating.name })}</td>
+                    <td className="col-text">
+                      {formatDescriptiveRatingLabel(formatMessage, {
+                        code: rating.code,
+                        name: rating.name,
+                      })}
+                    </td>
                     <td className="col-meta">{rating.code}</td>
                     <td className="col-num">
-                      {rating.minAverage?.toFixed(2)} – {rating.maxAverage?.toFixed(2)}
+                      {rating.minAverage?.toFixed(2)} –{' '}
+                      {rating.maxAverage?.toFixed(2)}
                     </td>
-                    <td className="col-num">{(rating.recommendedShare * 100).toFixed(1)}%</td>
+                    <td className="col-num">
+                      {(rating.recommendedShare * 100).toFixed(1)}%
+                    </td>
                     <td className="col-num">{rating.sortOrder}</td>
-                    <td className="col-meta table-col--compact">{rating.isActive ? formatMessage({ id: 'common.yes' }) : formatMessage({ id: 'common.no' })}</td>
+                    <td className="col-meta table-col--compact">
+                      {rating.isActive
+                        ? formatMessage({ id: 'common.yes' })
+                        : formatMessage({ id: 'common.no' })}
+                    </td>
                     <td className="col-actions">
                       <button
                         type="button"

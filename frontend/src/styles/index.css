@@ -25,7 +25,12 @@
   --text-xl: 1.35rem;
   --text-2xl: 1.5rem;
   --sidebar-width: 0px;
-  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family:
+    'Inter',
+    'Segoe UI',
+    system-ui,
+    -apple-system,
+    sans-serif;
   line-height: 1.55;
   color: var(--text);
   background: var(--bg);
@@ -35,9 +40,14 @@
   box-sizing: border-box;
 }
 
+html,
+body,
+#root {
+  height: 100%;
+}
+
 body {
   margin: 0;
-  min-height: 100vh;
 }
 
 a {
@@ -53,12 +63,16 @@ textarea {
 }
 
 .app-shell {
-  min-height: 100vh;
+  height: 100%;
+  min-height: 0;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .topbar {
+  flex-shrink: 0;
+  z-index: 20;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
   border-bottom: 1px solid var(--border);
   padding: 0.65rem var(--space-lg);
@@ -104,14 +118,11 @@ textarea {
   flex-shrink: 0;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 8px;
+  border-radius: 10px;
   background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   color: white;
-  font-size: var(--text-xs);
-  font-weight: 700;
   display: grid;
   place-items: center;
-  letter-spacing: 0.02em;
 }
 
 .app-brand__text {
@@ -121,8 +132,9 @@ textarea {
 }
 
 .app-brand__name {
-  font-size: var(--text-sm);
-  font-weight: 600;
+  font-size: var(--text-base);
+  font-weight: 700;
+  letter-spacing: -0.015em;
   color: var(--text);
   line-height: 1.2;
   white-space: nowrap;
@@ -220,7 +232,9 @@ textarea {
 }
 
 .topbar-user__avatar {
-  box-shadow: 0 0 0 2px var(--surface), 0 0 0 3px var(--border);
+  box-shadow:
+    0 0 0 2px var(--surface),
+    0 0 0 3px var(--border);
 }
 
 .topbar-user__text {
@@ -254,7 +268,9 @@ textarea {
   display: flex;
   flex: 1;
   min-width: 0;
+  min-height: 0;
   width: 100%;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -263,41 +279,8 @@ textarea {
   background: var(--surface);
   border-right: 1px solid var(--border);
   padding: 1rem 0;
-  overflow: hidden;
-  transition: width 0.2s ease, padding 0.2s ease, border-color 0.2s ease;
-}
-
-.sidebar--collapsed {
-  width: 0;
-  padding: 0;
-  border-right-color: transparent;
-  pointer-events: none;
-}
-
-.sidebar-toggle {
-  flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  display: grid;
-  place-items: center;
-  padding: 0;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
-}
-
-.sidebar-toggle:hover {
-  background: var(--primary-soft);
-  border-color: #c7d7eb;
-  color: var(--primary);
-}
-
-.sidebar-toggle__icon {
-  font-size: 1.1rem;
-  line-height: 1;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .sidebar a {
@@ -343,7 +326,11 @@ textarea {
   flex: 1;
   width: 100%;
   min-width: 0;
+  min-height: 0;
   max-width: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: clamp(var(--space-md), 2.5vw, var(--space-xl));
   container-type: inline-size;
   container-name: main;
@@ -603,6 +590,14 @@ textarea {
   gap: 0;
   width: 100%;
   max-width: 100%;
+  min-width: 0;
+}
+
+/* Grupiše polja da bi se zaključala zajedno (disabled) bez promene izgleda. */
+.form-page__fieldset {
+  margin: 0;
+  padding: 0;
+  border: 0;
   min-width: 0;
 }
 
@@ -998,18 +993,6 @@ textarea {
   overflow-x: auto;
 }
 
-.app-shell:has(.table-wrap--infinite) {
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.app-shell:has(.table-wrap--infinite) .layout-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
 .main-content:has(.table-wrap--infinite) {
   display: flex;
   flex-direction: column;
@@ -1097,15 +1080,9 @@ textarea {
 }
 
 @container main (max-width: 900px) {
-  .app-shell:has(.table-wrap--infinite) {
-    height: auto;
-    overflow: visible;
-  }
-
-  .app-shell:has(.table-wrap--infinite) .layout-body,
   .main-content:has(.table-wrap--infinite),
   .varijabila-page:has(.table-wrap--infinite) {
-    overflow: visible;
+    overflow: auto;
   }
 
   .main-content:has(.table-wrap--infinite) > .card--table-fill,
@@ -1229,23 +1206,75 @@ textarea {
   font-weight: 600;
 }
 
-.badge-draft { background: #e2e8f0; color: #475569; }
-.badge-unrated { background: #fef3c7; color: #b45309; }
-.badge-planning { background: #e0e7ff; color: #4338ca; }
-.badge-returned { background: #fce7f3; color: #9d174d; }
-.badge-submitted { background: #dbeafe; color: #1d4ed8; }
-.badge-underreview { background: #fef3c7; color: #b45309; }
-.badge-approved { background: #d1fae5; color: #047857; }
-.badge-rejected { background: #fee2e2; color: #b91c1c; }
-.badge-new { background: #dbeafe; color: #1d4ed8; font-size: 0.7rem; vertical-align: middle; }
+.badge-draft {
+  background: #e2e8f0;
+  color: #475569;
+}
+.badge-unrated {
+  background: #fef3c7;
+  color: #b45309;
+}
+.badge-planning {
+  background: #e0e7ff;
+  color: #4338ca;
+}
+.badge-returned {
+  background: #fce7f3;
+  color: #9d174d;
+}
+.badge-submitted {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+.badge-underreview {
+  background: #fef3c7;
+  color: #b45309;
+}
+.badge-approved {
+  background: #d1fae5;
+  color: #047857;
+}
+.badge-rejected {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.badge-new {
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 0.7rem;
+  vertical-align: middle;
+}
 
-.badge-descriptive-does-not-meet { background: #fee2e2; color: #b91c1c; }
-.badge-descriptive-meets { background: #ffedd5; color: #c2410c; }
-.badge-descriptive-good { background: #fef9c3; color: #a16207; }
-.badge-descriptive-exceeds { background: #ccfbf1; color: #0f766e; }
-.badge-descriptive-outstanding { background: #d1fae5; color: #047857; }
-.badge-descriptive-default { background: #e2e8f0; color: #475569; }
-.badge-descriptive-none { background: transparent; color: var(--muted); padding: 0; font-weight: 500; }
+.badge-descriptive-does-not-meet {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.badge-descriptive-meets {
+  background: #ffedd5;
+  color: #c2410c;
+}
+.badge-descriptive-good {
+  background: #fef9c3;
+  color: #a16207;
+}
+.badge-descriptive-exceeds {
+  background: #ccfbf1;
+  color: #0f766e;
+}
+.badge-descriptive-outstanding {
+  background: #d1fae5;
+  color: #047857;
+}
+.badge-descriptive-default {
+  background: #e2e8f0;
+  color: #475569;
+}
+.badge-descriptive-none {
+  background: transparent;
+  color: var(--muted);
+  padding: 0;
+  font-weight: 500;
+}
 
 .login-page {
   min-height: 100vh;
@@ -1275,7 +1304,11 @@ textarea {
   height: min(420px, 70vw);
   top: -12%;
   right: -8%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, transparent 68%);
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.14) 0%,
+    transparent 68%
+  );
 }
 
 .login-hero__orb--2 {
@@ -1283,7 +1316,11 @@ textarea {
   height: min(280px, 45vw);
   bottom: 8%;
   left: -6%;
-  background: radial-gradient(circle, rgba(94, 234, 212, 0.22) 0%, transparent 70%);
+  background: radial-gradient(
+    circle,
+    rgba(94, 234, 212, 0.22) 0%,
+    transparent 70%
+  );
 }
 
 .login-hero__orb--3 {
@@ -1303,34 +1340,74 @@ textarea {
   flex-direction: column;
   align-items: center;
   text-align: center;
-  max-width: 20rem;
+  max-width: 24rem;
+}
+
+.login-hero__lockup {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 0.9rem;
 }
 
 .login-hero__mark {
-  width: 4.5rem;
-  height: 4.5rem;
-  margin-bottom: 1.75rem;
-  font-size: 1.1rem;
-  border-radius: 18px;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 16px;
+  background: #ffffff;
+  color: var(--primary);
   box-shadow:
-    0 12px 32px rgba(0, 0, 0, 0.25),
-    0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    0 12px 32px rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.45) inset;
 }
 
-.login-hero__title {
-  margin: 0 0 0.5rem;
-  font-size: clamp(1.6rem, 3.5vw, 2rem);
+.login-hero__wordmark {
+  margin: 0;
+  font-size: clamp(2.1rem, 4.5vw, 2.6rem);
   font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.03em;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: #ffffff;
 }
 
 .login-hero__tagline {
   margin: 0;
   font-size: 1rem;
   font-weight: 500;
-  color: rgba(248, 250, 252, 0.65);
-  letter-spacing: 0.02em;
+  color: rgba(248, 250, 252, 0.68);
+  letter-spacing: 0.01em;
+}
+
+.login-hero__points {
+  list-style: none;
+  margin: 2.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  text-align: left;
+}
+
+.login-hero__point {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: rgba(248, 250, 252, 0.88);
+}
+
+.login-hero__point-icon {
+  flex-shrink: 0;
+  width: 1.35rem;
+  height: 1.35rem;
+  margin-top: 0.1rem;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: #5eead4;
+  background: rgba(94, 234, 212, 0.14);
+  border: 1px solid rgba(94, 234, 212, 0.28);
 }
 
 .login-page__main {
@@ -1338,8 +1415,7 @@ textarea {
   align-items: center;
   justify-content: center;
   padding: clamp(1.5rem, 4vw, 3rem);
-  background:
-    linear-gradient(180deg, #f8fafc 0%, var(--bg) 100%);
+  background: linear-gradient(180deg, #f8fafc 0%, var(--bg) 100%);
 }
 
 .login-card {
@@ -1399,7 +1475,10 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 10px;
   background: #fafbfc;
-  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s,
+    background 0.15s;
 }
 
 .login-form__field input::placeholder {
@@ -1456,7 +1535,9 @@ textarea {
   border: 1px solid transparent;
   border-radius: 999px;
   cursor: pointer;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .login-demo__chip:hover {
@@ -1476,18 +1557,31 @@ textarea {
   }
 
   .login-hero__mark {
-    width: 3.5rem;
-    height: 3.5rem;
-    margin-bottom: 1rem;
-    font-size: 0.95rem;
+    width: 2.85rem;
+    height: 2.85rem;
+    border-radius: 13px;
   }
 
-  .login-hero__title {
-    font-size: 1.35rem;
+  .login-hero__mark svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  .login-hero__lockup {
+    gap: 0.7rem;
+    margin-bottom: 0.6rem;
+  }
+
+  .login-hero__wordmark {
+    font-size: 1.8rem;
   }
 
   .login-hero__tagline {
     font-size: 0.9rem;
+  }
+
+  .login-hero__points {
+    display: none;
   }
 
   .login-hero__orb--3 {
@@ -1711,18 +1805,10 @@ textarea {
   }
 }
 
-.evaluation-autosave-status {
+.evaluation-unsaved-status {
   margin: 0 0 0.75rem;
   font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.evaluation-autosave-status--dirty {
   color: var(--warning);
-}
-
-.evaluation-autosave-status--saved {
-  color: var(--success);
 }
 
 .evaluation-status-history__list {
@@ -1859,33 +1945,47 @@ textarea {
 /* Toast */
 .toast-stack {
   position: fixed;
-  top: var(--space-lg);
-  right: var(--space-lg);
+  left: 0;
+  right: 0;
+  bottom: var(--space-lg);
   z-index: 200;
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: var(--space-sm);
-  max-width: min(24rem, calc(100vw - 2rem));
+  padding: 0 1rem;
   pointer-events: none;
 }
 
 .toast {
   pointer-events: auto;
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-sm);
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: var(--text-sm);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
+  align-items: center;
+  gap: 0.85rem;
+  width: min(36rem, calc(100vw - 2rem));
+  padding: 1.05rem 1.25rem;
+  border-radius: 10px;
+  font-size: var(--text-base);
+  line-height: 1.45;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.14);
   animation: toast-in 0.2s ease;
+}
+
+.toast__icon {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+}
+
+.toast__message {
+  flex: 1;
+  min-width: 0;
 }
 
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(8px);
   }
   to {
     opacity: 1;
@@ -1911,15 +2011,22 @@ textarea {
   border: 1px solid #bfdbfe;
 }
 
+.toast--warning {
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
 .toast__close {
+  flex-shrink: 0;
   background: none;
   border: none;
-  font-size: 1.25rem;
+  font-size: 1.4rem;
   line-height: 1;
   cursor: pointer;
   color: inherit;
   opacity: 0.6;
-  padding: 0;
+  padding: 0.1rem;
 }
 
 .toast__close:hover {
@@ -2155,7 +2262,9 @@ textarea {
   border-radius: 10px;
   padding: 0.35rem 0.5rem;
   margin: -0.35rem -0.5rem;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .goals-employee-card__identity {
@@ -2172,7 +2281,9 @@ textarea {
   border-radius: 10px;
   padding: 0.25rem 0.5rem 0.25rem 0.25rem;
   margin: -0.25rem;
-  transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    background-color 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .goals-employee-card__main--link:hover,
@@ -2349,7 +2460,8 @@ textarea {
 }
 
 .employee-avatar-upload__trigger:hover .employee-avatar-upload__overlay,
-.employee-avatar-upload__trigger:focus-visible .employee-avatar-upload__overlay {
+.employee-avatar-upload__trigger:focus-visible
+  .employee-avatar-upload__overlay {
   opacity: 1;
 }
 
@@ -2440,7 +2552,6 @@ textarea {
   justify-content: flex-end;
 }
 
-
 .employee-card__meta {
   margin: 0;
   display: grid;
@@ -2477,7 +2588,9 @@ textarea {
   background: #fafbfc;
   padding: 0.75rem;
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .quarter-list__item:hover {
@@ -2874,18 +2987,6 @@ textarea {
   overflow-y: visible;
 }
 
-.app-shell:has(.compensation-analytics) {
-  height: 100dvh;
-  min-height: 0;
-  overflow: hidden;
-}
-
-.app-shell:has(.compensation-analytics) .layout-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
-}
-
 .main-content:has(.compensation-analytics) {
   display: flex;
   flex-direction: column;
@@ -3262,6 +3363,12 @@ textarea {
   width: 100%;
 }
 
+.admin-form__static-value {
+  margin: 0;
+  padding: 0.5rem 0;
+  font-weight: 600;
+}
+
 .admin-form__roles-label {
   display: block;
   font-size: 0.85rem;
@@ -3294,7 +3401,9 @@ textarea {
   border-radius: var(--radius);
   background: var(--surface);
   cursor: pointer;
-  transition: border-color 0.15s ease, background 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease;
 }
 
 .admin-form__role-item:hover {
@@ -3523,7 +3632,9 @@ textarea {
   min-height: 0;
 }
 
-.compensation-params__chart .analytics-chart--panel .analytics-chart__canvas-wrap {
+.compensation-params__chart
+  .analytics-chart--panel
+  .analytics-chart__canvas-wrap {
   flex: 1;
   min-height: 11rem;
   overflow: visible;

@@ -17,7 +17,11 @@ export function useEvaluation(id: string | undefined) {
       const data = await api.get<EvaluationDetail>(`/api/evaluations/${id}`);
       setEvaluation(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      setError(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
       setEvaluation(null);
     } finally {
       setLoading(false);

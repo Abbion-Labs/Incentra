@@ -10,10 +10,41 @@ interface RatingCountComparisonChartProps {
 }
 
 const SERIES_KEYS = [
-  { key: 'previousYearCount' as const, labelKey: 'charts.previousYear', color: '#78909c' },
-  { key: 'thisYearCount' as const, labelKey: 'charts.thisYear', color: '#00897b' },
-  { key: 'recommendedCount' as const, labelKey: 'charts.recommended', color: '#ef6c00' },
+  {
+    key: 'previousYearCount' as const,
+    labelKey: 'charts.previousYear',
+    color: '#78909c',
+  },
+  {
+    key: 'thisYearCount' as const,
+    labelKey: 'charts.thisYear',
+    color: '#00897b',
+  },
+  {
+    key: 'recommendedCount' as const,
+    labelKey: 'charts.recommended',
+    color: '#ef6c00',
+  },
 ];
+
+// Small counts get a tick for every whole number. Above that the axis steps
+// by 5, and moves on to 10, 20, 50, 100… once reaching the peak would take
+// more than MAX_Y_INTERVALS steps.
+const SMALL_PEAK = 5;
+const MIN_STEP_ABOVE_SMALL_PEAK = 5;
+const MAX_Y_INTERVALS = 10;
+
+function yAxisStep(peak: number): number {
+  if (peak <= SMALL_PEAK) return 1;
+
+  const minStep = Math.max(peak / MAX_Y_INTERVALS, MIN_STEP_ABOVE_SMALL_PEAK);
+  const magnitude = 10 ** Math.floor(Math.log10(minStep));
+  return (
+    [1, 2, 5]
+      .map((factor) => factor * magnitude)
+      .find((step) => step >= minStep) ?? 10 * magnitude
+  );
+}
 
 interface TooltipState {
   label: string;
@@ -23,16 +54,29 @@ interface TooltipState {
   y: number;
 }
 
-export function RatingCountComparisonChart({ items, previousYear, year }: RatingCountComparisonChartProps) {
+export function RatingCountComparisonChart({
+  items,
+  previousYear,
+  year,
+}: RatingCountComparisonChartProps) {
   const { formatMessage } = useIntl();
   const [tooltip, setTooltip] = useState<TooltipState | null>(null);
 
-  const maxValue = useMemo(() => {
+  const { maxValue, yTicks } = useMemo(() => {
     const peak = items.reduce((max, item) => {
-      const localMax = Math.max(item.previousYearCount, item.thisYearCount, item.recommendedCount);
+      const localMax = Math.max(
+        item.previousYearCount,
+        item.thisYearCount,
+        item.recommendedCount,
+      );
       return Math.max(max, localMax);
     }, 0);
-    return Math.max(peak, 1);
+    const step = yAxisStep(peak);
+    const intervals = Math.max(Math.ceil(peak / step), 1);
+    return {
+      maxValue: intervals * step,
+      yTicks: Array.from({ length: intervals + 1 }, (_, index) => index * step),
+    };
   }, [items]);
 
   if (items.length === 0) {
@@ -73,21 +117,47 @@ export function RatingCountComparisonChart({ items, previousYear, year }: Rating
     <div className="analytics-chart">
       <div className="analytics-chart__canvas-wrap">
         {tooltip && (
-          <div className="analytics-chart__tooltip" style={{ left: tooltip.x, top: tooltip.y }} role="tooltip">
-            <span className="analytics-chart__tooltip-period">{tooltip.rating}</span>
+          <div
+            className="analytics-chart__tooltip"
+            style={{ left: tooltip.x, top: tooltip.y }}
+            role="tooltip"
+          >
+            <span className="analytics-chart__tooltip-period">
+              {tooltip.rating}
+            </span>
             <strong>
               {tooltip.label}: {tooltip.value}
             </strong>
           </div>
         )}
 
-        <svg viewBox={`0 0 ${width} ${height}`} className="analytics-chart__svg" role="img" aria-label={formatMessage({ id: 'analytics.ratingCountComparisonAria' })}>
-          {Array.from({ length: maxValue + 1 }, (_, tick) => {
-            const y = padding.top + chartHeight - (tick / maxValue) * chartHeight;
+        <svg
+          viewBox={`0 0 ${width} ${height}`}
+          className="analytics-chart__svg"
+          role="img"
+          aria-label={formatMessage({
+            id: 'analytics.ratingCountComparisonAria',
+          })}
+        >
+          {yTicks.map((tick) => {
+            const y =
+              padding.top + chartHeight - (tick / maxValue) * chartHeight;
             return (
               <g key={tick}>
-                <line x1={padding.left} y1={y} x2={width - padding.right} y2={y} stroke="#e2e8f0" />
-                <text x={padding.left - 8} y={y + 4} textAnchor="end" fontSize="11" fill="#64748b">
+                <line
+                  x1={padding.left}
+                  y1={y}
+                  x2={width - padding.right}
+                  y2={y}
+                  stroke="#e2e8f0"
+                />
+                <text
+                  x={padding.left - 8}
+                  y={y + 4}
+                  textAnchor="end"
+                  fontSize="11"
+                  fill="#64748b"
+                >
                   {tick}
                 </text>
               </g>
@@ -95,15 +165,22 @@ export function RatingCountComparisonChart({ items, previousYear, year }: Rating
           })}
 
           {items.map((item, index) => {
-            const ratingLabel = formatDescriptiveRatingLabel(formatMessage, { code: item.code, name: item.name }) ?? item.name;
+            const ratingLabel =
+              formatDescriptiveRatingLabel(formatMessage, {
+                code: item.code,
+                name: item.name,
+              }) ?? item.name;
             const groupX = padding.left + index * groupWidth + groupWidth / 2;
             return (
               <g key={item.descriptiveRatingId}>
                 {SERIES_KEYS.map((series, seriesIndex) => {
-                  const seriesLabel = formatMessage({ id: series.labelKey as never });
+                  const seriesLabel = formatMessage({
+                    id: series.labelKey as never,
+                  });
                   const value = item[series.key];
                   const barHeight = (value / maxValue) * chartHeight;
-                  const x = groupX - barWidth * 1.5 + seriesIndex * (barWidth + 4);
+                  const x =
+                    groupX - barWidth * 1.5 + seriesIndex * (barWidth + 4);
                   const y = padding.top + chartHeight - barHeight;
                   return (
                     <rect
@@ -115,8 +192,12 @@ export function RatingCountComparisonChart({ items, previousYear, year }: Rating
                       rx={3}
                       fill={series.color}
                       opacity={0.9}
-                      onMouseEnter={(event) => showTooltip(event, seriesLabel, value, ratingLabel)}
-                      onMouseMove={(event) => showTooltip(event, seriesLabel, value, ratingLabel)}
+                      onMouseEnter={(event) =>
+                        showTooltip(event, seriesLabel, value, ratingLabel)
+                      }
+                      onMouseMove={(event) =>
+                        showTooltip(event, seriesLabel, value, ratingLabel)
+                      }
                       onMouseLeave={() => setTooltip(null)}
                     />
                   );
@@ -140,10 +221,16 @@ export function RatingCountComparisonChart({ items, previousYear, year }: Rating
         <ul className="analytics-chart__legend analytics-chart__legend--inline">
           {SERIES_KEYS.map((series) => (
             <li key={series.key}>
-              <span className="analytics-chart__legend-swatch" style={{ background: series.color }} />
+              <span
+                className="analytics-chart__legend-swatch"
+                style={{ background: series.color }}
+              />
               <span>
                 {series.key === 'previousYearCount'
-                  ? formatMessage({ id: 'charts.selectedYear' }, { year: previousYear })
+                  ? formatMessage(
+                      { id: 'charts.selectedYear' },
+                      { year: previousYear },
+                    )
                   : series.key === 'thisYearCount'
                     ? formatMessage({ id: 'charts.selectedYear' }, { year })
                     : formatMessage({ id: series.labelKey as never })}

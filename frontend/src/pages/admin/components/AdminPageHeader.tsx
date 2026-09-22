@@ -1,21 +1,13 @@
 import type { ReactNode } from 'react';
-import { AlertMessages } from '../../../components/common/AlertMessages';
 
 interface AdminPageHeaderProps {
-  error?: string;
-  message?: string;
   actions?: ReactNode;
 }
 
-export function AdminPageHeader({ error, message, actions }: AdminPageHeaderProps) {
-  if (!actions && !error && !message) {
+export function AdminPageHeader({ actions }: AdminPageHeaderProps) {
+  if (!actions) {
     return null;
   }
 
-  return (
-    <div className="admin-page-header">
-      {actions}
-      <AlertMessages error={error} info={message} />
-    </div>
-  );
+  return <div className="admin-page-header">{actions}</div>;
 }

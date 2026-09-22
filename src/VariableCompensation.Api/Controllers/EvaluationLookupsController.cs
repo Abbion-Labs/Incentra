@@ -29,9 +29,9 @@ public sealed class EvaluationLookupsController : ControllerBase
     }
 
     [HttpGet("measure-types")]
-    public async Task<IActionResult> GetMeasureTypes([FromQuery] bool includeDescriptions = true, CancellationToken cancellationToken = default)
+    public async Task<IActionResult> GetMeasureTypes(CancellationToken cancellationToken)
     {
-        var result = await this.mediator.Send(new GetMeasureTypesQuery(includeDescriptions), cancellationToken);
+        var result = await this.mediator.Send(new GetMeasureTypesQuery(), cancellationToken);
         return this.Ok(result);
     }
 }

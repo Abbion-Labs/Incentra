@@ -6,26 +6,23 @@ import { api } from '../../api/client';
 
 import type { Employee, EvaluationSummary, PagedResult } from '../../api/types';
 
-import { AlertMessages } from '../../components/common/AlertMessages';
-
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
-
 import { TableSkeleton } from '../../components/common/LoadingSkeleton';
 
 import { AppLayout } from '../../components/AppLayout';
 
-import { PeriodFilters, currentQuarter, currentYear } from '../../components/PeriodFilters';
+import {
+  PeriodFilters,
+  currentQuarter,
+  currentYear,
+} from '../../components/PeriodFilters';
 
-import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
-
-import { usePagedList } from '../../hooks/usePagedList';
 import { useIntl } from '../../i18n';
 
-import {
-  type GoalsBucket,
-} from '../../utils/goalsBuckets';
+import { type GoalsBucket } from '../../utils/goalsBuckets';
 
 import { buildEvaluationsPagePath } from '../../utils/evaluationApi';
 
@@ -35,10 +32,9 @@ import { PlanningEmployeesTable } from './components/PlanningEmployeesTable';
 
 import { SetGoalsTable } from './components/SetGoalsTable';
 
-
-
 export function EvaluatorGoalsDashboard() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const navigate = useNavigate();
 
   const [searchParams, setSearchParams] = useSearchParams();
@@ -49,28 +45,29 @@ export function EvaluatorGoalsDashboard() {
 
   const [activeTab, setActiveTab] = useState<GoalsBucket>(initialTab);
 
-  const [error, setError] = useState('');
-
   const [creatingFor, setCreatingFor] = useState<number | null>(null);
 
   const [year, setYear] = useState(currentYear);
 
   const [quarter, setQuarter] = useState(currentQuarter);
 
-  const { input: searchInput, debounced: search, setInput: setSearchInput } = useDebouncedSearch();
-
-
+  const {
+    input: searchInput,
+    debounced: search,
+    setInput: setSearchInput,
+  } = useDebouncedSearch();
 
   const countsQueryKey = `${year}|${quarter}|${search}`;
 
-  const { counts } = useEvaluationBucketCounts(countsQueryKey, { year, quarter, search });
-
-
+  const { counts } = useEvaluationBucketCounts(countsQueryKey, {
+    year,
+    quarter,
+    search,
+  });
 
   const employeesQueryKey = `${activeTab}|${year}|${quarter}|${search}`;
 
   const {
-
     items: pendingEmployees,
 
     loading: loadingEmployees,
@@ -80,17 +77,14 @@ export function EvaluatorGoalsDashboard() {
     hasMore: hasMoreEmployees,
 
     loadMore: loadMoreEmployees,
-
+    error: employeesError,
   } = usePagedList<Employee>({
-
     queryKey: employeesQueryKey,
 
     enabled: activeTab === 'pending',
 
     fetchPage: (page, pageSize) => {
-
       const params = new URLSearchParams({
-
         page: String(page),
 
         pageSize: String(pageSize),
@@ -102,27 +96,19 @@ export function EvaluatorGoalsDashboard() {
         goalsYear: String(year),
 
         goalsQuarter: String(quarter),
-
       });
 
       if (search.trim()) {
-
         params.set('search', search.trim());
-
       }
 
       return `/api/employees?${params}`;
-
     },
-
   });
-
-
 
   const setGoalsQueryKey = `${year}|${quarter}|${search}|set`;
 
   const {
-
     items: setEvaluations,
 
     loading: loadingSet,
@@ -132,17 +118,14 @@ export function EvaluatorGoalsDashboard() {
     hasMore: hasMoreSet,
 
     loadMore: loadMoreSet,
-
+    error: setErrorList,
   } = usePagedList<EvaluationSummary>({
-
     queryKey: setGoalsQueryKey,
 
     enabled: activeTab === 'set',
 
     fetchPage: (page, pageSize) =>
-
       buildEvaluationsPagePath(page, pageSize, {
-
         year,
 
         quarter,
@@ -150,47 +133,35 @@ export function EvaluatorGoalsDashboard() {
         bucket: 'goalscomplete',
 
         search,
-
       }),
-
   });
 
-
-
   useEffect(() => {
-
     if (tabFromUrl === 'pending' || tabFromUrl === 'set') {
-
       setActiveTab(tabFromUrl);
-
     }
-
   }, [tabFromUrl]);
 
+  useEffect(() => {
+    if (employeesError) toast.error(employeesError);
+  }, [employeesError, toast]);
 
+  useEffect(() => {
+    if (setErrorList) toast.error(setErrorList);
+  }, [setErrorList, toast]);
 
   function handleTabChange(tab: GoalsBucket) {
-
     setActiveTab(tab);
 
     setSearchParams({ tab });
-
   }
 
-
-
   async function startPlanning(employeeId: number) {
-
     setCreatingFor(employeeId);
 
-    setError('');
-
     try {
-
       const result = await api.get<PagedResult<EvaluationSummary>>(
-
         buildEvaluationsPagePath(1, 1, { year, quarter, employeeId }),
-
       );
 
       const existing = result.items?.[0];
@@ -200,155 +171,100 @@ export function EvaluatorGoalsDashboard() {
         return;
       }
 
-      const created = await api.post<EvaluationSummary>('/api/evaluations', { employeeId, year, quarter });
+      const created = await api.post<EvaluationSummary>('/api/evaluations', {
+        employeeId,
+        year,
+        quarter,
+      });
       navigate(`/evaluator/goals/evaluations/${created.id}`);
-
     } catch (e) {
-
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.creationFailed' }));
-
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.creationFailed' }),
+      );
     } finally {
-
       setCreatingFor(null);
-
     }
-
   }
 
+  const tabCounts = useMemo(
+    () => ({
+      pending: counts.goalsPending,
 
-
-  const tabCounts = useMemo(() => ({
-
-    pending: counts.goalsPending,
-
-    set: counts.goalsComplete,
-
-  }), [counts.goalsComplete, counts.goalsPending]);
-
-
+      set: counts.goalsComplete,
+    }),
+    [counts.goalsComplete, counts.goalsPending],
+  );
 
   const loading = activeTab === 'pending' ? loadingEmployees : loadingSet;
 
-
-
   return (
-
     <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
-
       <div className="card card--filter">
-
         <PeriodFilters
-
           year={year}
-
           quarter={quarter}
-
           onYearChange={setYear}
-
           onQuarterChange={(q) => {
-
             if (q != null) setQuarter(q as 1 | 2 | 3 | 4);
-
           }}
-
           search={searchInput}
-
           onSearchChange={setSearchInput}
-
         />
-
       </div>
 
-
-
-      <GoalsBucketTabs activeTab={activeTab} onTabChange={handleTabChange} counts={tabCounts} />
-
-      <AlertMessages error={error} />
-
-
+      <GoalsBucketTabs
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+        counts={tabCounts}
+      />
 
       {activeTab === 'pending' ? (
-
         <div className="card card--flush card--table-fill">
-
           {loading ? (
-
             <TableSkeleton rows={4} columns={4} />
-
           ) : (
-
             <div className="table-panel">
               <div className="table-wrap table-wrap--infinite">
-              <PlanningEmployeesTable
+                <PlanningEmployeesTable
+                  employees={pendingEmployees}
+                  creatingFor={creatingFor}
+                  search={search}
+                  onStartPlanning={startPlanning}
+                  evaluationLabel={() =>
+                    formatMessage({ id: 'evaluation.setGoals' })
+                  }
+                />
 
-                employees={pendingEmployees}
-
-                creatingFor={creatingFor}
-
-                search={search}
-
-                onStartPlanning={startPlanning}
-
-                evaluationLabel={() => formatMessage({ id: 'evaluation.setGoals' })}
-
-              />
-
-              <InfiniteScrollSentinel
-
-                hasMore={hasMoreEmployees}
-
-                isLoading={loadingMoreEmployees}
-
-                onLoadMore={loadMoreEmployees}
-
-              />
-
+                <InfiniteScrollSentinel
+                  hasMore={hasMoreEmployees}
+                  isLoading={loadingMoreEmployees}
+                  onLoadMore={loadMoreEmployees}
+                />
+              </div>
             </div>
-
-            </div>
-
           )}
-
         </div>
-
       ) : (
-
         <div className="card card--flush card--table-fill">
           {loading ? (
-
             <TableSkeleton rows={4} columns={4} />
-
           ) : (
-
             <div className="table-panel">
-
               <div className="table-wrap table-wrap--infinite">
+                <SetGoalsTable evaluations={setEvaluations} search={search} />
 
-              <SetGoalsTable evaluations={setEvaluations} search={search} />
-
-              <InfiniteScrollSentinel
-
-                hasMore={hasMoreSet}
-
-                isLoading={loadingMoreSet}
-
-                onLoadMore={loadMoreSet}
-
-              />
-
+                <InfiniteScrollSentinel
+                  hasMore={hasMoreSet}
+                  isLoading={loadingMoreSet}
+                  onLoadMore={loadMoreSet}
+                />
+              </div>
             </div>
-
-            </div>
-
           )}
-
         </div>
-
       )}
-
     </AppLayout>
-
   );
-
 }
-

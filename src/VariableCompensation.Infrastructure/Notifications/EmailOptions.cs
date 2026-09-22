@@ -16,9 +16,9 @@ public sealed class EmailOptions
 
     public string? Password { get; set; }
 
-    public string FromAddress { get; set; } = "noreply@variable-compensation.local";
+    public string FromAddress { get; set; } = "noreply@incentra.local";
 
-    public string FromName { get; set; } = "Variable Compensation";
+    public string FromName { get; set; } = "Incentra";
 
     public string FrontendBaseUrl { get; set; } = "http://localhost:5173";
 }

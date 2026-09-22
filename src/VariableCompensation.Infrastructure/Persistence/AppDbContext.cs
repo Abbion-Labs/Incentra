@@ -28,8 +28,6 @@ public class AppDbContext : DbContext
 
     public DbSet<MeasureType> MeasureTypes => Set<MeasureType>();
 
-    public DbSet<MeasureTypeDescription> MeasureTypeDescriptions => Set<MeasureTypeDescription>();
-
     public DbSet<User> Users => Set<User>();
 
     public DbSet<UserRole> UserRoles => Set<UserRole>();

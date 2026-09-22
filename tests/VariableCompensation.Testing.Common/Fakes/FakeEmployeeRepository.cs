@@ -5,6 +5,12 @@ namespace VariableCompensation.Testing.Common.Fakes;
 
 public sealed class FakeEmployeeRepository : IEmployeeRepository
 {
+    public Dictionary<long, Employee> EmployeesByUserId { get; } = [];
+
+    public HashSet<long> ExistingEmployeeIds { get; } = [];
+
+    public HashSet<long> EvaluatorsWithSubordinates { get; } = [];
+
     public Task<Employee?> FindByIdAsync(long id, CancellationToken cancellationToken) =>
         Task.FromResult<Employee?>(null);
 
@@ -33,13 +39,16 @@ public sealed class FakeEmployeeRepository : IEmployeeRepository
         Task.FromResult<(IReadOnlyList<Employee> Items, int TotalCount)>(([], 0));
 
     public Task<Employee?> FindByUserIdAsync(long userId, CancellationToken cancellationToken) =>
-        Task.FromResult<Employee?>(null);
+        Task.FromResult(this.EmployeesByUserId.GetValueOrDefault(userId));
 
     public Task<bool> IsUserLinkedToAnotherEmployeeAsync(long userId, long excludeEmployeeId, CancellationToken cancellationToken) =>
         Task.FromResult(false);
 
     public Task<bool> ExistsAsync(long id, CancellationToken cancellationToken) =>
-        Task.FromResult(false);
+        Task.FromResult(this.ExistingEmployeeIds.Contains(id));
+
+    public Task<bool> HasSubordinatesAsync(long evaluatorEmployeeId, CancellationToken cancellationToken) =>
+        Task.FromResult(this.EvaluatorsWithSubordinates.Contains(evaluatorEmployeeId));
 
     public Task<Employee?> FindByIdWithEvaluatorAsync(long id, CancellationToken cancellationToken) =>
         Task.FromResult<Employee?>(null);

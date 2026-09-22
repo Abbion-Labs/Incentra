@@ -5,7 +5,9 @@ import type { DescriptiveRating, MeasureType, RatingLevel } from '../api/types';
 export function useLookups() {
   const [ratingLevels, setRatingLevels] = useState<RatingLevel[]>([]);
   const [measureTypes, setMeasureTypes] = useState<MeasureType[]>([]);
-  const [descriptiveRatings, setDescriptiveRatings] = useState<DescriptiveRating[]>([]);
+  const [descriptiveRatings, setDescriptiveRatings] = useState<
+    DescriptiveRating[]
+  >([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {

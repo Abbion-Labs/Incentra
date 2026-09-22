@@ -65,7 +65,6 @@
     "vn-0062": "Image must be 2 MB or smaller.",
     "vn-0063": "Rating level for not rated (/) is not configured.",
     "vn-0064": "Goal description is required.",
-    "vn-0065": "Measure description not found for the given measure type.",
     "vn-0066": "Criterion description is required.",
     "vn-0067": "Condition description is required.",
     "vn-0068": "Goals, conditions and criteria are already set and cannot be changed.",
@@ -91,6 +90,13 @@
     "vn-0089": "An unexpected error occurred. Please try again. (ID: {traceId})",
     "vn-0090": "The data was modified by another user in the meantime. Please refresh and try again.",
     "vn-0091": "A record with the same value already exists.",
-    "vn-0092": "Too many failed sign-in attempts. Try again in {seconds} seconds."
+    "vn-0092": "Too many failed sign-in attempts. Try again in {seconds} seconds.",
+    "vn-0093": "The selected person is not set up as an evaluator. Add them to the evaluators first.",
+    "vn-0094": "This account is not linked to an employee. Link it on the employee form first, then grant the evaluator role.",
+    "vn-0095": "Pick a controller for the evaluator role.",
+    "vn-0096": "This evaluator still has people assigned to them. Reassign them before removing the role.",
+    "vn-0097": "People are assigned to this employee as their evaluator. Reassign them before deactivating.",
+    "vn-0098": "The selected person is not a controller. Grant them the controller role on the Users tab.",
+    "vn-0099": "This controller still has evaluators assigned to them. Reassign them before removing the role."
   }
 }

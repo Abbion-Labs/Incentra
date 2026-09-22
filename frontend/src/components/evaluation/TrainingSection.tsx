@@ -66,11 +66,15 @@ export function TrainingSection({
   };
 
   return (
-    <FormSection title={formatMessage({ id: 'evaluation.trainingAndDevelopment' })}>
+    <FormSection
+      title={formatMessage({ id: 'evaluation.trainingAndDevelopment' })}
+    >
       <div className="form-list">
         {TRAINING_FIELDS.map((field) => (
           <div key={field.id} className="form-row">
-            <label htmlFor={field.id}>{formatMessage({ id: field.labelKey as never })}</label>
+            <label htmlFor={field.id}>
+              {formatMessage({ id: field.labelKey as never })}
+            </label>
             <textarea
               id={field.id}
               rows={3}

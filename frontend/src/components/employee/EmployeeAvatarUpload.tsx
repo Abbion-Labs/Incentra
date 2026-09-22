@@ -10,7 +10,11 @@ interface EmployeeAvatarUploadProps {
   size?: 'sm' | 'md' | 'lg';
 }
 
-export function EmployeeAvatarUpload({ employee, onUpdated, size = 'lg' }: EmployeeAvatarUploadProps) {
+export function EmployeeAvatarUpload({
+  employee,
+  onUpdated,
+  size = 'lg',
+}: EmployeeAvatarUploadProps) {
   const { formatMessage } = useIntl();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -52,10 +56,17 @@ export function EmployeeAvatarUpload({ employee, onUpdated, size = 'lg' }: Emplo
     try {
       const formData = new FormData();
       formData.append('file', file);
-      const updated = await api.postForm<Employee>(`/api/employees/${employee.id}/avatar`, formData);
+      const updated = await api.postForm<Employee>(
+        `/api/employees/${employee.id}/avatar`,
+        formData,
+      );
       onUpdated(updated);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : formatMessage({ id: 'account.uploadFailed' }));
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : formatMessage({ id: 'account.uploadFailed' }),
+      );
     } finally {
       setUploading(false);
     }
@@ -67,10 +78,16 @@ export function EmployeeAvatarUpload({ employee, onUpdated, size = 'lg' }: Emplo
     setError('');
     setMenuOpen(false);
     try {
-      const updated = await api.delete<Employee>(`/api/employees/${employee.id}/avatar`);
+      const updated = await api.delete<Employee>(
+        `/api/employees/${employee.id}/avatar`,
+      );
       onUpdated(updated);
     } catch (e) {
-      setError(e instanceof ApiError ? e.message : formatMessage({ id: 'account.removeFailed' }));
+      setError(
+        e instanceof ApiError
+          ? e.message
+          : formatMessage({ id: 'account.removeFailed' }),
+      );
     } finally {
       setUploading(false);
     }

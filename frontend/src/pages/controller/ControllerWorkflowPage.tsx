@@ -1,14 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import type { EvaluationSummary } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
 import { EvaluationBucketTabs } from '../../components/evaluation/EvaluationBucketTabs';
-import { EvaluationSummaryTable, EvaluationSummaryTableCard } from '../../components/evaluation/EvaluationSummaryTable';
+import {
+  EvaluationSummaryTable,
+  EvaluationSummaryTableCard,
+} from '../../components/evaluation/EvaluationSummaryTable';
 import { AppLayout } from '../../components/AppLayout';
 import { PeriodFilters, currentYear } from '../../components/PeriodFilters';
-import { useDebouncedSearch } from '../../hooks/useDebouncedSearch';
+import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
-import { usePagedList } from '../../hooks/usePagedList';
 import { useIntl } from '../../i18n';
 import {
   type ControllerBucket,
@@ -16,17 +17,28 @@ import {
   controllerBucketTabs,
   emptyStateByControllerBucket,
 } from '../../utils/controllerBuckets';
-import { buildEvaluationsPagePath, mapControllerBucketCounts } from '../../utils/evaluationApi';
+import {
+  buildEvaluationsPagePath,
+  mapControllerBucketCounts,
+} from '../../utils/evaluationApi';
 
 export function ControllerWorkflowPage() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as ControllerBucket | null;
-  const initialTab = tabFromUrl && controllerBucketTabs.includes(tabFromUrl) ? tabFromUrl : 'pending';
+  const initialTab =
+    tabFromUrl && controllerBucketTabs.includes(tabFromUrl)
+      ? tabFromUrl
+      : 'pending';
   const [activeTab, setActiveTab] = useState<ControllerBucket>(initialTab);
   const [year, setYear] = useState(currentYear);
   const [quarter, setQuarter] = useState<number | null>(null);
-  const { input: searchInput, debounced: search, setInput: setSearchInput } = useDebouncedSearch();
+  const {
+    input: searchInput,
+    debounced: search,
+    setInput: setSearchInput,
+  } = useDebouncedSearch();
 
   const listQueryKey = `${year}|${quarter ?? 'all'}|${activeTab}|${search}`;
   const countsQueryKey = `${year}|${quarter ?? 'all'}|${search}`;
@@ -49,8 +61,16 @@ export function ControllerWorkflowPage() {
       }),
   });
 
-  const { counts } = useEvaluationBucketCounts(countsQueryKey, { year, quarter, search });
+  const { counts } = useEvaluationBucketCounts(countsQueryKey, {
+    year,
+    quarter,
+    search,
+  });
   const tabCounts = useMemo(() => mapControllerBucketCounts(counts), [counts]);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   useEffect(() => {
     if (tabFromUrl && controllerBucketTabs.includes(tabFromUrl)) {
@@ -79,7 +99,6 @@ export function ControllerWorkflowPage() {
         counts={tabCounts}
         tabLabels={controllerBucketTabLabels}
       />
-      <AlertMessages error={error} />
 
       <EvaluationSummaryTableCard
         loading={loading}
@@ -93,7 +112,9 @@ export function ControllerWorkflowPage() {
           detailPath={(id) => `/controller/evaluations/${id}`}
           showEvaluator
           showNewBadge
-          pendingActionLabel={formatMessage({ id: 'controller.reviewAndDecision' })}
+          pendingActionLabel={formatMessage({
+            id: 'controller.reviewAndDecision',
+          })}
           pendingTabs={['pending']}
           hasMore={hasMore}
           loadingMore={loadingMore}

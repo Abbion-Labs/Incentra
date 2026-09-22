@@ -65,7 +65,6 @@ public static class ErrorCodes
     public const string ImageTooLarge = "vn-0062";
     public const string NotRatedLevelMissing = "vn-0063";
     public const string GoalDescriptionRequired = "vn-0064";
-    public const string MeasureDescriptionNotFound = "vn-0065";
     public const string CriterionDescriptionRequired = "vn-0066";
     public const string ConditionDescriptionRequired = "vn-0067";
     public const string GoalsPlanningLocked = "vn-0068";
@@ -93,4 +92,11 @@ public static class ErrorCodes
     public const string ConcurrencyConflict = "vn-0090";
     public const string DuplicateValue = "vn-0091";
     public const string TooManyLoginAttempts = "vn-0092";
+    public const string EvaluatorNotConfigured = "vn-0093";
+    public const string EvaluatorUserNotLinkedToEmployee = "vn-0094";
+    public const string EvaluatorControllerRequired = "vn-0095";
+    public const string EvaluatorHasSubordinates = "vn-0096";
+    public const string EmployeeHasSubordinates = "vn-0097";
+    public const string ControllerRoleRequired = "vn-0098";
+    public const string ControllerHasEvaluators = "vn-0099";
 }

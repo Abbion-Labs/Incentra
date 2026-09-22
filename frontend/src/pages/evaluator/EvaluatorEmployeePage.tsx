@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
-import type { EmployeeEvaluationBenchmarks, EvaluationDetail } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
+import type {
+  EmployeeEvaluationBenchmarks,
+  EvaluationDetail,
+} from '../../api/types';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { PageBackLink } from '../../components/common/PageBackLink';
 import { AppLayout } from '../../components/AppLayout';
 import { EmployeeAvatarUpload } from '../../components/employee/EmployeeAvatarUpload';
+import { useToast } from '../../hooks';
 import { EvaluationBenchmarkChart } from './components/EvaluationBenchmarkChart';
 import { EmployeeQuarterList } from './components/EmployeeQuarterList';
 import { SelectedEvaluationPanel } from './components/SelectedEvaluationPanel';
@@ -16,15 +19,17 @@ import { formatDate } from '../../utils/formatLocale';
 
 export function EvaluatorEmployeePage() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const { employeeId } = useParams<{ employeeId: string }>();
   const location = useLocation();
   const backState = location.state as PageBackState | null;
   const [searchParams, setSearchParams] = useSearchParams();
-  const [benchmarks, setBenchmarks] = useState<EmployeeEvaluationBenchmarks | null>(null);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<EvaluationDetail | null>(null);
+  const [benchmarks, setBenchmarks] =
+    useState<EmployeeEvaluationBenchmarks | null>(null);
+  const [selectedEvaluation, setSelectedEvaluation] =
+    useState<EvaluationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const selectedEvaluationId = searchParams.get('evaluation')
     ? Number(searchParams.get('evaluation'))
@@ -33,18 +38,21 @@ export function EvaluatorEmployeePage() {
   const loadBenchmarks = useCallback(async () => {
     if (!employeeId) return;
     setLoading(true);
-    setError('');
     try {
       const data = await api.get<EmployeeEvaluationBenchmarks>(
         `/api/employees/${employeeId}/evaluation-benchmarks`,
       );
       setBenchmarks(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
     } finally {
       setLoading(false);
     }
-  }, [employeeId]);
+  }, [employeeId, formatMessage, toast]);
 
   useEffect(() => {
     loadBenchmarks();
@@ -53,7 +61,10 @@ export function EvaluatorEmployeePage() {
   useEffect(() => {
     if (!benchmarks || selectedEvaluationId) return;
     if (benchmarks.quarters.length > 0) {
-      setSearchParams({ evaluation: String(benchmarks.quarters[0].evaluationId) }, { replace: true });
+      setSearchParams(
+        { evaluation: String(benchmarks.quarters[0].evaluationId) },
+        { replace: true },
+      );
     }
   }, [benchmarks, selectedEvaluationId, setSearchParams]);
 
@@ -72,7 +83,11 @@ export function EvaluatorEmployeePage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.evaluationLoadFailed' }));
+          toast.error(
+            e instanceof Error
+              ? e.message
+              : formatMessage({ id: 'errors.evaluationLoadFailed' }),
+          );
           setSelectedEvaluation(null);
         }
       })
@@ -83,13 +98,15 @@ export function EvaluatorEmployeePage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedEvaluationId]);
+  }, [selectedEvaluationId, formatMessage, toast]);
 
   function handleSelectEvaluation(id: number) {
     setSearchParams({ evaluation: String(id) });
   }
 
-  const selectedQuarter = benchmarks?.quarters.find((q) => q.evaluationId === selectedEvaluationId);
+  const selectedQuarter = benchmarks?.quarters.find(
+    (q) => q.evaluationId === selectedEvaluationId,
+  );
 
   if (loading && !benchmarks) {
     return (
@@ -103,8 +120,10 @@ export function EvaluatorEmployeePage() {
   if (!benchmarks) {
     return (
       <AppLayout title={formatMessage({ id: 'admin.employees' })}>
-        <AlertMessages error={error || formatMessage({ id: 'errors.employeeNotFound' })} />
-        <PageBackLink to="/evaluator" label={formatMessage({ id: 'buttons.backToList' })} />
+        <PageBackLink
+          to="/evaluator"
+          label={formatMessage({ id: 'buttons.backToList' })}
+        />
       </AppLayout>
     );
   }
@@ -114,9 +133,11 @@ export function EvaluatorEmployeePage() {
   return (
     <AppLayout title={employee.fullName}>
       {backState?.backTo && (
-        <PageBackLink to={backState.backTo} label={formatMessage({ id: backState.backLabelKey as never })} />
+        <PageBackLink
+          to={backState.backTo}
+          label={formatMessage({ id: backState.backLabelKey as never })}
+        />
       )}
-      <AlertMessages error={error} />
 
       <div className="employee-profile-layout">
         <aside className="employee-profile-layout__sidebar">
@@ -126,7 +147,9 @@ export function EvaluatorEmployeePage() {
                 employee={employee}
                 size="lg"
                 onUpdated={(updated) => {
-                  setBenchmarks((current) => (current ? { ...current, employee: updated } : current));
+                  setBenchmarks((current) =>
+                    current ? { ...current, employee: updated } : current,
+                  );
                 }}
               />
               <h2 className="employee-card__name">{employee.fullName}</h2>
@@ -156,7 +179,9 @@ export function EvaluatorEmployeePage() {
           </div>
 
           <div className="card">
-            <h3 className="form-section__title">{formatMessage({ id: 'evaluation.quarterlyEvaluations' })}</h3>
+            <h3 className="form-section__title">
+              {formatMessage({ id: 'evaluation.quarterlyEvaluations' })}
+            </h3>
             <EmployeeQuarterList
               quarters={quarters}
               selectedEvaluationId={selectedEvaluationId}
@@ -174,7 +199,10 @@ export function EvaluatorEmployeePage() {
             />
           </div>
 
-          <SelectedEvaluationPanel evaluation={selectedEvaluation} loading={detailLoading} />
+          <SelectedEvaluationPanel
+            evaluation={selectedEvaluation}
+            loading={detailLoading}
+          />
         </div>
       </div>
     </AppLayout>

@@ -2,7 +2,12 @@ import type { EvaluationBucket } from '../../utils/evaluationBuckets';
 import { bucketTabLabelKeys } from '../../utils/evaluationBuckets';
 import { useIntl } from '../../i18n';
 
-export const evaluationBucketTabs: EvaluationBucket[] = ['unrated', 'returned', 'submitted', 'approved'];
+export const evaluationBucketTabs: EvaluationBucket[] = [
+  'unrated',
+  'returned',
+  'submitted',
+  'approved',
+];
 
 interface EvaluationBucketTabsProps {
   activeTab: string;
@@ -33,14 +38,15 @@ export function EvaluationBucketTabs({
             className={`tab ${activeTab === tab ? 'active' : ''}`}
             onClick={() => onTabChange(tab)}
           >
-            {formatMessage({ id: (tabLabels[tab] ?? bucketTabLabelKeys[tab as EvaluationBucket] ?? tab) as never })}
-            {count !== undefined && (
-              <span className="tab-count">{count}</span>
-            )}
+            {formatMessage({
+              id: (tabLabels[tab] ??
+                bucketTabLabelKeys[tab as EvaluationBucket] ??
+                tab) as never,
+            })}
+            {count !== undefined && <span className="tab-count">{count}</span>}
           </button>
         );
       })}
     </div>
   );
 }
-

@@ -1,9 +1,7 @@
 {
   "navigation": {
-    "brand": "Varijabilno nagrađivanje",
+    "brand": "Incentra",
     "main": "Glavna navigacija",
-    "showMenu": "Prikaži navigaciju",
-    "hideMenu": "Sakrij navigaciju",
     "myAccount": "Moj nalog",
     "logout": "Odjava",
     "evaluatorEmployees": "Zaposleni",
@@ -99,7 +97,10 @@
   "auth": {
     "welcome": "Dobrodošli",
     "subtitle": "Prijavite se email adresom i lozinkom",
-    "heroTagline": "Ocenjivanje i kompenzacija",
+    "heroTagline": "Ocenjivanje i varijabilno nagrađivanje",
+    "heroPointGoals": "Jasno postavljeni ciljevi i kriterijumi",
+    "heroPointWorkflow": "Vođen proces od ocenjivača do kontrole",
+    "heroPointPayout": "Obračun varijabile bez ručnih tabela",
     "loginFailed": "Prijava nije uspela.",
     "demoAccounts": "Demo nalozi",
     "placeholderEmail": "ime@firma.rs",
@@ -180,9 +181,6 @@
     "criteriaTitle": "Kriterijumi",
     "measuresTitle": "Merila",
     "measuresHint": "Za svako merilo izaberite ocenu; komentar se automatski popunjava.",
-    "measureDescriptionLabel": "Opis merila",
-    "measureDescriptionCustom": "Drugo (slobodan unos)",
-    "measureCustomDescriptionLabel": "Slobodan opis",
     "measureFallback": "Merilo",
     "rateAndSubmit": "Oceni i pošalji",
     "submitRequirements": "Pre slanja ocenite sve ciljeve i merila (ocena \"/\" nije dozvoljena).",
@@ -217,8 +215,7 @@
     },
     "setPlanningBeforeRating": "Pre ocenjivanja potrebno je postaviti bar jedan cilj, jedan uslov i jedan kriterijum.",
     "submitToControllerTitle": "Slanje kontroloru",
-    "submitToControllerConfirm": "Da li ste sigurni da želite da pošaljete ocenu kontroloru na pregled?"
-    ,
+    "submitToControllerConfirm": "Da li ste sigurni da želite da pošaljete ocenu kontroloru na pregled?",
     "bucket": {
       "planning": "Postavljanje ciljeva",
       "unrated": "Neocenjene",
@@ -276,8 +273,6 @@
     "conversationNote": "Napomena sa razgovora",
     "settingGoals": "Postavljanje...",
     "unsavedChanges": "Nesačuvane izmene",
-    "autosaving": "Automatsko čuvanje...",
-    "autosaved": "Automatski sačuvano",
     "statusHistoryTitle": "Istorija statusa",
     "statusHistoryEmpty": "Nema zabeleženih promena statusa.",
     "statusHistoryTransition": "{from} → {to}",
@@ -309,7 +304,11 @@
       "noUsers": "Nema korisnika.",
       "linkedEmployee": "Povezan zaposleni",
       "passwordOptionalPlaceholder": "Ostavite prazno ako se ne menja",
-      "rolesHint": "Izaberite jednu ili više uloga. Korisnik mora imati bar jednu ulogu."
+      "rolesHint": "Izaberite jednu ili više uloga. Korisnik mora imati bar jednu ulogu.",
+      "evaluatorController": "Kontrolor ocenjivača",
+      "evaluatorControllerHint": "Ocenjivač se dodeljuje kontroloru koji pregleda njegove ocene. Pragovi se popunjavaju podrazumevanim vrednostima i menjaju se na kartici Ocenjivači.",
+      "evaluatorNeedsLinkedEmployee": "Ovaj nalog nije povezan ni sa jednim zaposlenim. Povežite ga u formi zaposlenog pre nego što mu dodelite ulogu ocenjivača.",
+      "evaluatorNotAvailableAtCreate": "Ulogu ocenjivača dodeljujete izmenom naloga, pošto prvo mora da bude povezan sa zaposlenim."
     },
     "employeeForm": {
       "newEmployee": "Novi zaposleni",
@@ -340,7 +339,9 @@
       "thresholdDoesNotMeet": "Prag: ne zadovoljava",
       "thresholdMeets": "Prag: zadovoljava",
       "thresholdGood": "Prag: dobar",
-      "thresholds": "Pragovi"
+      "thresholds": "Pragovi",
+      "selectToEdit": "Izaberite ocenjivača iz tabele da biste izmenili njegova podešavanja.",
+      "closeEditor": "Zatvori izmenu"
     },
     "salaries": {
       "loadingEmployees": "Učitavanje zaposlenih...",

@@ -10,7 +10,7 @@ import {
 import { createPortal } from 'react-dom';
 import type { EvaluationSummary } from '../../api/types';
 import { useIntl } from '../../i18n';
-import { useEvaluationStatusHistory } from '../../hooks/useEvaluationStatusHistory';
+import { useEvaluationStatusHistory, useToast } from '../../hooks';
 import { isReturnedEvaluation } from '../../utils/evaluationBuckets';
 import { EvaluationStatusHistoryPanel } from './EvaluationStatusHistoryPanel';
 
@@ -25,7 +25,10 @@ function isHoverCapable(): boolean {
 
 interface EvaluationStatusWithHistoryProps {
   evaluationId: number;
-  evaluation?: Pick<EvaluationSummary, 'status' | 'goalCount' | 'controllerComment'>;
+  evaluation?: Pick<
+    EvaluationSummary,
+    'status' | 'goalCount' | 'controllerComment'
+  >;
   children: ReactNode;
 }
 
@@ -35,14 +38,22 @@ export function EvaluationStatusWithHistory({
   children,
 }: EvaluationStatusWithHistoryProps) {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const popoverId = useId();
   const triggerRef = useRef<HTMLSpanElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const hoverCapableRef = useRef(isHoverCapable());
   const [open, setOpen] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const [position, setPosition] = useState<{ top: number; left: number } | null>(null);
+  const [position, setPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
   const { items, loading, error } = useEvaluationStatusHistory(evaluationId);
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   const title = formatMessage({ id: 'evaluation.statusHistoryTitle' });
   const countSuffix = !loading && items.length > 0 ? ` (${items.length})` : '';
@@ -63,7 +74,9 @@ export function EvaluationStatusWithHistory({
     );
 
     setPosition({
-      top: showAbove ? rect.top - POPOVER_GAP - popoverHeight : rect.bottom + POPOVER_GAP,
+      top: showAbove
+        ? rect.top - POPOVER_GAP - popoverHeight
+        : rect.bottom + POPOVER_GAP,
       left,
     });
   }, []);
@@ -80,7 +93,9 @@ export function EvaluationStatusWithHistory({
 
   const isWithinTriggerOrPopover = useCallback((node: Node | null) => {
     if (!node) return false;
-    return Boolean(triggerRef.current?.contains(node) || popoverRef.current?.contains(node));
+    return Boolean(
+      triggerRef.current?.contains(node) || popoverRef.current?.contains(node),
+    );
   }, []);
 
   const handleMouseEnter = () => {
@@ -148,7 +163,9 @@ export function EvaluationStatusWithHistory({
     'evaluation-status-with-history',
     isReturned ? 'evaluation-status-with-history--returned' : '',
     hasHistory ? 'evaluation-status-with-history--has-history' : '',
-  ].filter(Boolean).join(' ');
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <span
@@ -182,30 +199,42 @@ export function EvaluationStatusWithHistory({
       }}
     >
       {children}
-      {open && position && createPortal(
-        <div
-          ref={popoverRef}
-          id={popoverId}
-          className="evaluation-status-history-popover"
-          style={{ top: position.top, left: position.left, width: POPOVER_WIDTH }}
-          role="dialog"
-          aria-label={title}
-          onMouseEnter={() => {
-            if (hoverCapableRef.current) setOpen(true);
-          }}
-          onMouseLeave={(event) => {
-            if (!hoverCapableRef.current) return;
-            if (isWithinTriggerOrPopover(event.relatedTarget as Node | null)) return;
-            closePopover();
-          }}
-        >
-          <p className="evaluation-status-history-popover__title">
-            {title}{countSuffix}
-          </p>
-          <EvaluationStatusHistoryPanel items={items} loading={loading} error={error} />
-        </div>,
-        document.body,
-      )}
+      {open &&
+        position &&
+        createPortal(
+          <div
+            ref={popoverRef}
+            id={popoverId}
+            className="evaluation-status-history-popover"
+            style={{
+              top: position.top,
+              left: position.left,
+              width: POPOVER_WIDTH,
+            }}
+            role="dialog"
+            aria-label={title}
+            onMouseEnter={() => {
+              if (hoverCapableRef.current) setOpen(true);
+            }}
+            onMouseLeave={(event) => {
+              if (!hoverCapableRef.current) return;
+              if (isWithinTriggerOrPopover(event.relatedTarget as Node | null))
+                return;
+              closePopover();
+            }}
+          >
+            <p className="evaluation-status-history-popover__title">
+              {title}
+              {countSuffix}
+            </p>
+            <EvaluationStatusHistoryPanel
+              items={items}
+              loading={loading}
+              error={error}
+            />
+          </div>,
+          document.body,
+        )}
     </span>
   );
 }

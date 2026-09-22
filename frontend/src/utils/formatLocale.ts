@@ -8,7 +8,11 @@ function resolveIntlLocale(): string {
   }
 }
 
-export function formatAmount(value: number, currency = 'RSD', maximumFractionDigits = 2): string {
+export function formatAmount(
+  value: number,
+  currency = 'RSD',
+  maximumFractionDigits = 2,
+): string {
   return new Intl.NumberFormat(resolveIntlLocale(), {
     style: 'currency',
     currency,
@@ -17,14 +21,21 @@ export function formatAmount(value: number, currency = 'RSD', maximumFractionDig
   }).format(value);
 }
 
-export function formatPercent(value: number, maximumFractionDigits = 2): string {
+export function formatPercent(
+  value: number,
+  maximumFractionDigits = 2,
+): string {
   return new Intl.NumberFormat(resolveIntlLocale(), {
     style: 'percent',
     maximumFractionDigits,
   }).format(value);
 }
 
-export function formatNumber(value: number, maximumFractionDigits = 0, minimumFractionDigits = 0): string {
+export function formatNumber(
+  value: number,
+  maximumFractionDigits = 0,
+  minimumFractionDigits = 0,
+): string {
   return new Intl.NumberFormat(resolveIntlLocale(), {
     minimumFractionDigits,
     maximumFractionDigits,

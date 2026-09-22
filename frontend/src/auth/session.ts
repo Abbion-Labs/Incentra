@@ -2,7 +2,9 @@ type SessionExpiredHandler = () => void;
 
 let sessionExpiredHandler: SessionExpiredHandler | null = null;
 
-export function setSessionExpiredHandler(handler: SessionExpiredHandler | null): void {
+export function setSessionExpiredHandler(
+  handler: SessionExpiredHandler | null,
+): void {
   sessionExpiredHandler = handler;
 }
 

@@ -1,17 +1,21 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api/client';
-import type { EducationLevel, JobPosition, OrganizationUnit } from '../../api/types';
+import type {
+  EducationLevel,
+  JobPosition,
+  OrganizationUnit,
+} from '../../api/types';
+import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { LookupCrudPanel } from './components/LookupCrudPanel';
-import { AdminPageHeader } from './components/AdminPageHeader';
 
 export function AdminLookups() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const [orgUnits, setOrgUnits] = useState<OrganizationUnit[]>([]);
   const [positions, setPositions] = useState<JobPosition[]>([]);
   const [education, setEducation] = useState<EducationLevel[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
 
   const load = useCallback(async () => {
     const [ou, jp, ed] = await Promise.all([
@@ -27,9 +31,15 @@ export function AdminLookups() {
   useEffect(() => {
     setLoading(true);
     load()
-      .catch((e) => setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' })))
+      .catch((e) =>
+        toast.error(
+          e instanceof Error
+            ? e.message
+            : formatMessage({ id: 'errors.generic' }),
+        ),
+      )
       .finally(() => setLoading(false));
-  }, [load]);
+  }, [load, formatMessage, toast]);
 
   if (loading) {
     return (
@@ -41,7 +51,6 @@ export function AdminLookups() {
 
   return (
     <div className="admin-page">
-      <AdminPageHeader error={error} />
       <div className="admin-lookups-grid">
         <LookupCrudPanel
           kind="org"

@@ -120,9 +120,7 @@ export interface EvaluationMeasure {
   id: number;
   measureTypeId: number;
   measureTypeName: string;
-  measureDescriptionId: number | null;
-  measureDescription: string | null;
-  customDescription: string | null;
+  measureTypeCode: string;
   ratingComment: string | null;
   ratingLevelId: number;
   ratingLevelValue: number;
@@ -163,7 +161,6 @@ export interface MeasureType {
   name: string;
   description?: string | null;
   sortOrder: number;
-  descriptions: { id: number; description: string }[];
 }
 
 export interface OrganizationUnit {

@@ -1,12 +1,15 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
-import type { EmployeeEvaluationBenchmarks, EvaluationDetail } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
+import type {
+  EmployeeEvaluationBenchmarks,
+  EvaluationDetail,
+} from '../../api/types';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { PageBackLink } from '../../components/common/PageBackLink';
 import { AppLayout } from '../../components/AppLayout';
 import { EmployeeAvatar } from '../../components/employee/EmployeeAvatar';
+import { useToast } from '../../hooks';
 import { EvaluationBenchmarkChart } from '../evaluator/components/EvaluationBenchmarkChart';
 import { EmployeeQuarterList } from '../evaluator/components/EmployeeQuarterList';
 import { SelectedEvaluationPanel } from '../evaluator/components/SelectedEvaluationPanel';
@@ -15,13 +18,15 @@ import { formatDate } from '../../utils/formatLocale';
 
 export function ControllerEmployeePage() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const { employeeId } = useParams<{ employeeId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [benchmarks, setBenchmarks] = useState<EmployeeEvaluationBenchmarks | null>(null);
-  const [selectedEvaluation, setSelectedEvaluation] = useState<EvaluationDetail | null>(null);
+  const [benchmarks, setBenchmarks] =
+    useState<EmployeeEvaluationBenchmarks | null>(null);
+  const [selectedEvaluation, setSelectedEvaluation] =
+    useState<EvaluationDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [detailLoading, setDetailLoading] = useState(false);
-  const [error, setError] = useState('');
 
   const selectedEvaluationId = searchParams.get('evaluation')
     ? Number(searchParams.get('evaluation'))
@@ -30,18 +35,21 @@ export function ControllerEmployeePage() {
   const loadBenchmarks = useCallback(async () => {
     if (!employeeId) return;
     setLoading(true);
-    setError('');
     try {
       const data = await api.get<EmployeeEvaluationBenchmarks>(
         `/api/employees/${employeeId}/evaluation-benchmarks`,
       );
       setBenchmarks(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
     } finally {
       setLoading(false);
     }
-  }, [employeeId]);
+  }, [employeeId, formatMessage, toast]);
 
   useEffect(() => {
     loadBenchmarks();
@@ -50,7 +58,10 @@ export function ControllerEmployeePage() {
   useEffect(() => {
     if (!benchmarks || selectedEvaluationId) return;
     if (benchmarks.quarters.length > 0) {
-      setSearchParams({ evaluation: String(benchmarks.quarters[0].evaluationId) }, { replace: true });
+      setSearchParams(
+        { evaluation: String(benchmarks.quarters[0].evaluationId) },
+        { replace: true },
+      );
     }
   }, [benchmarks, selectedEvaluationId, setSearchParams]);
 
@@ -69,7 +80,11 @@ export function ControllerEmployeePage() {
       })
       .catch((e) => {
         if (!cancelled) {
-          setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.evaluationLoadFailed' }));
+          toast.error(
+            e instanceof Error
+              ? e.message
+              : formatMessage({ id: 'errors.evaluationLoadFailed' }),
+          );
           setSelectedEvaluation(null);
         }
       })
@@ -80,13 +95,15 @@ export function ControllerEmployeePage() {
     return () => {
       cancelled = true;
     };
-  }, [selectedEvaluationId]);
+  }, [selectedEvaluationId, formatMessage, toast]);
 
   function handleSelectEvaluation(id: number) {
     setSearchParams({ evaluation: String(id) });
   }
 
-  const selectedQuarter = benchmarks?.quarters.find((q) => q.evaluationId === selectedEvaluationId);
+  const selectedQuarter = benchmarks?.quarters.find(
+    (q) => q.evaluationId === selectedEvaluationId,
+  );
 
   if (loading && !benchmarks) {
     return (
@@ -100,8 +117,10 @@ export function ControllerEmployeePage() {
   if (!benchmarks) {
     return (
       <AppLayout title={formatMessage({ id: 'admin.employees' })}>
-        <AlertMessages error={error || formatMessage({ id: 'errors.employeeNotFound' })} />
-        <PageBackLink to="/controller" label={formatMessage({ id: 'buttons.backToList' })} />
+        <PageBackLink
+          to="/controller"
+          label={formatMessage({ id: 'buttons.backToList' })}
+        />
       </AppLayout>
     );
   }
@@ -110,8 +129,10 @@ export function ControllerEmployeePage() {
 
   return (
     <AppLayout title={employee.fullName}>
-      <PageBackLink to="/controller" label={formatMessage({ id: 'controller.backToEmployees' })} />
-      <AlertMessages error={error} />
+      <PageBackLink
+        to="/controller"
+        label={formatMessage({ id: 'controller.backToEmployees' })}
+      />
 
       <div className="employee-profile-layout">
         <aside className="employee-profile-layout__sidebar">
@@ -151,7 +172,9 @@ export function ControllerEmployeePage() {
           </div>
 
           <div className="card">
-            <h3 className="form-section__title">{formatMessage({ id: 'evaluation.quarterlyEvaluations' })}</h3>
+            <h3 className="form-section__title">
+              {formatMessage({ id: 'evaluation.quarterlyEvaluations' })}
+            </h3>
             <EmployeeQuarterList
               quarters={quarters}
               selectedEvaluationId={selectedEvaluationId}
@@ -172,7 +195,9 @@ export function ControllerEmployeePage() {
           <SelectedEvaluationPanel
             evaluation={selectedEvaluation}
             loading={detailLoading}
-            getDetailPath={(evaluation) => `/controller/evaluations/${evaluation.id}`}
+            getDetailPath={(evaluation) =>
+              `/controller/evaluations/${evaluation.id}`
+            }
             actionLabel={formatMessage({ id: 'controller.reviewAndDecision' })}
           />
         </div>

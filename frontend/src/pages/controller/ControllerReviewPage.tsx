@@ -2,19 +2,22 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import type { Employee, EvaluationDetail } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { ControllerDecisionPanel } from '../../components/evaluation/ControllerDecisionPanel';
 import { EvaluationPlanningOverview } from '../../components/evaluation/EvaluationPlanningOverview';
-import { MeasuresEditorSection, type MeasureDraft } from '../../components/evaluation/MeasuresEditorSection';
+import {
+  MeasuresEditorSection,
+  type MeasureDraft,
+} from '../../components/evaluation/MeasuresEditorSection';
 import { TrainingSection } from '../../components/evaluation/TrainingSection';
 import { AppLayout } from '../../components/AppLayout';
-import { useToast } from '../../components/common/Toast';
-import { useEvaluation } from '../../hooks/useEvaluation';
-import { useLookups } from '../../hooks/useLookups';
+import { useEvaluation, useLookups, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { GoalsPlanningEmployeeCard } from '../evaluator/components/GoalsPlanningEmployeeCard';
-import { EvaluationScoresSummary, EvaluationStatusSummary } from '../evaluator/components/EvaluationRatingMeta';
+import {
+  EvaluationScoresSummary,
+  EvaluationStatusSummary,
+} from '../evaluator/components/EvaluationRatingMeta';
 import { detailHasIncompleteRatings } from '../../utils/scoring';
 import { getMeasureRatingComment } from '../../utils/measureRatingDefaults';
 
@@ -23,7 +26,7 @@ export function ControllerReviewPage() {
   const { id } = useParams<{ id: string }>();
   const toast = useToast();
   const { ratingLevels, measureTypes } = useLookups();
-  const { evaluation, setEvaluation, loading, error, setError } = useEvaluation(id);
+  const { evaluation, setEvaluation, loading, error } = useEvaluation(id);
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [saving, setSaving] = useState(false);
   const [controllerComment, setControllerComment] = useState('');
@@ -31,11 +34,19 @@ export function ControllerReviewPage() {
   const [measures, setMeasures] = useState<MeasureDraft[]>([]);
   const [trainingsAttended, setTrainingsAttended] = useState('');
   const [missingKnowledgeSkills, setMissingKnowledgeSkills] = useState('');
-  const [selfDevelopmentSuggestions, setSelfDevelopmentSuggestions] = useState('');
+  const [selfDevelopmentSuggestions, setSelfDevelopmentSuggestions] =
+    useState('');
   const [trainingEvaluatorComment, setTrainingEvaluatorComment] = useState('');
 
-  const canReview = evaluation?.status === 'Submitted' || evaluation?.status === 'UnderReview';
-  const incompleteRatings = evaluation ? detailHasIncompleteRatings(evaluation) : false;
+  const canReview =
+    evaluation?.status === 'Submitted' || evaluation?.status === 'UnderReview';
+  const incompleteRatings = evaluation
+    ? detailHasIncompleteRatings(evaluation)
+    : false;
+
+  useEffect(() => {
+    if (error) toast.error(error);
+  }, [error, toast]);
 
   useEffect(() => {
     if (!evaluation?.employeeId) {
@@ -44,7 +55,8 @@ export function ControllerReviewPage() {
     }
 
     let cancelled = false;
-    api.get<Employee>(`/api/employees/${evaluation.employeeId}`)
+    api
+      .get<Employee>(`/api/employees/${evaluation.employeeId}`)
       .then((data) => {
         if (!cancelled) setEmployee(data);
       })
@@ -70,9 +82,9 @@ export function ControllerReviewPage() {
 
         return {
           measureTypeId: m.measureTypeId,
-          measureDescriptionId: m.measureDescriptionId ?? '',
-          customDescription: m.customDescription ?? '',
-          ratingComment: m.ratingComment?.trim() ? m.ratingComment : autoComment,
+          ratingComment: m.ratingComment?.trim()
+            ? m.ratingComment
+            : autoComment,
           ratingLevelId: m.ratingLevelId,
           sortOrder: m.sortOrder,
         };
@@ -80,9 +92,17 @@ export function ControllerReviewPage() {
     );
     setTrainingsAttended(evaluation.training?.trainingDescription ?? '');
     setMissingKnowledgeSkills(evaluation.training?.knowledgeDescription ?? '');
-    setSelfDevelopmentSuggestions(evaluation.training?.developmentDescription ?? '');
+    setSelfDevelopmentSuggestions(
+      evaluation.training?.developmentDescription ?? '',
+    );
     setTrainingEvaluatorComment(evaluation.training?.evaluatorComment ?? '');
-  }, [evaluation?.id, evaluation?.version, measureTypes, ratingLevels, formatMessage]);
+  }, [
+    evaluation?.id,
+    evaluation?.version,
+    measureTypes,
+    ratingLevels,
+    formatMessage,
+  ]);
 
   useEffect(() => {
     if (evaluation?.controllerComment) {
@@ -92,26 +112,35 @@ export function ControllerReviewPage() {
 
   async function startReviewIfNeeded() {
     if (!evaluation || evaluation.status !== 'Submitted') return evaluation;
-    return api.post<EvaluationDetail>(`/api/evaluations/${evaluation.id}/start-review`, {
-      version: evaluation.version,
-    });
+    return api.post<EvaluationDetail>(
+      `/api/evaluations/${evaluation.id}/start-review`,
+      {
+        version: evaluation.version,
+      },
+    );
   }
 
   async function approve() {
     if (!evaluation) return;
     setSaving(true);
-    setError('');
     try {
-      let current = await startReviewIfNeeded();
+      const current = await startReviewIfNeeded();
       if (current) setEvaluation(current);
-      const updated = await api.post<EvaluationDetail>(`/api/evaluations/${evaluation.id}/approve`, {
-        version: current?.version ?? evaluation.version,
-        controllerComment: controllerComment || null,
-      });
+      const updated = await api.post<EvaluationDetail>(
+        `/api/evaluations/${evaluation.id}/approve`,
+        {
+          version: current?.version ?? evaluation.version,
+          controllerComment: controllerComment || null,
+        },
+      );
       setEvaluation(updated);
       toast.success(formatMessage({ id: 'alerts.evaluationApproved' }));
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.approveFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.approveFailed' }),
+      );
     } finally {
       setSaving(false);
     }
@@ -120,13 +149,12 @@ export function ControllerReviewPage() {
   async function returnForRevision() {
     if (!evaluation) return;
     if (!revisionComment.trim()) {
-      setError(formatMessage({ id: 'errors.revisionCommentRequired' }));
+      toast.warning(formatMessage({ id: 'errors.revisionCommentRequired' }));
       return;
     }
     setSaving(true);
-    setError('');
     try {
-      let current = await startReviewIfNeeded();
+      const current = await startReviewIfNeeded();
       if (current) setEvaluation(current);
       const updated = await api.post<EvaluationDetail>(
         `/api/evaluations/${evaluation.id}/return-for-revision`,
@@ -139,7 +167,11 @@ export function ControllerReviewPage() {
       toast.success(formatMessage({ id: 'alerts.evaluationReturned' }));
       setRevisionComment('');
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.returnFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.returnFailed' }),
+      );
     } finally {
       setSaving(false);
     }
@@ -155,7 +187,9 @@ export function ControllerReviewPage() {
           </>
         ) : (
           <div className="empty-state">
-            <p className="empty-state__title">{formatMessage({ id: 'errors.evaluationNotFound' })}</p>
+            <p className="empty-state__title">
+              {formatMessage({ id: 'errors.evaluationNotFound' })}
+            </p>
           </div>
         )}
       </AppLayout>
@@ -163,7 +197,12 @@ export function ControllerReviewPage() {
   }
 
   return (
-    <AppLayout title={formatMessage({ id: 'controller.reviewTitleWithName' }, { name: evaluation.employeeFullName })}>
+    <AppLayout
+      title={formatMessage(
+        { id: 'controller.reviewTitleWithName' },
+        { name: evaluation.employeeFullName },
+      )}
+    >
       <div className="form-page">
         <GoalsPlanningEmployeeCard
           evaluation={evaluation}
@@ -172,14 +211,24 @@ export function ControllerReviewPage() {
           hidePeriod
           showStatusHistory
           employeeAnalyticsPath={`/controller/employees/${evaluation.employeeId}`}
-          ratingAside={<EvaluationStatusSummary evaluation={evaluation} showPeriod showStatusHistory />}
-          footer={evaluation.controllerComment && !canReview ? (
-            <div className="alert alert-info goals-employee-card__controller-comment">
-              <strong>{formatMessage({ id: 'evaluation.controllerCommentLabel' })}</strong> {evaluation.controllerComment}
-            </div>
-          ) : undefined}
+          ratingAside={
+            <EvaluationStatusSummary
+              evaluation={evaluation}
+              showPeriod
+              showStatusHistory
+            />
+          }
+          footer={
+            evaluation.controllerComment && !canReview ? (
+              <div className="alert alert-info goals-employee-card__controller-comment">
+                <strong>
+                  {formatMessage({ id: 'evaluation.controllerCommentLabel' })}
+                </strong>{' '}
+                {evaluation.controllerComment}
+              </div>
+            ) : undefined
+          }
         />
-        <AlertMessages error={error} />
 
         <EvaluationPlanningOverview
           evaluation={evaluation}
@@ -234,7 +283,6 @@ export function ControllerReviewPage() {
             />
           )}
         </section>
-
       </div>
     </AppLayout>
   );

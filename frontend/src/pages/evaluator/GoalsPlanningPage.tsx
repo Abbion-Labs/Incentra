@@ -1,18 +1,25 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api/client';
-import type { Employee, EvaluationDetail, EvaluationSummary, PagedResult } from '../../api/types';
-import { AlertMessages } from '../../components/common/AlertMessages';
+import type {
+  Employee,
+  EvaluationDetail,
+  EvaluationSummary,
+  PagedResult,
+} from '../../api/types';
 import { LoadingEmpty } from '../../components/common/LoadingEmpty';
 import { FormSection } from '../../components/forms/FormSection';
 import { TextListEditor } from '../../components/forms/TextListEditor';
 import { AppLayout } from '../../components/AppLayout';
-import { useLookups } from '../../hooks/useLookups';
-import { useToast } from '../../components/common/Toast';
-import { useAutosave } from '../../hooks/useAutosave';
-import { useUnsavedChangesGuard } from '../../hooks/useUnsavedChangesGuard';
-import { EvaluationAutosaveIndicator, type AutosaveStatus } from '../../components/evaluation/EvaluationAutosaveIndicator';
-import { defaultConversationDatetime, hasValidPlanningDraft, isGoalsPlanningComplete, toTextDrafts, type TextItemDraft } from '../../utils/goalsPlanning';
+import { useLookups, useToast, useUnsavedChangesGuard } from '../../hooks';
+import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
+import {
+  defaultConversationDatetime,
+  hasValidPlanningDraft,
+  isGoalsPlanningComplete,
+  toTextDrafts,
+  type TextItemDraft,
+} from '../../utils/goalsPlanning';
 import { fetchLatestEvaluation } from '../../utils/evaluationSave';
 import { previousQuarter } from '../../utils/status';
 import { CopyFromPreviousQuarterButton } from './components/CopyFromPreviousQuarterButton';
@@ -33,8 +40,6 @@ export function GoalsPlanningPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [copying, setCopying] = useState(false);
-  const [error, setError] = useState('');
-  const [info, setInfo] = useState('');
 
   const [goals, setGoals] = useState<TextItemDraft[]>([]);
   const [conditions, setConditions] = useState<TextItemDraft[]>([]);
@@ -42,7 +47,6 @@ export function GoalsPlanningPage() {
   const [conversationAt, setConversationAt] = useState('');
   const [evaluatorComment, setEvaluatorComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
-  const [autosaveStatus, setAutosaveStatus] = useState<AutosaveStatus>('idle');
 
   const editable = evaluation?.status === 'Draft';
   const goalsLocked = evaluation ? isGoalsPlanningComplete(evaluation) : false;
@@ -51,10 +55,9 @@ export function GoalsPlanningPage() {
   const markDirty = useCallback(() => {
     if (!canEditPlanning) return;
     setIsDirty(true);
-    setAutosaveStatus('dirty');
   }, [canEditPlanning]);
 
-  useUnsavedChangesGuard(
+  const { allowNextNavigation } = useUnsavedChangesGuard(
     canEditPlanning && isDirty,
     formatMessage({ id: 'common.unsavedChangesWarning' }),
   );
@@ -62,76 +65,103 @@ export function GoalsPlanningPage() {
   const load = useCallback(async () => {
     if (!id) return;
     setLoading(true);
-    setError('');
     try {
       const data = await api.get<EvaluationDetail>(`/api/evaluations/${id}`);
-      const employeeData = await api.get<Employee>(`/api/employees/${data.employeeId}`);
+      const employeeData = await api.get<Employee>(
+        `/api/employees/${data.employeeId}`,
+      );
       setEvaluation(data);
       setEmployee(employeeData);
-      setConversationAt(data.conversationAt ? data.conversationAt.slice(0, 16) : defaultConversationDatetime());
+      setConversationAt(
+        data.conversationAt
+          ? data.conversationAt.slice(0, 16)
+          : defaultConversationDatetime(),
+      );
       setEvaluatorComment(data.evaluatorComment ?? '');
       setGoals(
         data.goals.length > 0
-          ? data.goals.map((g) => ({ description: g.description, sortOrder: g.sortOrder }))
+          ? data.goals.map((g) => ({
+              description: g.description,
+              sortOrder: g.sortOrder,
+            }))
           : [{ description: '', sortOrder: 0 }],
       );
       setConditions(
         data.conditions.length > 0
-          ? data.conditions.map((c) => ({ description: c.description, sortOrder: c.sortOrder }))
+          ? data.conditions.map((c) => ({
+              description: c.description,
+              sortOrder: c.sortOrder,
+            }))
           : [{ description: '', sortOrder: 0 }],
       );
       setCriteria(
         data.criteria.length > 0
-          ? data.criteria.map((c) => ({ description: c.description, sortOrder: c.sortOrder }))
+          ? data.criteria.map((c) => ({
+              description: c.description,
+              sortOrder: c.sortOrder,
+            }))
           : [{ description: '', sortOrder: 0 }],
       );
       setIsDirty(false);
-      setAutosaveStatus('idle');
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.loadFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.loadFailed' }),
+      );
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, formatMessage, toast]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const handleGoalsChange = useCallback((items: TextItemDraft[]) => {
-    setGoals(items);
-    markDirty();
-  }, [markDirty]);
+  const handleGoalsChange = useCallback(
+    (items: TextItemDraft[]) => {
+      setGoals(items);
+      markDirty();
+    },
+    [markDirty],
+  );
 
-  const handleConditionsChange = useCallback((items: TextItemDraft[]) => {
-    setConditions(items);
-    markDirty();
-  }, [markDirty]);
+  const handleConditionsChange = useCallback(
+    (items: TextItemDraft[]) => {
+      setConditions(items);
+      markDirty();
+    },
+    [markDirty],
+  );
 
-  const handleCriteriaChange = useCallback((items: TextItemDraft[]) => {
-    setCriteria(items);
-    markDirty();
-  }, [markDirty]);
+  const handleCriteriaChange = useCallback(
+    (items: TextItemDraft[]) => {
+      setCriteria(items);
+      markDirty();
+    },
+    [markDirty],
+  );
 
-  const handleConversationAtChange = useCallback((value: string) => {
-    setConversationAt(value);
-    markDirty();
-  }, [markDirty]);
+  const handleConversationAtChange = useCallback(
+    (value: string) => {
+      setConversationAt(value);
+      markDirty();
+    },
+    [markDirty],
+  );
 
-  const handleEvaluatorCommentChange = useCallback((value: string) => {
-    setEvaluatorComment(value);
-    markDirty();
-  }, [markDirty]);
+  const handleEvaluatorCommentChange = useCallback(
+    (value: string) => {
+      setEvaluatorComment(value);
+      markDirty();
+    },
+    [markDirty],
+  );
 
-  const persistPlanningDraft = useCallback(async (options?: { silent?: boolean }): Promise<boolean> => {
+  const persistPlanningDraft = useCallback(async (): Promise<boolean> => {
     if (!evaluation || !canEditPlanning) return false;
 
-    if (!options?.silent) {
-      setSaving(true);
-    } else {
-      setAutosaveStatus('saving');
-    }
-    setError('');
+    setSaving(true);
     try {
       const server = await fetchLatestEvaluation(evaluation.id);
 
@@ -139,63 +169,70 @@ export function GoalsPlanningPage() {
       const validConditions = conditions.filter((c) => c.description.trim());
       const validCriteria = criteria.filter((c) => c.description.trim());
 
-      const current = await api.put<EvaluationDetail>(`/api/evaluations/${evaluation.id}/planning-draft`, {
-        version: server.version,
-        conversationAt: new Date(conversationAt || defaultConversationDatetime()).toISOString(),
-        evaluatorComment: evaluatorComment || null,
-        conditionsNotMetComment: server.conditionsNotMetComment ?? null,
-        conditionsFulfilled: server.conditionsFulfilled !== false,
-        goals: validGoals.map((g, i) => ({
-          description: g.description.trim(),
-          ratingLevelId: null,
-          comment: null,
-          weight: null,
-          sortOrder: g.sortOrder ?? i,
-        })),
-        conditions: validConditions.map((c, i) => ({
-          description: c.description.trim(),
-          sortOrder: c.sortOrder ?? i,
-        })),
-        criteria: validCriteria.map((c, i) => ({
-          description: c.description.trim(),
-          sortOrder: c.sortOrder ?? i,
-        })),
-      });
+      const current = await api.put<EvaluationDetail>(
+        `/api/evaluations/${evaluation.id}/planning-draft`,
+        {
+          version: server.version,
+          conversationAt: new Date(
+            conversationAt || defaultConversationDatetime(),
+          ).toISOString(),
+          evaluatorComment: evaluatorComment || null,
+          conditionsNotMetComment: server.conditionsNotMetComment ?? null,
+          conditionsFulfilled: server.conditionsFulfilled !== false,
+          goals: validGoals.map((g, i) => ({
+            description: g.description.trim(),
+            ratingLevelId: null,
+            comment: null,
+            weight: null,
+            sortOrder: g.sortOrder ?? i,
+          })),
+          conditions: validConditions.map((c, i) => ({
+            description: c.description.trim(),
+            sortOrder: c.sortOrder ?? i,
+          })),
+          criteria: validCriteria.map((c, i) => ({
+            description: c.description.trim(),
+            sortOrder: c.sortOrder ?? i,
+          })),
+        },
+      );
 
       setEvaluation(current);
       setIsDirty(false);
-      setAutosaveStatus('saved');
       return true;
     } catch (e) {
-      if (options?.silent) {
-        setAutosaveStatus('dirty');
-      }
       try {
         const latest = await fetchLatestEvaluation(evaluation.id);
         setEvaluation(latest);
       } catch {
         // ignore sync failure
       }
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.saveFailed' }),
+      );
       return false;
     } finally {
-      if (!options?.silent) {
-        setSaving(false);
-      }
+      setSaving(false);
     }
-  }, [canEditPlanning, conditions, conversationAt, criteria, evaluation, evaluatorComment, formatMessage, goals]);
-
-  useAutosave({
-    enabled: canEditPlanning,
-    isDirty,
-    onSave: () => persistPlanningDraft({ silent: true }),
-  });
+  }, [
+    canEditPlanning,
+    conditions,
+    conversationAt,
+    criteria,
+    evaluation,
+    evaluatorComment,
+    formatMessage,
+    goals,
+    toast,
+  ]);
 
   async function saveAll(): Promise<boolean> {
     if (!evaluation || !canEditPlanning) return false;
 
     if (!hasValidPlanningDraft(goals, conditions, criteria)) {
-      setError(formatMessage({ id: 'errors.goalsPlanningIncomplete' }));
+      toast.warning(formatMessage({ id: 'errors.goalsPlanningIncomplete' }));
       return false;
     }
 
@@ -205,6 +242,7 @@ export function GoalsPlanningPage() {
   async function handleSave() {
     const saved = await saveAll();
     if (saved) {
+      allowNextNavigation();
       toast.success(formatMessage({ id: 'alerts.goalsPlanningSaved' }));
       navigate('/evaluator/goals?tab=set');
     }
@@ -213,33 +251,49 @@ export function GoalsPlanningPage() {
   async function copyFromPreviousQuarter() {
     if (!evaluation || !canEditPlanning) return;
 
-    const hasContent = [...goals, ...conditions, ...criteria].some((item) => item.description.trim());
-    if (hasContent && !window.confirm(
-      formatMessage({ id: 'evaluation.copyOverwriteConfirm' }),
-    )) {
+    const hasContent = [...goals, ...conditions, ...criteria].some((item) =>
+      item.description.trim(),
+    );
+    if (
+      hasContent &&
+      !window.confirm(formatMessage({ id: 'evaluation.copyOverwriteConfirm' }))
+    ) {
       return;
     }
 
-    const { year, quarter } = previousQuarter(evaluation.year, evaluation.quarter);
+    const { year, quarter } = previousQuarter(
+      evaluation.year,
+      evaluation.quarter,
+    );
     setCopying(true);
-    setError('');
-    setInfo('');
     try {
       const list = await api.get<PagedResult<EvaluationSummary>>(
         `/api/evaluations?pageSize=5&year=${year}&quarter=${quarter}&employeeId=${evaluation.employeeId}`,
       );
       const previous = list.items[0];
       if (!previous) {
-        setError(formatMessage({ id: 'errors.noSavedEvaluationForQuarter' }, { quarter, year }));
+        toast.warning(
+          formatMessage(
+            { id: 'errors.noSavedEvaluationForQuarter' },
+            { quarter, year },
+          ),
+        );
         return;
       }
 
-      const detail = await api.get<EvaluationDetail>(`/api/evaluations/${previous.id}`);
+      const detail = await api.get<EvaluationDetail>(
+        `/api/evaluations/${previous.id}`,
+      );
       const hasGoals = detail.goals.some((g) => g.description.trim());
       const hasConditions = detail.conditions.some((c) => c.description.trim());
       const hasCriteria = detail.criteria.some((c) => c.description.trim());
       if (!hasGoals && !hasConditions && !hasCriteria) {
-        setError(formatMessage({ id: 'errors.noPlanningDataForQuarter' }, { quarter, year }));
+        toast.warning(
+          formatMessage(
+            { id: 'errors.noPlanningDataForQuarter' },
+            { quarter, year },
+          ),
+        );
         return;
       }
 
@@ -247,10 +301,15 @@ export function GoalsPlanningPage() {
       setConditions(toTextDrafts(detail.conditions));
       setCriteria(toTextDrafts(detail.criteria));
       markDirty();
-      toast.info(formatMessage({ id: 'alerts.copiedFromQuarter' }, { quarter, year }));
-      setInfo('');
+      toast.info(
+        formatMessage({ id: 'alerts.copiedFromQuarter' }, { quarter, year }),
+      );
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.copyFromPreviousQuarterFailed' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.copyFromPreviousQuarterFailed' }),
+      );
     } finally {
       setCopying(false);
     }
@@ -259,7 +318,10 @@ export function GoalsPlanningPage() {
   if (loading || !evaluation) {
     return (
       <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
-        <LoadingEmpty loading={loading} emptyMessage={formatMessage({ id: 'errors.evaluationNotFound' })} />
+        <LoadingEmpty
+          loading={loading}
+          emptyMessage={formatMessage({ id: 'errors.evaluationNotFound' })}
+        />
       </AppLayout>
     );
   }
@@ -269,7 +331,9 @@ export function GoalsPlanningPage() {
       <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
         <div className="card">
           <p>{formatMessage({ id: 'evaluation.notInGoalsPlanningPhase' })}</p>
-          <Link to={`/evaluator/evaluations/${evaluation.id}`}>{formatMessage({ id: 'evaluation.review' })}</Link>
+          <Link to={`/evaluator/evaluations/${evaluation.id}`}>
+            {formatMessage({ id: 'evaluation.review' })}
+          </Link>
         </div>
       </AppLayout>
     );
@@ -298,8 +362,7 @@ export function GoalsPlanningPage() {
         employeeAnalyticsPath={`/evaluator/employees/${evaluation.employeeId}`}
         showStatusHistory
       />
-      <AlertMessages error={error} info={info} />
-      {canEditPlanning && <EvaluationAutosaveIndicator status={autosaveStatus} />}
+      <UnsavedChangesIndicator visible={canEditPlanning && isDirty} />
 
       {goalsLocked ? (
         <>
@@ -309,7 +372,10 @@ export function GoalsPlanningPage() {
           <GoalsReadOnlyOverview evaluation={evaluation} />
           {editable && (
             <div className="card">
-              <Link to={`/evaluator/evaluations/${evaluation.id}`} className="btn btn-primary">
+              <Link
+                to={`/evaluator/evaluations/${evaluation.id}`}
+                className="btn btn-primary"
+              >
                 {formatMessage({ id: 'evaluation.continueToEvaluation' })}
               </Link>
             </div>
@@ -325,7 +391,9 @@ export function GoalsPlanningPage() {
             <TextListEditor
               items={goals}
               setItems={handleGoalsChange}
-              placeholder={formatMessage({ id: 'evaluation.goalDescriptionPlaceholder' })}
+              placeholder={formatMessage({
+                id: 'evaluation.goalDescriptionPlaceholder',
+              })}
               addLabel={formatMessage({ id: 'evaluation.addGoal' })}
             />
           </FormSection>
@@ -339,7 +407,9 @@ export function GoalsPlanningPage() {
               <TextListEditor
                 items={conditions}
                 setItems={handleConditionsChange}
-                placeholder={formatMessage({ id: 'evaluation.conditionPlaceholder' })}
+                placeholder={formatMessage({
+                  id: 'evaluation.conditionPlaceholder',
+                })}
                 addLabel={formatMessage({ id: 'evaluation.addCondition' })}
               />
             </FormSection>
@@ -352,7 +422,9 @@ export function GoalsPlanningPage() {
               <TextListEditor
                 items={criteria}
                 setItems={handleCriteriaChange}
-                placeholder={formatMessage({ id: 'evaluation.criterionPlaceholder' })}
+                placeholder={formatMessage({
+                  id: 'evaluation.criterionPlaceholder',
+                })}
                 addLabel={formatMessage({ id: 'evaluation.addCriterion' })}
               />
             </FormSection>
@@ -362,6 +434,7 @@ export function GoalsPlanningPage() {
             conversationAt={conversationAt}
             evaluatorComment={evaluatorComment}
             saving={saving}
+            copying={copying}
             lookupsLoading={lookupsLoading}
             canSubmit={hasValidPlanningDraft(goals, conditions, criteria)}
             onConversationAtChange={handleConversationAtChange}
@@ -370,7 +443,6 @@ export function GoalsPlanningPage() {
           />
         </div>
       )}
-
     </AppLayout>
   );
 }

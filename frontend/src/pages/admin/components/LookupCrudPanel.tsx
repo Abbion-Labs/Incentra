@@ -1,7 +1,11 @@
 import { useState } from 'react';
 import { api } from '../../../api/client';
-import type { EducationLevel, JobPosition, OrganizationUnit } from '../../../api/types';
-import { AlertMessages } from '../../../components/common/AlertMessages';
+import type {
+  EducationLevel,
+  JobPosition,
+  OrganizationUnit,
+} from '../../../api/types';
+import { useToast } from '../../../hooks';
 import { useIntl } from '../../../i18n';
 
 type LookupKind = 'org' | 'position' | 'education';
@@ -43,16 +47,19 @@ export function LookupCrudPanel({
   onReload,
 }: LookupCrudPanelProps) {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const config = CONFIG[kind];
   const [editingId, setEditingId] = useState<number | null>(null);
   const [name, setName] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
 
   const rows: LookupItem[] =
-    kind === 'org' ? orgUnits : kind === 'position' ? positions : educationLevels;
+    kind === 'org'
+      ? orgUnits
+      : kind === 'position'
+        ? positions
+        : educationLevels;
 
   function resetForm() {
     setEditingId(null);
@@ -64,15 +71,11 @@ export function LookupCrudPanel({
     setEditingId(item.id);
     setName(item.name);
     setIsActive(item.isActive);
-    setError('');
-    setMessage('');
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
-    setError('');
-    setMessage('');
     try {
       const trimmedName = name.trim();
 
@@ -84,30 +87,35 @@ export function LookupCrudPanel({
             isActive,
           });
         } else {
-          const existing = rows.find((item) => item.id === editingId) as JobPosition | EducationLevel;
+          const existing = rows.find((item) => item.id === editingId) as
+            JobPosition | EducationLevel;
           await api.put(`${config.endpoint}/${editingId}`, {
             name: trimmedName,
             sortOrder: existing.sortOrder,
             isActive,
           });
         }
-        setMessage(formatMessage({ id: 'alerts.changesSaved' }));
+        toast.success(formatMessage({ id: 'alerts.changesSaved' }));
       } else if (kind === 'org') {
         await api.post(config.endpoint, { name: trimmedName, code: null });
-        setMessage(formatMessage({ id: 'alerts.itemAdded' }));
+        toast.success(formatMessage({ id: 'alerts.itemAdded' }));
       } else {
         const sortedItems = rows as (JobPosition | EducationLevel)[];
         await api.post(config.endpoint, {
           name: trimmedName,
           sortOrder: nextSortOrder(sortedItems),
         });
-        setMessage(formatMessage({ id: 'alerts.itemAdded' }));
+        toast.success(formatMessage({ id: 'alerts.itemAdded' }));
       }
 
       resetForm();
       await onReload();
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : formatMessage({ id: 'errors.saveFailed' }),
+      );
     } finally {
       setSaving(false);
     }
@@ -115,10 +123,11 @@ export function LookupCrudPanel({
 
   return (
     <div className="card admin-lookup-panel">
-      <AlertMessages error={error} info={message} />
       <form className="admin-lookup-form" onSubmit={handleSubmit}>
         <div className="form-row">
-          <label htmlFor={`${kind}-name`}>{formatMessage({ id: 'common.name' })}</label>
+          <label htmlFor={`${kind}-name`}>
+            {formatMessage({ id: 'common.name' })}
+          </label>
           <input
             id={`${kind}-name`}
             value={name}
@@ -128,7 +137,9 @@ export function LookupCrudPanel({
         </div>
         {editingId && (
           <div className="form-row">
-            <label htmlFor={`${kind}-active`}>{formatMessage({ id: 'common.active' })}</label>
+            <label htmlFor={`${kind}-active`}>
+              {formatMessage({ id: 'common.active' })}
+            </label>
             <select
               id={`${kind}-active`}
               value={isActive ? '1' : '0'}
@@ -140,7 +151,11 @@ export function LookupCrudPanel({
           </div>
         )}
         <div className="actions admin-lookup-form__actions">
-          <button type="submit" className="btn btn-primary btn-sm" disabled={saving}>
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm"
+            disabled={saving}
+          >
             {saving
               ? formatMessage({ id: 'buttons.saving' })
               : editingId
@@ -148,7 +163,11 @@ export function LookupCrudPanel({
                 : formatMessage({ id: 'buttons.add' })}
           </button>
           {editingId && (
-            <button type="button" className="btn btn-secondary btn-sm" onClick={resetForm}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={resetForm}
+            >
               {formatMessage({ id: 'buttons.cancel' })}
             </button>
           )}
@@ -158,18 +177,33 @@ export function LookupCrudPanel({
         <table className="table table--hover admin-lookup-table">
           <thead>
             <tr>
-              <th className="col-text">{formatMessage({ id: 'common.name' })}</th>
-              <th className="col-meta admin-lookup-table__status">{formatMessage({ id: 'common.active' })}</th>
-              <th className="col-actions" aria-label={formatMessage({ id: 'admin.actions' })} />
+              <th className="col-text">
+                {formatMessage({ id: 'common.name' })}
+              </th>
+              <th className="col-meta admin-lookup-table__status">
+                {formatMessage({ id: 'common.active' })}
+              </th>
+              <th
+                className="col-actions"
+                aria-label={formatMessage({ id: 'admin.actions' })}
+              />
             </tr>
           </thead>
           <tbody>
             {rows.map((item) => (
               <tr key={item.id}>
                 <td className="col-text">{item.name}</td>
-                <td className="col-meta admin-lookup-table__status">{item.isActive ? formatMessage({ id: 'common.yes' }) : formatMessage({ id: 'common.no' })}</td>
+                <td className="col-meta admin-lookup-table__status">
+                  {item.isActive
+                    ? formatMessage({ id: 'common.yes' })
+                    : formatMessage({ id: 'common.no' })}
+                </td>
                 <td className="col-actions">
-                  <button type="button" className="btn btn-secondary btn-sm" onClick={() => startEdit(item)}>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={() => startEdit(item)}
+                  >
                     {formatMessage({ id: 'buttons.edit' })}
                   </button>
                 </td>

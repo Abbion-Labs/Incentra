@@ -255,20 +255,20 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<DateTime?>("ApprovedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("ControllerComment")
-                        .HasColumnType("text");
-
                     b.Property<bool>("ConditionsFulfilled")
                         .HasColumnType("boolean");
 
                     b.Property<string>("ConditionsNotMetComment")
                         .HasColumnType("text");
 
-                    b.Property<DateTime?>("ControllerViewedAt")
-                        .HasColumnType("timestamp with time zone");
+                    b.Property<string>("ControllerComment")
+                        .HasColumnType("text");
 
                     b.Property<long?>("ControllerEmployeeId")
                         .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("ControllerViewedAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<DateTime?>("ConversationAt")
                         .HasColumnType("timestamp with time zone");
@@ -467,13 +467,7 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<string>("CustomDescription")
-                        .HasColumnType("text");
-
                     b.Property<long>("EvaluationId")
-                        .HasColumnType("bigint");
-
-                    b.Property<long?>("MeasureDescriptionId")
                         .HasColumnType("bigint");
 
                     b.Property<long>("MeasureTypeId")
@@ -494,8 +488,6 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("EvaluationId");
-
-                    b.HasIndex("MeasureDescriptionId");
 
                     b.HasIndex("MeasureTypeId");
 
@@ -669,18 +661,18 @@ namespace VariableCompensation.Infrastructure.Migrations
                         .HasMaxLength(3)
                         .HasColumnType("character varying(3)");
 
+                    b.Property<DateOnly>("EffectiveFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("EffectiveTo")
+                        .HasColumnType("date");
+
                     b.Property<long>("EmployeeId")
                         .HasColumnType("bigint");
 
                     b.Property<byte[]>("EncryptedSalaryPerPoint")
                         .IsRequired()
                         .HasColumnType("bytea");
-
-                    b.Property<DateOnly>("EffectiveFrom")
-                        .HasColumnType("date");
-
-                    b.Property<DateOnly?>("EffectiveTo")
-                        .HasColumnType("date");
 
                     b.Property<int>("KeyVersion")
                         .HasColumnType("integer");
@@ -987,31 +979,6 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.ToTable("measure_types", (string)null);
                 });
 
-            modelBuilder.Entity("VariableCompensation.Domain.Entities.Lookup.MeasureTypeDescription", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Description")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("boolean");
-
-                    b.Property<long>("MeasureTypeId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MeasureTypeId");
-
-                    b.ToTable("measure_type_descriptions", (string)null);
-                });
-
             modelBuilder.Entity("VariableCompensation.Domain.Entities.Lookup.OrganizationUnit", b =>
                 {
                     b.Property<long>("Id")
@@ -1244,10 +1211,6 @@ namespace VariableCompensation.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("VariableCompensation.Domain.Entities.Lookup.MeasureTypeDescription", "MeasureDescription")
-                        .WithMany()
-                        .HasForeignKey("MeasureDescriptionId");
-
                     b.HasOne("VariableCompensation.Domain.Entities.Lookup.MeasureType", "MeasureType")
                         .WithMany()
                         .HasForeignKey("MeasureTypeId")
@@ -1261,8 +1224,6 @@ namespace VariableCompensation.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Evaluation");
-
-                    b.Navigation("MeasureDescription");
 
                     b.Navigation("MeasureType");
 
@@ -1390,17 +1351,6 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("VariableCompensation.Domain.Entities.Lookup.MeasureTypeDescription", b =>
-                {
-                    b.HasOne("VariableCompensation.Domain.Entities.Lookup.MeasureType", "MeasureType")
-                        .WithMany("Descriptions")
-                        .HasForeignKey("MeasureTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("MeasureType");
-                });
-
             modelBuilder.Entity("VariableCompensation.Domain.Entities.Compensation.VariableCompensationParameters", b =>
                 {
                     b.Navigation("Results");
@@ -1452,11 +1402,6 @@ namespace VariableCompensation.Infrastructure.Migrations
             modelBuilder.Entity("VariableCompensation.Domain.Entities.Lookup.JobPosition", b =>
                 {
                     b.Navigation("Employees");
-                });
-
-            modelBuilder.Entity("VariableCompensation.Domain.Entities.Lookup.MeasureType", b =>
-                {
-                    b.Navigation("Descriptions");
                 });
 
             modelBuilder.Entity("VariableCompensation.Domain.Entities.Lookup.OrganizationUnit", b =>

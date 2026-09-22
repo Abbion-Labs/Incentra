@@ -1,8 +1,14 @@
-import type { AdminUser } from '../../../api/types';
+import type { AdminUser, Employee } from '../../../api/types';
 import { useIntl } from '../../../i18n';
 import { roleLabel } from '../../../utils/status';
 
-const ROLE_ORDER = ['EMPLOYEE', 'EVALUATOR', 'CONTROLLER', 'PAYROLL', 'ADMIN'] as const;
+const ROLE_ORDER = [
+  'EMPLOYEE',
+  'EVALUATOR',
+  'CONTROLLER',
+  'PAYROLL',
+  'ADMIN',
+] as const;
 
 export { ROLE_ORDER };
 
@@ -11,23 +17,29 @@ export interface UserFormValues {
   password: string;
   roleCodes: string[];
   isActive: boolean;
+  controllerEmployeeId: string;
 }
 
 export const emptyUserForm = (): UserFormValues => ({
   email: '',
   password: '',
-  roleCodes: ['EVALUATOR'],
+  // Not EVALUATOR: that role needs an employee link, which a new account
+  // does not have yet.
+  roleCodes: ['EMPLOYEE'],
   isActive: true,
+  controllerEmployeeId: '',
 });
 
 export function userToForm(user: AdminUser): UserFormValues {
   return {
     email: user.email,
     password: '',
-    roleCodes: user.roles.length > 0
-      ? ROLE_ORDER.filter((code) => user.roles.includes(code))
-      : ['EVALUATOR'],
+    roleCodes:
+      user.roles.length > 0
+        ? ROLE_ORDER.filter((code) => user.roles.includes(code))
+        : ['EMPLOYEE'],
     isActive: user.isActive,
+    controllerEmployeeId: '',
   };
 }
 
@@ -35,6 +47,8 @@ interface AdminUserFormProps {
   values: UserFormValues;
   editingUser: AdminUser | null;
   saving: boolean;
+  controllerOptions: Employee[];
+  alreadyConfiguredEvaluator: boolean;
   onChange: (values: UserFormValues) => void;
   onSubmit: () => void;
   onCancel: () => void;
@@ -44,6 +58,8 @@ export function AdminUserForm({
   values,
   editingUser,
   saving,
+  controllerOptions,
+  alreadyConfiguredEvaluator,
   onChange,
   onSubmit,
   onCancel,
@@ -51,7 +67,22 @@ export function AdminUserForm({
   const { formatMessage } = useIntl();
   const isEditing = editingUser != null;
 
-  function setField<K extends keyof UserFormValues>(key: K, value: UserFormValues[K]) {
+  const wantsEvaluator = values.roleCodes.includes('EVALUATOR');
+  const missingEmployeeLink =
+    wantsEvaluator && isEditing && editingUser.employeeId == null;
+  // Thresholds keep whatever the admin tuned, so only a brand new evaluator
+  // has to name a controller here.
+  const needsController =
+    wantsEvaluator &&
+    isEditing &&
+    !missingEmployeeLink &&
+    !alreadyConfiguredEvaluator;
+  const blocked = missingEmployeeLink || (wantsEvaluator && !isEditing);
+
+  function setField<K extends keyof UserFormValues>(
+    key: K,
+    value: UserFormValues[K],
+  ) {
     onChange({ ...values, [key]: value });
   }
 
@@ -62,7 +93,10 @@ export function AdminUserForm({
     } else {
       selected.add(role);
     }
-    setField('roleCodes', ROLE_ORDER.filter((code) => selected.has(code)));
+    setField(
+      'roleCodes',
+      ROLE_ORDER.filter((code) => selected.has(code)),
+    );
   }
 
   return (
@@ -75,7 +109,9 @@ export function AdminUserForm({
     >
       <div className="form-grid admin-form__grid admin-form__grid--three-cols">
         <div className="form-row">
-          <label htmlFor="user-email">{formatMessage({ id: 'common.email' })}</label>
+          <label htmlFor="user-email">
+            {formatMessage({ id: 'common.email' })}
+          </label>
           <input
             id="user-email"
             type="email"
@@ -86,7 +122,9 @@ export function AdminUserForm({
         </div>
         <div className="form-row">
           <label htmlFor="user-password">
-            {isEditing ? formatMessage({ id: 'common.newPassword' }) : formatMessage({ id: 'common.password' })}
+            {isEditing
+              ? formatMessage({ id: 'common.newPassword' })
+              : formatMessage({ id: 'common.password' })}
           </label>
           <input
             id="user-password"
@@ -95,12 +133,20 @@ export function AdminUserForm({
             onChange={(e) => setField('password', e.target.value)}
             minLength={isEditing ? 8 : undefined}
             required={!isEditing}
-            placeholder={isEditing ? formatMessage({ id: 'admin.users.passwordOptionalPlaceholder' }) : undefined}
+            placeholder={
+              isEditing
+                ? formatMessage({
+                    id: 'admin.users.passwordOptionalPlaceholder',
+                  })
+                : undefined
+            }
           />
         </div>
         {isEditing ? (
           <div className="form-row">
-            <label htmlFor="user-active">{formatMessage({ id: 'admin.active' })}</label>
+            <label htmlFor="user-active">
+              {formatMessage({ id: 'admin.active' })}
+            </label>
             <select
               id="user-active"
               value={values.isActive ? '1' : '0'}
@@ -114,8 +160,14 @@ export function AdminUserForm({
       </div>
 
       <div className="admin-form__roles">
-        <span className="admin-form__roles-label">{formatMessage({ id: 'admin.roles' })}</span>
-        <ul className="admin-form__roles-list" role="group" aria-label={formatMessage({ id: 'admin.roles' })}>
+        <span className="admin-form__roles-label">
+          {formatMessage({ id: 'admin.roles' })}
+        </span>
+        <ul
+          className="admin-form__roles-list"
+          role="group"
+          aria-label={formatMessage({ id: 'admin.roles' })}
+        >
           {ROLE_ORDER.map((role) => {
             const selected = values.roleCodes.includes(role);
             return (
@@ -129,7 +181,9 @@ export function AdminUserForm({
                     checked={selected}
                     onChange={() => toggleRole(role)}
                   />
-                  <span className="admin-form__role-label">{roleLabel(role, formatMessage)}</span>
+                  <span className="admin-form__role-label">
+                    {roleLabel(role, formatMessage)}
+                  </span>
                 </label>
               </li>
             );
@@ -137,8 +191,53 @@ export function AdminUserForm({
         </ul>
       </div>
 
+      {wantsEvaluator && !isEditing && (
+        <p className="alert alert-info">
+          {formatMessage({ id: 'admin.users.evaluatorNotAvailableAtCreate' })}
+        </p>
+      )}
+
+      {missingEmployeeLink && (
+        <p className="alert alert-warning">
+          {formatMessage({ id: 'admin.users.evaluatorNeedsLinkedEmployee' })}
+        </p>
+      )}
+
+      {needsController && (
+        <div className="form-row">
+          <label htmlFor="user-evaluator-controller">
+            {formatMessage({ id: 'admin.users.evaluatorController' })}
+          </label>
+          <select
+            id="user-evaluator-controller"
+            value={values.controllerEmployeeId}
+            onChange={(e) => setField('controllerEmployeeId', e.target.value)}
+            required
+          >
+            <option value="">--</option>
+            {controllerOptions.map((employee) => (
+              <option key={employee.id} value={employee.id}>
+                {employee.fullName}
+              </option>
+            ))}
+          </select>
+          <p className="form-hint">
+            {formatMessage({ id: 'admin.users.evaluatorControllerHint' })}
+          </p>
+        </div>
+      )}
+
       <div className="actions">
-        <button type="submit" className="btn btn-primary" disabled={saving || values.roleCodes.length === 0}>
+        <button
+          type="submit"
+          className="btn btn-primary"
+          disabled={
+            saving ||
+            values.roleCodes.length === 0 ||
+            blocked ||
+            (needsController && !values.controllerEmployeeId)
+          }
+        >
           {saving
             ? formatMessage({ id: 'buttons.saving' })
             : isEditing
@@ -146,7 +245,11 @@ export function AdminUserForm({
               : formatMessage({ id: 'admin.users.createUser' })}
         </button>
         {isEditing && (
-          <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={onCancel}
+          >
             {formatMessage({ id: 'buttons.cancel' })}
           </button>
         )}

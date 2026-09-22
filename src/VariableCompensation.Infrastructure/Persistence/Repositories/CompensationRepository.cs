@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Compensation.Models;
 using VariableCompensation.Domain.Entities.Compensation;
 using VariableCompensation.Domain.Entities.Evaluation;
@@ -113,11 +114,10 @@ public sealed class CompensationRepository : ICompensationRepository
 
         if (!string.IsNullOrWhiteSpace(search))
         {
-            var term = search.Trim().ToLower();
+            var term = EmployeeNameSearch.Normalize(search)!;
             query = query.Where(r =>
-                r.Employee.FirstName.ToLower().Contains(term) ||
-                r.Employee.LastName.ToLower().Contains(term) ||
-                (r.Employee.FirstName + " " + r.Employee.LastName).ToLower().Contains(term));
+                (r.Employee.FirstName + " " + r.Employee.LastName).ToLower().Contains(term) ||
+                (r.Employee.LastName + " " + r.Employee.FirstName).ToLower().Contains(term));
         }
 
         var latestResultIds = query

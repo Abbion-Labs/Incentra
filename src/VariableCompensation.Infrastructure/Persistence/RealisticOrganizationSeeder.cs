@@ -20,12 +20,25 @@ internal static class RealisticOrganizationSeeder
 
     private const decimal SalaryPerPoint = 1000m;
 
-    private static readonly string[] DemoUserEmails =
+    private static readonly string[] FixedDemoUserEmails =
     [
         "admin@local.dev",
         "payroll@local.dev",
-        "evaluator@local.dev",
-        "controller@local.dev",
+    ];
+
+    // The first evaluator and controller keep the plain addresses the README
+    // documents; the rest are numbered.
+    private static string EvaluatorEmail(int index) =>
+        index == 0 ? "evaluator@local.dev" : $"evaluator{index + 1}@local.dev";
+
+    private static string ControllerEmail(int index) =>
+        index == 0 ? "controller@local.dev" : $"controller{index + 1}@local.dev";
+
+    private static IReadOnlyCollection<string> DemoUserEmails() =>
+    [
+        .. FixedDemoUserEmails,
+        .. Enumerable.Range(0, OrgUnitDefinitions.Length).Select(EvaluatorEmail),
+        .. Enumerable.Range(0, OrgUnitDefinitions.Length).Select(ControllerEmail),
     ];
 
     private static readonly (string Code, string Name, decimal Pool2024, decimal Pool2025)[] OrgUnitDefinitions =
@@ -166,8 +179,9 @@ internal static class RealisticOrganizationSeeder
         await context.VariableCompensationParameters.ExecuteDeleteAsync();
         await context.OrganizationUnits.ExecuteDeleteAsync();
 
+        var demoEmails = DemoUserEmails();
         var usersToRemove = await context.Users
-            .Where(u => !DemoUserEmails.Contains(u.Email))
+            .Where(u => !demoEmails.Contains(u.Email))
             .Select(u => u.Id)
             .ToListAsync();
 
@@ -313,31 +327,39 @@ internal static class RealisticOrganizationSeeder
         await EnsureUserAsync(context, "admin@local.dev", "Admin123!", RoleCodes.Admin);
         await EnsureUserAsync(context, "payroll@local.dev", "Payroll123!", RoleCodes.Payroll);
 
-        var demoSettings = await context.EvaluatorSettings
+        var settings = await context.EvaluatorSettings
             .Include(s => s.Employee)
-            .Include(s => s.Controller)
             .OrderBy(s => s.Employee.OrganizationUnitId)
             .ThenBy(s => s.EmployeeId)
-            .FirstOrDefaultAsync();
+            .ToListAsync();
 
-        if (demoSettings is null)
+        // Everyone acting as an evaluator or a controller gets an account with
+        // the matching role. Without it they cannot sign in, and the role is
+        // what makes them an evaluator or a controller in the first place.
+        for (var i = 0; i < settings.Count; i++)
         {
-            return;
+            await EnsureUserAsync(
+                context,
+                EvaluatorEmail(i),
+                "Eval123!",
+                RoleCodes.Evaluator,
+                settings[i].EmployeeId);
         }
 
-        await EnsureUserAsync(
-            context,
-            "evaluator@local.dev",
-            "Eval123!",
-            RoleCodes.Evaluator,
-            demoSettings.EmployeeId);
+        var controllerEmployeeIds = settings
+            .Select(s => s.ControllerEmployeeId)
+            .Distinct()
+            .ToList();
 
-        await EnsureUserAsync(
-            context,
-            "controller@local.dev",
-            "Control123!",
-            RoleCodes.Controller,
-            demoSettings.ControllerEmployeeId);
+        for (var i = 0; i < controllerEmployeeIds.Count; i++)
+        {
+            await EnsureUserAsync(
+                context,
+                ControllerEmail(i),
+                "Control123!",
+                RoleCodes.Controller,
+                controllerEmployeeIds[i]);
+        }
     }
 
     private static async Task EnsureUserAsync(

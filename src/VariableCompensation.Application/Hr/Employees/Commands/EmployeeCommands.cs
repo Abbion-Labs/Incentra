@@ -24,6 +24,7 @@ public sealed class CreateEmployeeCommandHandler : IRequestHandler<CreateEmploye
     private readonly IOrganizationUnitRepository organizationUnitRepository;
     private readonly IJobPositionRepository jobPositionRepository;
     private readonly IEducationLevelRepository educationLevelRepository;
+    private readonly IEvaluatorSettingsRepository evaluatorSettingsRepository;
     private readonly ICurrentUserService currentUserService;
 
     public CreateEmployeeCommandHandler(
@@ -31,12 +32,14 @@ public sealed class CreateEmployeeCommandHandler : IRequestHandler<CreateEmploye
         IOrganizationUnitRepository organizationUnitRepository,
         IJobPositionRepository jobPositionRepository,
         IEducationLevelRepository educationLevelRepository,
+        IEvaluatorSettingsRepository evaluatorSettingsRepository,
         ICurrentUserService currentUserService)
     {
         this.employeeRepository = employeeRepository;
         this.organizationUnitRepository = organizationUnitRepository;
         this.jobPositionRepository = jobPositionRepository;
         this.educationLevelRepository = educationLevelRepository;
+        this.evaluatorSettingsRepository = evaluatorSettingsRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -96,10 +99,17 @@ public sealed class CreateEmployeeCommandHandler : IRequestHandler<CreateEmploye
             return Result.Failure(ErrorCodes.EducationLevelNotFound);
         }
 
-        if (request.EvaluatorEmployeeId is not null &&
-            !await this.employeeRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
+        if (request.EvaluatorEmployeeId is not null)
         {
-            return Result.Failure(ErrorCodes.EvaluatorNotFound);
+            if (!await this.employeeRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
+            {
+                return Result.Failure(ErrorCodes.EvaluatorNotFound);
+            }
+
+            if (!await this.evaluatorSettingsRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
+            {
+                return Result.Failure(ErrorCodes.EvaluatorNotConfigured);
+            }
         }
 
         return Result.Success();
@@ -123,6 +133,7 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
     private readonly IOrganizationUnitRepository organizationUnitRepository;
     private readonly IJobPositionRepository jobPositionRepository;
     private readonly IEducationLevelRepository educationLevelRepository;
+    private readonly IEvaluatorSettingsRepository evaluatorSettingsRepository;
     private readonly ICurrentUserService currentUserService;
 
     public UpdateEmployeeCommandHandler(
@@ -130,12 +141,14 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
         IOrganizationUnitRepository organizationUnitRepository,
         IJobPositionRepository jobPositionRepository,
         IEducationLevelRepository educationLevelRepository,
+        IEvaluatorSettingsRepository evaluatorSettingsRepository,
         ICurrentUserService currentUserService)
     {
         this.employeeRepository = employeeRepository;
         this.organizationUnitRepository = organizationUnitRepository;
         this.jobPositionRepository = jobPositionRepository;
         this.educationLevelRepository = educationLevelRepository;
+        this.evaluatorSettingsRepository = evaluatorSettingsRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -177,10 +190,25 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
             return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeSelfEvaluator);
         }
 
-        if (request.EvaluatorEmployeeId is not null &&
-            !await this.employeeRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
+        // Deactivating an evaluator would leave the people they rate without
+        // anyone able to rate them, the same hole the role rules close.
+        if (entity.IsActive && !request.IsActive
+            && await this.employeeRepository.HasSubordinatesAsync(request.Id, cancellationToken))
         {
-            return Result.Failure<EmployeeResponse>(ErrorCodes.EvaluatorNotFound);
+            return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeHasSubordinates);
+        }
+
+        if (request.EvaluatorEmployeeId is not null)
+        {
+            if (!await this.employeeRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
+            {
+                return Result.Failure<EmployeeResponse>(ErrorCodes.EvaluatorNotFound);
+            }
+
+            if (!await this.evaluatorSettingsRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
+            {
+                return Result.Failure<EmployeeResponse>(ErrorCodes.EvaluatorNotConfigured);
+            }
         }
 
         entity.FirstName = request.FirstName.Trim();

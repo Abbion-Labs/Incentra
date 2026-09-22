@@ -9,12 +9,18 @@ import { roleLabel, statusLabel } from '../utils/status';
 
 export function useRoleLabel() {
   const { formatMessage } = useIntl();
-  return useMemo(() => (role: string) => roleLabel(role, formatMessage), [formatMessage]);
+  return useMemo(
+    () => (role: string) => roleLabel(role, formatMessage),
+    [formatMessage],
+  );
 }
 
 export function useStatusLabel() {
   const { formatMessage } = useIntl();
-  return useMemo(() => (status: string) => statusLabel(status, formatMessage), [formatMessage]);
+  return useMemo(
+    () => (status: string) => statusLabel(status, formatMessage),
+    [formatMessage],
+  );
 }
 
 export function useBucketLabels() {
@@ -22,8 +28,10 @@ export function useBucketLabels() {
 
   return useMemo(
     () => ({
-      label: (bucket: EvaluationBucket) => formatMessage({ id: bucketLabelKeys[bucket] as never }),
-      tabLabel: (bucket: EvaluationBucket) => formatMessage({ id: bucketTabLabelKeys[bucket] as never }),
+      label: (bucket: EvaluationBucket) =>
+        formatMessage({ id: bucketLabelKeys[bucket] as never }),
+      tabLabel: (bucket: EvaluationBucket) =>
+        formatMessage({ id: bucketTabLabelKeys[bucket] as never }),
     }),
     [formatMessage],
   );

@@ -1,9 +1,7 @@
 {
   "navigation": {
-    "brand": "Variable Compensation",
+    "brand": "Incentra",
     "main": "Main navigation",
-    "showMenu": "Show navigation",
-    "hideMenu": "Hide navigation",
     "myAccount": "My account",
     "logout": "Sign out",
     "evaluatorEmployees": "Employees",
@@ -99,7 +97,10 @@
   "auth": {
     "welcome": "Welcome",
     "subtitle": "Sign in with your email and password",
-    "heroTagline": "Evaluation and compensation",
+    "heroTagline": "Evaluation and variable compensation",
+    "heroPointGoals": "Clearly defined goals and criteria",
+    "heroPointWorkflow": "Guided flow from evaluator to controller",
+    "heroPointPayout": "Variable pay calculated without spreadsheets",
     "loginFailed": "Login failed.",
     "demoAccounts": "Demo accounts",
     "placeholderEmail": "name@company.com",
@@ -180,9 +181,6 @@
     "criteriaTitle": "Criteria",
     "measuresTitle": "Measures",
     "measuresHint": "Select a rating for each measure; comment is auto-filled.",
-    "measureDescriptionLabel": "Measure description",
-    "measureDescriptionCustom": "Other (custom)",
-    "measureCustomDescriptionLabel": "Custom description",
     "measureFallback": "Measure",
     "rateAndSubmit": "Rate and submit",
     "submitRequirements": "Before submission, rate all goals and measures (\"/\" rating is not allowed).",
@@ -217,8 +215,7 @@
     },
     "setPlanningBeforeRating": "Before rating, at least one goal, condition, and criterion must be set.",
     "submitToControllerTitle": "Submit to controller",
-    "submitToControllerConfirm": "Are you sure you want to submit this evaluation to controller review?"
-    ,
+    "submitToControllerConfirm": "Are you sure you want to submit this evaluation to controller review?",
     "bucket": {
       "planning": "Goal planning",
       "unrated": "Not rated",
@@ -276,8 +273,6 @@
     "conversationNote": "Conversation note",
     "settingGoals": "Setting goals...",
     "unsavedChanges": "Unsaved changes",
-    "autosaving": "Autosaving...",
-    "autosaved": "Autosaved",
     "statusHistoryTitle": "Status history",
     "statusHistoryEmpty": "No status changes recorded.",
     "statusHistoryTransition": "{from} → {to}",
@@ -309,7 +304,11 @@
       "noUsers": "No users.",
       "linkedEmployee": "Linked employee",
       "passwordOptionalPlaceholder": "Leave blank to keep current password",
-      "rolesHint": "Select one or more roles. The user must have at least one role."
+      "rolesHint": "Select one or more roles. The user must have at least one role.",
+      "evaluatorController": "Evaluator's controller",
+      "evaluatorControllerHint": "An evaluator reports to a controller who reviews their ratings. Thresholds start from the defaults and are changed on the Evaluators tab.",
+      "evaluatorNeedsLinkedEmployee": "This account is not linked to an employee. Link it on the employee form before granting the evaluator role.",
+      "evaluatorNotAvailableAtCreate": "The evaluator role is granted by editing the account, since it must be linked to an employee first."
     },
     "employeeForm": {
       "newEmployee": "New employee",
@@ -340,7 +339,9 @@
       "thresholdDoesNotMeet": "Threshold: does not meet",
       "thresholdMeets": "Threshold: meets",
       "thresholdGood": "Threshold: good",
-      "thresholds": "Thresholds"
+      "thresholds": "Thresholds",
+      "selectToEdit": "Pick an evaluator from the table to change their settings.",
+      "closeEditor": "Close editor"
     },
     "salaries": {
       "loadingEmployees": "Loading employees...",

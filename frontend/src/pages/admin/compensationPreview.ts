@@ -15,7 +15,9 @@ export interface CompensationPreviewPoint {
 
 function calculateVariance(values: number[], mean: number): number {
   if (values.length === 0) return 0;
-  return values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length;
+  return (
+    values.reduce((sum, value) => sum + (value - mean) ** 2, 0) / values.length
+  );
 }
 
 function calculatePonder(
@@ -42,14 +44,20 @@ function calculatePonder(
 }
 
 function distributePool(
-  inputs: Array<{ rating: number; points: number; ponder: number; salaryPerPoint: number }>,
+  inputs: Array<{
+    rating: number;
+    points: number;
+    ponder: number;
+    salaryPerPoint: number;
+  }>,
   monetaryPool: number,
   dependencyWeight: number,
 ): Array<{ rating: number; annualVariable: number; monthlyVariable: number }> {
   if (inputs.length === 0) return [];
 
   const pointsList = inputs.map((input) => input.points);
-  const meanPoints = pointsList.reduce((sum, value) => sum + value, 0) / pointsList.length;
+  const meanPoints =
+    pointsList.reduce((sum, value) => sum + value, 0) / pointsList.length;
   const variance = calculateVariance(pointsList, meanPoints);
   const maxPoints = Math.max(...pointsList, 1);
 
@@ -61,7 +69,8 @@ function distributePool(
       input,
       zScore,
       normalizedPoints: input.points / maxPoints,
-      compensationWithoutSalary: ponderSum !== 0 ? (monetaryPool * input.ponder) / ponderSum : 0,
+      compensationWithoutSalary:
+        ponderSum !== 0 ? (monetaryPool * input.ponder) / ponderSum : 0,
     };
   });
 
@@ -86,10 +95,13 @@ function distributePool(
   });
 }
 
-export function previewCompensationByRating(params: CompensationPreviewParams): CompensationPreviewPoint[] {
+export function previewCompensationByRating(
+  params: CompensationPreviewParams,
+): CompensationPreviewPoint[] {
   const ratings = [1, 2, 3, 4, 5] as const;
   /** Skala grafikona: godišnja referentna zarada (bodovi × zarada po bodu × 12) */
-  const previewPool = params.referencePoints * params.referenceSalaryPerPoint * 12;
+  const previewPool =
+    params.referencePoints * params.referenceSalaryPerPoint * 12;
 
   const peerInputs = ratings
     .map((rating) => ({
@@ -103,12 +115,23 @@ export function previewCompensationByRating(params: CompensationPreviewParams): 
         params.allowNegativeVariable,
       ),
     }))
-    .filter((input) => input.ponder !== 0 || input.rating >= params.acceptablePerformanceRating);
+    .filter(
+      (input) =>
+        input.ponder !== 0 ||
+        input.rating >= params.acceptablePerformanceRating,
+    );
 
-  const distributed = distributePool(peerInputs, previewPool, params.dependencyWeight);
+  const distributed = distributePool(
+    peerInputs,
+    previewPool,
+    params.dependencyWeight,
+  );
 
   return ratings.map((targetRating) => {
-    if (!params.allowNegativeVariable && targetRating < params.acceptablePerformanceRating) {
+    if (
+      !params.allowNegativeVariable &&
+      targetRating < params.acceptablePerformanceRating
+    ) {
       return { rating: targetRating, annualVariable: 0, monthlyVariable: 0 };
     }
 
@@ -124,6 +147,8 @@ export function previewCompensationByRating(params: CompensationPreviewParams): 
     }
 
     const match = distributed.find((item) => item.rating === targetRating);
-    return match ?? { rating: targetRating, annualVariable: 0, monthlyVariable: 0 };
+    return (
+      match ?? { rating: targetRating, annualVariable: 0, monthlyVariable: 0 }
+    );
   });
 }

@@ -87,7 +87,6 @@ internal sealed class EvaluationMeasureConfiguration : IEntityTypeConfiguration<
         builder.HasKey(x => x.Id);
         builder.HasOne(x => x.Evaluation).WithMany(x => x.Measures).HasForeignKey(x => x.EvaluationId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.MeasureType).WithMany().HasForeignKey(x => x.MeasureTypeId);
-        builder.HasOne(x => x.MeasureDescription).WithMany().HasForeignKey(x => x.MeasureDescriptionId);
         builder.HasOne(x => x.RatingLevel).WithMany().HasForeignKey(x => x.RatingLevelId);
     }
 }

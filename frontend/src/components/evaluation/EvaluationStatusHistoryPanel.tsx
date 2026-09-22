@@ -9,11 +9,17 @@ interface EvaluationStatusHistoryPanelProps {
   error: string;
 }
 
-export function EvaluationStatusHistoryPanel({ items, loading, error }: EvaluationStatusHistoryPanelProps) {
+export function EvaluationStatusHistoryPanel({
+  items,
+  loading,
+  error,
+}: EvaluationStatusHistoryPanelProps) {
   const { formatMessage } = useIntl();
 
   if (loading) {
-    return <p className="empty-inline">{formatMessage({ id: 'common.loading' })}</p>;
+    return (
+      <p className="empty-inline">{formatMessage({ id: 'common.loading' })}</p>
+    );
   }
 
   if (error) {
@@ -21,7 +27,11 @@ export function EvaluationStatusHistoryPanel({ items, loading, error }: Evaluati
   }
 
   if (items.length === 0) {
-    return <p className="empty-inline">{formatMessage({ id: 'evaluation.statusHistoryEmpty' })}</p>;
+    return (
+      <p className="empty-inline">
+        {formatMessage({ id: 'evaluation.statusHistoryEmpty' })}
+      </p>
+    );
   }
 
   return (
@@ -29,7 +39,9 @@ export function EvaluationStatusHistoryPanel({ items, loading, error }: Evaluati
       {items.map((entry) => (
         <li key={entry.id} className="evaluation-status-history__item">
           <div className="evaluation-status-history__meta">
-            <time dateTime={entry.changedAt}>{formatDateTime(entry.changedAt)}</time>
+            <time dateTime={entry.changedAt}>
+              {formatDateTime(entry.changedAt)}
+            </time>
           </div>
           <p className="evaluation-status-history__transition">
             {entry.fromStatus
@@ -46,7 +58,9 @@ export function EvaluationStatusHistoryPanel({ items, loading, error }: Evaluati
                 )}
           </p>
           {entry.comment?.trim() && (
-            <p className="evaluation-status-history__comment">{entry.comment}</p>
+            <p className="evaluation-status-history__comment">
+              {entry.comment}
+            </p>
           )}
         </li>
       ))}

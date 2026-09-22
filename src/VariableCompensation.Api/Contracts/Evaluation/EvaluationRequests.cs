@@ -46,10 +46,6 @@ public sealed class EvaluationMeasureItemRequest
 {
     public long MeasureTypeId { get; init; }
 
-    public long? MeasureDescriptionId { get; init; }
-
-    public string? CustomDescription { get; init; }
-
     public string? RatingComment { get; init; }
 
     public long RatingLevelId { get; init; }

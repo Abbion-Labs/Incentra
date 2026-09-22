@@ -65,7 +65,6 @@
     "vn-0062": "Slika mora biti veličine do 2 MB.",
     "vn-0063": "Ocena '/' nije konfigurisana.",
     "vn-0064": "Opis cilja je obavezan.",
-    "vn-0065": "Opis mere nije pronađen za izabrani tip mere.",
     "vn-0066": "Opis kriterijuma je obavezan.",
     "vn-0067": "Opis uslova je obavezan.",
     "vn-0068": "Ciljevi, uslovi i kriterijumi su već postavljeni i ne mogu se menjati.",
@@ -91,6 +90,13 @@
     "vn-0089": "Došlo je do neočekivane greške. Pokušajte ponovo. (ID: {traceId})",
     "vn-0090": "Podatak je u međuvremenu izmenjen od strane drugog korisnika. Osvežite stranicu i pokušajte ponovo.",
     "vn-0091": "Zapis sa istom vrednošću već postoji.",
-    "vn-0092": "Previše neuspelih pokušaja prijave. Pokušajte ponovo za {seconds} s."
+    "vn-0092": "Previše neuspelih pokušaja prijave. Pokušajte ponovo za {seconds} s.",
+    "vn-0093": "Izabrana osoba nije podešena kao ocenjivač. Prvo je dodajte među ocenjivače.",
+    "vn-0094": "Nalog nije povezan sa zaposlenim. Prvo povežite nalog u formi zaposlenog, pa mu dodelite ulogu ocenjivača.",
+    "vn-0095": "Za ulogu ocenjivača morate izabrati kontrolora.",
+    "vn-0096": "Ocenjivaču su dodeljeni podređeni. Prerasporedite ih pre uklanjanja uloge.",
+    "vn-0097": "Zaposlenom su dodeljeni podređeni koje ocenjuje. Prerasporedite ih pre deaktivacije.",
+    "vn-0098": "Izabrana osoba nije kontrolor. Dodelite joj ulogu kontrolora na kartici Korisnici.",
+    "vn-0099": "Kontroloru su dodeljeni ocenjivači. Prerasporedite ih pre uklanjanja uloge."
   }
 }

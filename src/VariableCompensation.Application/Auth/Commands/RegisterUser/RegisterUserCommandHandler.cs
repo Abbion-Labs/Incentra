@@ -6,6 +6,7 @@ using VariableCompensation.Application.Auth.Commands.Login;
 using VariableCompensation.Application.Auth.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Identity;
+using VariableCompensation.Domain.Enums;
 
 namespace VariableCompensation.Application.Auth.Commands.RegisterUser;
 
@@ -49,6 +50,13 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         if (await this.userRepository.EmailExistsAsync(email, null, cancellationToken))
         {
             return Result.Failure<AuthResponse>(ErrorCodes.EmailAlreadyRegistered);
+        }
+
+        // A new account has no employee linked yet -- that link is made from the
+        // employee form -- so it cannot become an evaluator in the same step.
+        if (request.RoleCodes.Contains(RoleCodes.Evaluator, StringComparer.OrdinalIgnoreCase))
+        {
+            return Result.Failure<AuthResponse>(ErrorCodes.EvaluatorUserNotLinkedToEmployee);
         }
 
         var roleIdsResult = await UserRoleSync.ResolveRoleIdsAsync(request.RoleCodes, this.roleLookup, cancellationToken);

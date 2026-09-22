@@ -3,7 +3,10 @@ interface SectionAverageFooterProps {
   value: string;
 }
 
-export function SectionAverageFooter({ label, value }: SectionAverageFooterProps) {
+export function SectionAverageFooter({
+  label,
+  value,
+}: SectionAverageFooterProps) {
   return (
     <div className="form-section__footer form-section__footer--average">
       <span className="section-average">

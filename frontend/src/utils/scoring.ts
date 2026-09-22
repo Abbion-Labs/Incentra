@@ -1,4 +1,8 @@
-import type { EvaluationDetail, EvaluationSummary, RatingLevel } from '../api/types';
+import type {
+  EvaluationDetail,
+  EvaluationSummary,
+  RatingLevel,
+} from '../api/types';
 
 export const NOT_RATED_VALUE = 0;
 
@@ -23,7 +27,10 @@ export function ratingDescriptiveLabel(level: RatingLevel | undefined): string {
   return level.label;
 }
 
-export function findRatingLevel(levels: RatingLevel[], ratingLevelId: number): RatingLevel | undefined {
+export function findRatingLevel(
+  levels: RatingLevel[],
+  ratingLevelId: number,
+): RatingLevel | undefined {
   return levels.find((level) => level.id === ratingLevelId);
 }
 
@@ -35,17 +42,27 @@ export function detailHasIncompleteRatings(detail: EvaluationDetail): boolean {
   if (detail.conditionsFulfilled === false) return false;
   if (detail.hasIncompleteRatings) return true;
   const itemIncomplete = [...detail.goals, ...detail.measures].some(
-    (item) => item.ratingLevelValue === NOT_RATED_VALUE || item.ratingLevelLabel === '/',
+    (item) =>
+      item.ratingLevelValue === NOT_RATED_VALUE ||
+      item.ratingLevelLabel === '/',
   );
   if (itemIncomplete) return true;
   return detail.goals.length > 0 && detail.measures.length === 0;
 }
 
 export function formatSummaryAverage(
-  ev: Pick<EvaluationSummary, 'overallAverage' | 'hasIncompleteRatings' | 'status' | 'goalCount'>,
+  ev: Pick<
+    EvaluationSummary,
+    'overallAverage' | 'hasIncompleteRatings' | 'status' | 'goalCount'
+  >,
 ): string {
   if (ev.hasIncompleteRatings) return '/';
-  if (ev.status === 'Draft' && (ev.goalCount ?? 0) > 0 && ev.overallAverage == null) return '/';
+  if (
+    ev.status === 'Draft' &&
+    (ev.goalCount ?? 0) > 0 &&
+    ev.overallAverage == null
+  )
+    return '/';
   if (ev.overallAverage == null) return '—';
   return Number(ev.overallAverage).toFixed(2);
 }
@@ -59,7 +76,12 @@ export function summaryDescriptiveRatingName(
 
 export function formatDetailAverage(detail: EvaluationDetail): string {
   if (detailHasIncompleteRatings(detail)) return '/';
-  if (detail.status === 'Draft' && detail.goals.length > 0 && detail.overallAverage == null) return '/';
+  if (
+    detail.status === 'Draft' &&
+    detail.goals.length > 0 &&
+    detail.overallAverage == null
+  )
+    return '/';
   if (detail.overallAverage == null) return '—';
   return Number(detail.overallAverage).toFixed(2);
 }
@@ -70,11 +92,14 @@ export function hasLocalIncompleteRatings(
   notRatedLevelId?: number,
 ): boolean {
   const goalIncomplete = goals.some(
-    (g) => g.ratingLevelValue === NOT_RATED_VALUE || g.ratingLevelLabel === '/'
-      || (notRatedLevelId != null && g.ratingLevelId === notRatedLevelId),
+    (g) =>
+      g.ratingLevelValue === NOT_RATED_VALUE ||
+      g.ratingLevelLabel === '/' ||
+      (notRatedLevelId != null && g.ratingLevelId === notRatedLevelId),
   );
-  const measureIncomplete = notRatedLevelId != null
-    && measures.some((m) => m.ratingLevelId === notRatedLevelId);
+  const measureIncomplete =
+    notRatedLevelId != null &&
+    measures.some((m) => m.ratingLevelId === notRatedLevelId);
   if (goalIncomplete || measureIncomplete) return true;
   return goals.length > 0 && measures.length === 0;
 }
@@ -97,7 +122,10 @@ export function canSubmitEvaluationDraft(
   return !incompleteRatings;
 }
 
-export function formatAverageDisplay(incomplete: boolean, overallAverage: number | null): string {
+export function formatAverageDisplay(
+  incomplete: boolean,
+  overallAverage: number | null,
+): string {
   if (incomplete) return '/';
   if (overallAverage == null) return '—';
   return Number(overallAverage).toFixed(2);
@@ -130,13 +158,18 @@ export function calculateComponentAverage(
     return null;
   }
 
-  const valueById = new Map(ratingLevels.map((level) => [level.id, level.value]));
+  const valueById = new Map(
+    ratingLevels.map((level) => [level.id, level.value]),
+  );
   const rated = items
     .map((item) => ({
       value: valueById.get(item.ratingLevelId),
       weight: item.weight ?? null,
     }))
-    .filter((item): item is { value: number; weight: number | null } => item.value != null);
+    .filter(
+      (item): item is { value: number; weight: number | null } =>
+        item.value != null,
+    );
 
   if (rated.length === 0) {
     return null;
@@ -153,19 +186,25 @@ export function calculateComponentAverage(
     return roundAverage(weighted / totalWeight);
   }
 
-  return roundAverage(rated.reduce((sum, item) => sum + item.value, 0) / rated.length);
+  return roundAverage(
+    rated.reduce((sum, item) => sum + item.value, 0) / rated.length,
+  );
 }
 
 export function calculateOverallAverage(
   goalsAverage: number | null,
   measuresAverage: number | null,
 ): number | null {
-  const parts = [goalsAverage, measuresAverage].filter((value): value is number => value != null);
+  const parts = [goalsAverage, measuresAverage].filter(
+    (value): value is number => value != null,
+  );
   if (parts.length === 0) {
     return null;
   }
 
-  return roundAverage(parts.reduce((sum, value) => sum + value, 0) / parts.length);
+  return roundAverage(
+    parts.reduce((sum, value) => sum + value, 0) / parts.length,
+  );
 }
 
 function roundAverage(value: number): number {

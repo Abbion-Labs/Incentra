@@ -31,11 +31,14 @@ export function EvaluatorAnalyticsView({
     return [...years].sort((a, b) => b - a);
   }, [year]);
 
-  const displayTitle = title ?? (
-    analytics.evaluatorFullName
-      ? formatMessage({ id: 'analytics.titleWithName' }, { name: analytics.evaluatorFullName })
-      : formatMessage({ id: 'analytics.title' })
-  );
+  const displayTitle =
+    title ??
+    (analytics.evaluatorFullName
+      ? formatMessage(
+          { id: 'analytics.titleWithName' },
+          { name: analytics.evaluatorFullName },
+        )
+      : formatMessage({ id: 'analytics.title' }));
 
   return (
     <div className="analytics-page">
@@ -50,18 +53,30 @@ export function EvaluatorAnalyticsView({
 
       <div className="analytics-summary-grid">
         <div className="card analytics-summary-card">
-          <span className="analytics-summary-card__label">{formatMessage({ id: 'analytics.subordinates' })}</span>
-          <strong className="analytics-summary-card__value">{analytics.subordinateCount}</strong>
-        </div>
-        <div className="card analytics-summary-card">
           <span className="analytics-summary-card__label">
-            {formatMessage({ id: 'analytics.ratedInYear' }, { year: analytics.year })}
+            {formatMessage({ id: 'analytics.subordinates' })}
           </span>
-          <strong className="analytics-summary-card__value">{analytics.ratedEvaluationsThisYear}</strong>
+          <strong className="analytics-summary-card__value">
+            {analytics.subordinateCount}
+          </strong>
         </div>
         <div className="card analytics-summary-card">
           <span className="analytics-summary-card__label">
-            {formatMessage({ id: 'analytics.averageInYear' }, { year: analytics.year })}
+            {formatMessage(
+              { id: 'analytics.ratedInYear' },
+              { year: analytics.year },
+            )}
+          </span>
+          <strong className="analytics-summary-card__value">
+            {analytics.ratedEvaluationsThisYear}
+          </strong>
+        </div>
+        <div className="card analytics-summary-card">
+          <span className="analytics-summary-card__label">
+            {formatMessage(
+              { id: 'analytics.averageInYear' },
+              { year: analytics.year },
+            )}
           </span>
           <strong className="analytics-summary-card__value">
             {analytics.overallStats.selectedYear.average?.toFixed(2) ?? '—'}
@@ -69,15 +84,23 @@ export function EvaluatorAnalyticsView({
         </div>
         <div className="card analytics-summary-card">
           <span className="analytics-summary-card__label">
-            {formatMessage({ id: 'analytics.medianInYear' }, { year: analytics.year })}
+            {formatMessage(
+              { id: 'analytics.medianInYear' },
+              { year: analytics.year },
+            )}
           </span>
           <strong className="analytics-summary-card__value">
             {analytics.overallStats.selectedYear.median?.toFixed(2) ?? '—'}
           </strong>
         </div>
         <label className="card analytics-summary-card analytics-summary-card--filter">
-          <span className="analytics-summary-card__label">{formatMessage({ id: 'common.year' })}</span>
-          <select value={year} onChange={(event) => onYearChange(Number(event.target.value))}>
+          <span className="analytics-summary-card__label">
+            {formatMessage({ id: 'common.year' })}
+          </span>
+          <select
+            value={year}
+            onChange={(event) => onYearChange(Number(event.target.value))}
+          >
             {yearOptions.map((option) => (
               <option key={option} value={option}>
                 {option}.
@@ -89,19 +112,33 @@ export function EvaluatorAnalyticsView({
 
       <div className="analytics-grid">
         <section className="card analytics-panel">
-          <h3>{formatMessage({ id: 'analytics.descriptiveDistributionTitle' })}</h3>
+          <h3>
+            {formatMessage({ id: 'analytics.descriptiveDistributionTitle' })}
+          </h3>
           <p className="card__hint">
-            {formatMessage({ id: 'analytics.descriptiveDistributionHint' }, { year: analytics.year })}
+            {formatMessage(
+              { id: 'analytics.descriptiveDistributionHint' },
+              { year: analytics.year },
+            )}
           </p>
-          <DescriptiveRatingPieChart items={analytics.distributionThisYear} year={analytics.year} />
+          <DescriptiveRatingPieChart
+            items={analytics.distributionThisYear}
+            year={analytics.year}
+          />
         </section>
 
         <section className="card analytics-panel">
           <h3>{formatMessage({ id: 'analytics.averageAndVarianceTitle' })}</h3>
           <p className="card__hint">
-            {formatMessage({ id: 'analytics.statsComparisonHint' }, { year: analytics.year })}
+            {formatMessage(
+              { id: 'analytics.statsComparisonHint' },
+              { year: analytics.year },
+            )}
           </p>
-          <OverallStatsChart stats={analytics.overallStats} year={analytics.year} />
+          <OverallStatsChart
+            stats={analytics.overallStats}
+            year={analytics.year}
+          />
         </section>
 
         <section className="card analytics-panel analytics-panel--wide">

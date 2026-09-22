@@ -21,7 +21,9 @@ export function ConditionsFulfilledToggle({
         disabled={!editable}
         onChange={(e) => onChange(e.target.checked)}
       />
-      <span>{formatMessage({ id: 'evaluation.conditionsFulfilledLabel' })}</span>
+      <span>
+        {formatMessage({ id: 'evaluation.conditionsFulfilledLabel' })}
+      </span>
     </label>
   );
 }
@@ -50,7 +52,9 @@ export function ConditionsNotMetCommentField({
         value={value}
         disabled={!editable}
         onChange={(e) => onChange(e.target.value)}
-        placeholder={formatMessage({ id: 'evaluation.conditionsNotMetCommentPlaceholder' })}
+        placeholder={formatMessage({
+          id: 'evaluation.conditionsNotMetCommentPlaceholder',
+        })}
       />
     </div>
   );

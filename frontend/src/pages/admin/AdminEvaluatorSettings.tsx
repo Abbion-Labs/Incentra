@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '../../api/client';
 import { fetchAllPages } from '../../api/paged';
-import type { Employee, EvaluatorSettings } from '../../api/types';
+import type { AdminUser, Employee, EvaluatorSettings } from '../../api/types';
+import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { AdminPageHeader } from './components/AdminPageHeader';
 import { adminEvaluatorAnalyticsState } from './adminNavigation';
@@ -54,53 +55,64 @@ function settingsToForm(settings: EvaluatorSettings): SettingsFormValues {
 
 export function AdminEvaluatorSettings() {
   const { formatMessage } = useIntl();
+  const toast = useToast();
   const navigate = useNavigate();
   const [settings, setSettings] = useState<EvaluatorSettings[]>([]);
   const [employees, setEmployees] = useState<Employee[]>([]);
+  const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState('');
-  const [message, setMessage] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [form, setForm] = useState<SettingsFormValues>(emptyForm());
 
   const load = useCallback(async () => {
     setLoading(true);
-    setError('');
     try {
-      const [items, emp] = await Promise.all([
+      const [items, emp, userList] = await Promise.all([
         api.get<EvaluatorSettings[]>('/api/evaluator-settings'),
-        fetchAllPages<Employee>((page, pageSize) =>
-          `/api/employees?page=${page}&pageSize=${pageSize}&isActive=true`),
+        fetchAllPages<Employee>(
+          (page, pageSize) =>
+            `/api/employees?page=${page}&pageSize=${pageSize}&isActive=true`,
+        ),
+        api.get<AdminUser[]>('/api/users'),
       ]);
       setSettings(items);
       setEmployees(emp);
+      setUsers(userList);
     } catch (e) {
-      setError(e instanceof Error ? e.message : formatMessage({ id: 'errors.generic' }));
+      toast.error(
+        e instanceof Error
+          ? e.message
+          : formatMessage({ id: 'errors.generic' }),
+      );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [formatMessage, toast]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const configuredEvaluatorIds = useMemo(
-    () => new Set(settings.map((s) => s.employeeId)),
-    [settings],
+  // A controller is an account carrying the CONTROLLER role; nothing else marks one.
+  const controllerOptions = useMemo(() => {
+    const controllerEmployeeIds = new Set(
+      users
+        .filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
+        .map((u) => u.employeeId as number),
+    );
+    return employees.filter((e) => controllerEmployeeIds.has(e.id));
+  }, [employees, users]);
+
+  const editingEvaluatorName = useMemo(
+    () =>
+      settings.find((s) => s.employeeId === editingId)?.employeeFullName ?? '',
+    [settings, editingId],
   );
 
-  const availableEvaluators = useMemo(
-    () => employees.filter((e) => !configuredEvaluatorIds.has(e.id) || e.id === editingId),
-    [employees, configuredEvaluatorIds, editingId],
-  );
-
-  function startCreate() {
+  function closeEditor() {
     setEditingId(null);
     setForm(emptyForm());
-    setError('');
-    setMessage('');
   }
 
   function openAnalytics(employeeId: number, e?: React.MouseEvent) {
@@ -114,21 +126,21 @@ export function AdminEvaluatorSettings() {
     e?.stopPropagation();
     setEditingId(item.employeeId);
     setForm(settingsToForm(item));
-    setError('');
-    setMessage('');
   }
 
-  function setField<K extends keyof SettingsFormValues>(key: K, value: SettingsFormValues[K]) {
+  function setField<K extends keyof SettingsFormValues>(
+    key: K,
+    value: SettingsFormValues[K],
+  ) {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (editingId === null) return;
+
     setSaving(true);
-    setError('');
-    setMessage('');
     const payload = {
-      employeeId: Number(form.evaluatorId),
       controllerEmployeeId: Number(form.controllerId),
       thresholdDoesNotMeet: Number(form.thresholdDoesNotMeet),
       thresholdMeets: Number(form.thresholdMeets),
@@ -140,27 +152,15 @@ export function AdminEvaluatorSettings() {
       percentExceeds: Number(form.percentExceeds),
     };
     try {
-      if (editingId) {
-        await api.put(`/api/evaluator-settings/${editingId}`, {
-          controllerEmployeeId: payload.controllerEmployeeId,
-          thresholdDoesNotMeet: payload.thresholdDoesNotMeet,
-          thresholdMeets: payload.thresholdMeets,
-          thresholdGood: payload.thresholdGood,
-          thresholdExceeds: payload.thresholdExceeds,
-          percentDoesNotMeet: payload.percentDoesNotMeet,
-          percentMeets: payload.percentMeets,
-          percentGood: payload.percentGood,
-          percentExceeds: payload.percentExceeds,
-        });
-        setMessage(formatMessage({ id: 'alerts.settingsUpdated' }));
-      } else {
-        await api.post('/api/evaluator-settings', payload);
-        setMessage(formatMessage({ id: 'alerts.settingsCreated' }));
-        startCreate();
-      }
+      await api.put(`/api/evaluator-settings/${editingId}`, payload);
+      toast.success(formatMessage({ id: 'alerts.settingsUpdated' }));
       await load();
     } catch (err) {
-      setError(err instanceof Error ? err.message : formatMessage({ id: 'errors.saveFailed' }));
+      toast.error(
+        err instanceof Error
+          ? err.message
+          : formatMessage({ id: 'errors.saveFailed' }),
+      );
     } finally {
       setSaving(false);
     }
@@ -169,156 +169,187 @@ export function AdminEvaluatorSettings() {
   return (
     <div className="admin-page">
       <AdminPageHeader
-        error={error}
-        message={message}
         actions={
           editingId ? (
-            <button type="button" className="btn btn-secondary" onClick={startCreate}>
-              {formatMessage({ id: 'admin.evaluatorSettings.newSettings' })}
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={closeEditor}
+            >
+              {formatMessage({ id: 'admin.evaluatorSettings.closeEditor' })}
             </button>
           ) : null
         }
       />
 
-      <form className="card admin-form" onSubmit={handleSubmit}>
-        <div className="form-grid admin-form__grid">
-          <div className="form-row">
-            <label htmlFor="eval-employee">{formatMessage({ id: 'admin.evaluators' })}</label>
-            <select
-              id="eval-employee"
-              value={form.evaluatorId}
-              onChange={(e) => setField('evaluatorId', e.target.value)}
-              required
-              disabled={!!editingId}
-            >
-              <option value="">{formatMessage({ id: 'common.selectPlaceholder' })}</option>
-              {availableEvaluators.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.fullName}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-row">
-            <label htmlFor="eval-controller">{formatMessage({ id: 'roles.CONTROLLER' })}</label>
-            <select
-              id="eval-controller"
-              value={form.controllerId}
-              onChange={(e) => setField('controllerId', e.target.value)}
-              required
-            >
-              <option value="">{formatMessage({ id: 'common.selectPlaceholder' })}</option>
-              {employees.map((emp) => (
-                <option key={emp.id} value={emp.id}>{emp.fullName}</option>
-              ))}
-            </select>
-          </div>
-          <div className="form-row">
-            <label htmlFor="thr-dnm">{formatMessage({ id: 'admin.evaluatorSettings.thresholdDoesNotMeet' })}</label>
-            <input
-              id="thr-dnm"
-              type="number"
-              step="0.01"
-              value={form.thresholdDoesNotMeet}
-              onChange={(e) => setField('thresholdDoesNotMeet', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="thr-meets">{formatMessage({ id: 'admin.evaluatorSettings.thresholdMeets' })}</label>
-            <input
-              id="thr-meets"
-              type="number"
-              step="0.01"
-              value={form.thresholdMeets}
-              onChange={(e) => setField('thresholdMeets', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="thr-good">{formatMessage({ id: 'admin.evaluatorSettings.thresholdGood' })}</label>
-            <input
-              id="thr-good"
-              type="number"
-              step="0.01"
-              value={form.thresholdGood}
-              onChange={(e) => setField('thresholdGood', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="thr-exceeds">{formatMessage({ id: 'admin.evaluatorSettings.thresholdExceeds' })}</label>
-            <input
-              id="thr-exceeds"
-              type="number"
-              step="0.01"
-              value={form.thresholdExceeds}
-              onChange={(e) => setField('thresholdExceeds', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="pct-dnm">{formatMessage({ id: 'admin.evaluatorSettings.percentDoesNotMeet' })}</label>
-            <input
-              id="pct-dnm"
-              type="number"
-              step="1"
-              min="0"
-              value={form.percentDoesNotMeet}
-              onChange={(e) => setField('percentDoesNotMeet', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="pct-meets">{formatMessage({ id: 'admin.evaluatorSettings.percentMeets' })}</label>
-            <input
-              id="pct-meets"
-              type="number"
-              step="1"
-              min="0"
-              value={form.percentMeets}
-              onChange={(e) => setField('percentMeets', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="pct-good">{formatMessage({ id: 'admin.evaluatorSettings.percentGood' })}</label>
-            <input
-              id="pct-good"
-              type="number"
-              step="1"
-              min="0"
-              value={form.percentGood}
-              onChange={(e) => setField('percentGood', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="pct-exceeds">{formatMessage({ id: 'admin.evaluatorSettings.percentExceeds' })}</label>
-            <input
-              id="pct-exceeds"
-              type="number"
-              step="1"
-              min="0"
-              value={form.percentExceeds}
-              onChange={(e) => setField('percentExceeds', e.target.value)}
-              required
-            />
-          </div>
+      {editingId === null ? (
+        <div className="card">
+          <p>{formatMessage({ id: 'admin.evaluatorSettings.selectToEdit' })}</p>
         </div>
-        <div className="actions">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving
-              ? formatMessage({ id: 'buttons.saving' })
-              : editingId
-                ? formatMessage({ id: 'buttons.saveChanges' })
-                : formatMessage({ id: 'buttons.add' })}
-          </button>
-          {editingId && (
-            <button type="button" className="btn btn-secondary" onClick={startCreate}>
+      ) : (
+        <form className="card admin-form" onSubmit={handleSubmit}>
+          <div className="form-grid admin-form__grid">
+            <div className="form-row">
+              <label>{formatMessage({ id: 'admin.evaluators' })}</label>
+              <p className="admin-form__static-value">{editingEvaluatorName}</p>
+            </div>
+            <div className="form-row">
+              <label htmlFor="eval-controller">
+                {formatMessage({ id: 'roles.CONTROLLER' })}
+              </label>
+              <select
+                id="eval-controller"
+                value={form.controllerId}
+                onChange={(e) => setField('controllerId', e.target.value)}
+                required
+              >
+                <option value="">
+                  {formatMessage({ id: 'common.selectPlaceholder' })}
+                </option>
+                {controllerOptions.map((emp) => (
+                  <option key={emp.id} value={emp.id}>
+                    {emp.fullName}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="form-row">
+              <label htmlFor="thr-dnm">
+                {formatMessage({
+                  id: 'admin.evaluatorSettings.thresholdDoesNotMeet',
+                })}
+              </label>
+              <input
+                id="thr-dnm"
+                type="number"
+                step="0.01"
+                value={form.thresholdDoesNotMeet}
+                onChange={(e) =>
+                  setField('thresholdDoesNotMeet', e.target.value)
+                }
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="thr-meets">
+                {formatMessage({
+                  id: 'admin.evaluatorSettings.thresholdMeets',
+                })}
+              </label>
+              <input
+                id="thr-meets"
+                type="number"
+                step="0.01"
+                value={form.thresholdMeets}
+                onChange={(e) => setField('thresholdMeets', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="thr-good">
+                {formatMessage({ id: 'admin.evaluatorSettings.thresholdGood' })}
+              </label>
+              <input
+                id="thr-good"
+                type="number"
+                step="0.01"
+                value={form.thresholdGood}
+                onChange={(e) => setField('thresholdGood', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="thr-exceeds">
+                {formatMessage({
+                  id: 'admin.evaluatorSettings.thresholdExceeds',
+                })}
+              </label>
+              <input
+                id="thr-exceeds"
+                type="number"
+                step="0.01"
+                value={form.thresholdExceeds}
+                onChange={(e) => setField('thresholdExceeds', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="pct-dnm">
+                {formatMessage({
+                  id: 'admin.evaluatorSettings.percentDoesNotMeet',
+                })}
+              </label>
+              <input
+                id="pct-dnm"
+                type="number"
+                step="1"
+                min="0"
+                value={form.percentDoesNotMeet}
+                onChange={(e) => setField('percentDoesNotMeet', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="pct-meets">
+                {formatMessage({ id: 'admin.evaluatorSettings.percentMeets' })}
+              </label>
+              <input
+                id="pct-meets"
+                type="number"
+                step="1"
+                min="0"
+                value={form.percentMeets}
+                onChange={(e) => setField('percentMeets', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="pct-good">
+                {formatMessage({ id: 'admin.evaluatorSettings.percentGood' })}
+              </label>
+              <input
+                id="pct-good"
+                type="number"
+                step="1"
+                min="0"
+                value={form.percentGood}
+                onChange={(e) => setField('percentGood', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="pct-exceeds">
+                {formatMessage({
+                  id: 'admin.evaluatorSettings.percentExceeds',
+                })}
+              </label>
+              <input
+                id="pct-exceeds"
+                type="number"
+                step="1"
+                min="0"
+                value={form.percentExceeds}
+                onChange={(e) => setField('percentExceeds', e.target.value)}
+                required
+              />
+            </div>
+          </div>
+          <div className="actions">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving
+                ? formatMessage({ id: 'buttons.saving' })
+                : formatMessage({ id: 'buttons.saveChanges' })}
+            </button>
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={closeEditor}
+            >
               {formatMessage({ id: 'buttons.cancel' })}
             </button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
 
       <div className="card">
         {loading ? (
@@ -328,17 +359,36 @@ export function AdminEvaluatorSettings() {
             <table className="table table--hover table--compact table--clickable">
               <thead>
                 <tr>
-                  <th className="col-text">{formatMessage({ id: 'admin.evaluators' })}</th>
-                  <th className="col-text">{formatMessage({ id: 'roles.CONTROLLER' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.evaluatorSettings.thresholds' })}</th>
-                  <th className="col-num">{formatMessage({ id: 'admin.evaluatorSettings.compensationPercent' })}</th>
-                  <th className="col-actions" aria-label={formatMessage({ id: 'admin.actions' })} />
+                  <th className="col-text">
+                    {formatMessage({ id: 'admin.evaluators' })}
+                  </th>
+                  <th className="col-text">
+                    {formatMessage({ id: 'roles.CONTROLLER' })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.evaluatorSettings.thresholds',
+                    })}
+                  </th>
+                  <th className="col-num">
+                    {formatMessage({
+                      id: 'admin.evaluatorSettings.compensationPercent',
+                    })}
+                  </th>
+                  <th
+                    className="col-actions"
+                    aria-label={formatMessage({ id: 'admin.actions' })}
+                  />
                 </tr>
               </thead>
               <tbody>
                 {settings.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="empty">{formatMessage({ id: 'admin.evaluatorSettings.noSettings' })}</td>
+                    <td colSpan={5} className="empty">
+                      {formatMessage({
+                        id: 'admin.evaluatorSettings.noSettings',
+                      })}
+                    </td>
                   </tr>
                 ) : (
                   settings.map((item) => (
@@ -353,13 +403,17 @@ export function AdminEvaluatorSettings() {
                         }
                       }}
                     >
-                      <td className="cell-primary col-text">{item.employeeFullName}</td>
+                      <td className="cell-primary col-text">
+                        {item.employeeFullName}
+                      </td>
                       <td className="col-text">{item.controllerFullName}</td>
                       <td className="col-num admin-settings-thresholds">
-                        {item.thresholdDoesNotMeet} / {item.thresholdMeets} / {item.thresholdGood} / {item.thresholdExceeds}
+                        {item.thresholdDoesNotMeet} / {item.thresholdMeets} /{' '}
+                        {item.thresholdGood} / {item.thresholdExceeds}
                       </td>
                       <td className="col-num admin-settings-thresholds">
-                        {item.percentDoesNotMeet}% / {item.percentMeets}% / {item.percentGood}% / {item.percentExceeds}%
+                        {item.percentDoesNotMeet}% / {item.percentMeets}% /{' '}
+                        {item.percentGood}% / {item.percentExceeds}%
                       </td>
                       <td className="col-actions">
                         <button
