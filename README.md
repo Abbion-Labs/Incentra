@@ -104,6 +104,43 @@ Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud
 
 U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
 
+## Bezbednosni header-i
+
+### Frontend (Vercel)
+
+Header-i za frontend stoje u `vercel.json`, pod `services.frontend.headers`. Najvažniji je **Content-Security-Policy**, koji ograničava šta stranica sme da učita:
+
+| Direktiva | Vrednost | Zašto |
+|---|---|---|
+| `script-src` | `'self'` | samo skripte sa našeg domena; bez `unsafe-inline` i `unsafe-eval`, pa ubačena skripta ne može da se izvrši |
+| `style-src` | `'self' https://fonts.googleapis.com` | Google Fonts CSS iz `index.html` |
+| `font-src` | `'self' https://fonts.gstatic.com` | sami fontovi |
+| `img-src` | `'self' data: https://*.supabase.co` | avatari iz Supabase Storage-a |
+| `connect-src` | `'self'` | API je na istom domenu (`/api` rewrite) |
+| `frame-ancestors` | `'none'` | sajt se ne sme učitati u tuđi `<iframe>` (clickjacking) |
+
+Uz CSP idu i `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: same-origin`, `Cross-Origin-Opener-Policy: same-origin` i `Permissions-Policy` (kamera, mikrofon, lokacija, plaćanje i USB su isključeni).
+
+> Ako se doda novi spoljni izvor (drugi CDN, drugi domen za slike, API na posebnom domenu), mora se dopuniti odgovarajuća direktiva, inače će browser blokirati zahtev i prijaviti grešku u konzoli.
+
+Politika se **može proveriti lokalno**, jer `vite preview` čita iste header-e iz `vercel.json`:
+
+```bash
+cd frontend
+npm run build
+npm run preview
+```
+
+Dev server (`npm run dev`) namerno nema ove header-e: Vite u razvoju koristi inline skripte za hot reload.
+
+### API
+
+`SecurityHeadersMiddleware` (u `VariableCompensation.Api`) dodaje header-e na **svaki** odgovor backend-a, pre ostatka pipeline-a, pa ih dobijaju i statički fajlovi i odgovori iz globalnog exception handler-a:
+
+- svuda: `X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`
+- samo na `/api/*`: `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'` i `Cache-Control: no-store` (odgovori nose tokene i podatke o platama). Swagger UI je izvan `/api`, pa mu sopstvene skripte i dalje rade.
+
+
 ## HR modul (Faza 4)
 
 Lookup podaci se seed-uju pri pokretanju (org. jedinice, radna mesta, nivoi obrazovanja).

@@ -1,7 +1,9 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.OpenApi.Models;
+using VariableCompensation.Api.Middleware;
 
 namespace VariableCompensation.Api;
 
@@ -9,6 +11,10 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApi(this IServiceCollection services)
     {
+        // A startup filter rather than a line in Program.cs, so the headers also reach the responses of
+        // whatever is served before the API pipeline, such as the uploaded avatar files.
+        services.AddTransient<IStartupFilter, SecurityHeadersStartupFilter>();
+
         services.AddCors(options =>
         {
             options.AddPolicy("Frontend", policy =>
