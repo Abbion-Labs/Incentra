@@ -96,12 +96,14 @@ describe('EvaluationEditorPage', () => {
       .spyOn(api, 'put')
       .mockReturnValue(new Promise(() => undefined));
 
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: 'buttons.submitToController',
-      }),
-    );
-    const dialog = screen.getByRole('dialog');
+    const submit = await screen.findByRole('button', {
+      name: 'buttons.submitToController',
+    });
+    // Dugme se iscrta pre nego što se ocena potpuno učita; klik na još
+    // onemogućeno dugme ne otvara dijalog.
+    await waitFor(() => expect(submit).toHaveProperty('disabled', false));
+    fireEvent.click(submit);
+    const dialog = await screen.findByRole('dialog');
     const confirm = within(dialog).getByRole('button', {
       name: 'buttons.submit',
     });
