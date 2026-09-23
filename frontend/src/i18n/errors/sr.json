@@ -95,6 +95,7 @@
     "vn-0097": "Zaposlenom su dodeljeni podređeni koje ocenjuje. Prerasporedite ih pre deaktivacije.",
     "vn-0098": "Izabrana osoba nije kontrolor. Dodelite joj ulogu kontrolora na kartici Korisnici.",
     "vn-0099": "Kontroloru su dodeljeni ocenjivači. Prerasporedite ih pre uklanjanja uloge.",
-    "vn-0100": "Ova uloga vam nije dodeljena. Ako vam je upravo uklonjena, prijavite se ponovo."
+    "vn-0100": "Ova uloga vam nije dodeljena. Ako vam je upravo uklonjena, prijavite se ponovo.",
+    "vn-0101": "Zaposleni ima ocene koje još nisu odobrene, pa mora imati ocenjivača. Umesto uklanjanja izaberite novog ocenjivača."
   }
 }

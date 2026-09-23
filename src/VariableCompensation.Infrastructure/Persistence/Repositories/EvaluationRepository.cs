@@ -235,6 +235,26 @@ public sealed class EvaluationRepository : IEvaluationRepository
                 g.Average(e => e.MeasuresAverage)))
             .ToListAsync(cancellationToken);
 
+    public Task<bool> HasUnapprovedForEmployeeAsync(long employeeId, CancellationToken cancellationToken) =>
+        this.context.Evaluations.AnyAsync(
+            e => e.EmployeeId == employeeId && e.Status != EvaluationStatus.Approved,
+            cancellationToken);
+
+    public async Task<IReadOnlyList<Evaluation>> GetForUpdateByEmployeeAsync(
+        long employeeId,
+        EvaluationStatus status,
+        CancellationToken cancellationToken) =>
+        await this.context.Evaluations
+            .Where(e => e.EmployeeId == employeeId && e.Status == status)
+            .ToListAsync(cancellationToken);
+
+    public async Task<IReadOnlyList<Evaluation>> GetUnapprovedForUpdateByEvaluatorAsync(
+        long evaluatorEmployeeId,
+        CancellationToken cancellationToken) =>
+        await this.context.Evaluations
+            .Where(e => e.EvaluatorEmployeeId == evaluatorEmployeeId && e.Status != EvaluationStatus.Approved)
+            .ToListAsync(cancellationToken);
+
     public async Task AddAsync(Evaluation entity, CancellationToken cancellationToken) =>
         await this.context.Evaluations.AddAsync(entity, cancellationToken);
 

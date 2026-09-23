@@ -6,9 +6,11 @@ import type {
   AdminUser,
   EducationLevel,
   Employee,
+  EvaluationSummary,
   EvaluatorSettings,
   JobPosition,
   OrganizationUnit,
+  PagedResult,
 } from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
@@ -161,6 +163,45 @@ export function AdminEmployees() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /**
+   * Nacrti ocena prelaze na novog ocenjivača čim se sačuva, a poslate ocene tek
+   * kada ih kontrolor vrati na doradu. Admin to vidi pre čuvanja.
+   */
+  async function confirmEvaluatorChange(employeeId: number): Promise<boolean> {
+    const current = employees.find((e) => e.id === employeeId);
+    const nextEvaluatorId = formValues.evaluatorEmployeeId
+      ? Number(formValues.evaluatorEmployeeId)
+      : null;
+    if (
+      !current ||
+      nextEvaluatorId === null ||
+      nextEvaluatorId === (current.evaluatorEmployeeId ?? null)
+    ) {
+      return true;
+    }
+
+    const countEvaluations = async (filter: string) =>
+      (
+        await api.get<PagedResult<EvaluationSummary>>(
+          `/api/evaluations?employeeId=${employeeId}&pageSize=1&${filter}`,
+        )
+      ).totalCount;
+    const [drafts, submitted] = await Promise.all([
+      countEvaluations('status=Draft'),
+      countEvaluations('bucket=submitted'),
+    ]);
+    if (drafts === 0 && submitted === 0) {
+      return true;
+    }
+
+    return window.confirm(
+      formatMessage(
+        { id: 'admin.employeeForm.reassignConfirm' },
+        { drafts, submitted },
+      ),
+    );
+  }
+
   async function handleSubmit() {
     if (!formValues.educationLevelId) {
       toast.warning(formatMessage({ id: 'errors.educationRequired' }));
@@ -170,6 +211,9 @@ export function AdminEmployees() {
     setSaving(true);
     try {
       if (editingId) {
+        if (!(await confirmEvaluatorChange(editingId))) {
+          return;
+        }
         const payload = buildEmployeePayload(formValues, true);
         await api.put(`/api/employees/${editingId}`, payload);
         const currentUserId =

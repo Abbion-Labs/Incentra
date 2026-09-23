@@ -320,7 +320,8 @@
     "employeeForm": {
       "newEmployee": "New employee",
       "addEmployee": "Add employee",
-      "educationLevel": "Education level"
+      "educationLevel": "Education level",
+      "reassignConfirm": "The employee gets a new evaluator.\n\nDraft evaluations moving to the new evaluator: {drafts}\nSubmitted evaluations staying with the current evaluator until the controller returns them for revision: {submitted}\n\nDo you want to continue?"
     },
     "ratingConfig": {
       "newDescriptiveRating": "New descriptive rating",

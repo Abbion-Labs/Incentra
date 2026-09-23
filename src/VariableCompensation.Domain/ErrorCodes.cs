@@ -97,4 +97,5 @@ public static class ErrorCodes
     public const string ControllerRoleRequired = "vn-0098";
     public const string ControllerHasEvaluators = "vn-0099";
     public const string RoleNotAssigned = "vn-0100";
+    public const string EmployeeHasOpenEvaluations = "vn-0101";
 }

@@ -27,6 +27,7 @@ public class ReturnEvaluationForRevisionCommandHandlerTests
         var employeeContext = new FakeCurrentEmployeeContext { EmployeeId = 3 };
         var handler = new ReturnEvaluationForRevisionCommandHandler(
             repository,
+            new FakeEmployeeRepository(),
             userService,
             new EvaluationAccessService(userService, employeeContext),
             new FakeEvaluationNotificationService(),
@@ -55,6 +56,7 @@ public class ReturnEvaluationForRevisionCommandHandlerTests
         var employeeContext = new FakeCurrentEmployeeContext { EmployeeId = 3 };
         var handler = new ReturnEvaluationForRevisionCommandHandler(
             repository,
+            new FakeEmployeeRepository(),
             userService,
             new EvaluationAccessService(userService, employeeContext),
             new FakeEvaluationNotificationService(),
@@ -66,5 +68,68 @@ public class ReturnEvaluationForRevisionCommandHandlerTests
 
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(ErrorCodes.RevisionCommentRequired);
+    }
+
+    [Fact]
+    public async Task Handle_EmployeeHandedToAnotherEvaluator_MovesTheRevisionToThem()
+    {
+        var repository = new FakeEvaluationRepository();
+        repository.Seed(new EvaluationBuilder()
+            .WithId(1)
+            .WithEmployee(10)
+            .WithEvaluator(2)
+            .WithController(3)
+            .WithStatus(EvaluationStatus.Submitted)
+            .Build());
+        var employees = new FakeEmployeeRepository();
+        employees.EmployeesById[10] = new EmployeeBuilder().WithId(10).WithEvaluator(7).Build();
+
+        var result = await CreateHandler(repository, employees).Handle(
+            new ReturnEvaluationForRevisionCommand(1, 1, "Dopuniti merila"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        var stored = repository.Store[1];
+        stored.Status.Should().Be(EvaluationStatus.Draft);
+        stored.EvaluatorEmployeeId.Should().Be(7);
+        stored.ControllerEmployeeId.Should().Be(3);
+    }
+
+    [Fact]
+    public async Task Handle_SameEvaluator_KeepsTheAssignment()
+    {
+        var repository = new FakeEvaluationRepository();
+        repository.Seed(new EvaluationBuilder()
+            .WithId(1)
+            .WithEmployee(10)
+            .WithEvaluator(2)
+            .WithController(3)
+            .WithStatus(EvaluationStatus.Submitted)
+            .Build());
+        var employees = new FakeEmployeeRepository();
+        employees.EmployeesById[10] = new EmployeeBuilder().WithId(10).WithEvaluator(2).Build();
+
+        var result = await CreateHandler(repository, employees).Handle(
+            new ReturnEvaluationForRevisionCommand(1, 1, "Dopuniti merila"),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        repository.Store[1].EvaluatorEmployeeId.Should().Be(2);
+        repository.Store[1].Version.Should().Be(2);
+    }
+
+    private static ReturnEvaluationForRevisionCommandHandler CreateHandler(
+        FakeEvaluationRepository repository,
+        FakeEmployeeRepository employees)
+    {
+        var userService = FakeCurrentUserService.AsController();
+        var employeeContext = new FakeCurrentEmployeeContext { EmployeeId = 3 };
+        return new ReturnEvaluationForRevisionCommandHandler(
+            repository,
+            employees,
+            userService,
+            new EvaluationAccessService(userService, employeeContext),
+            new FakeEvaluationNotificationService(),
+            NullLogger<ReturnEvaluationForRevisionCommandHandler>.Instance);
     }
 }
