@@ -38,6 +38,7 @@ internal static class EvaluationWorkflow
         EvaluationStatus from,
         EvaluationStatus to,
         long changedByUserId,
+        string? changedByRoleCode,
         string? comment)
     {
         evaluation.Status = to;
@@ -48,6 +49,7 @@ internal static class EvaluationWorkflow
             FromStatus = from.ToString(),
             ToStatus = to.ToString(),
             ChangedByUserId = changedByUserId,
+            ChangedByRoleCode = changedByRoleCode,
             Comment = comment,
             ChangedAt = DateTime.UtcNow
         });

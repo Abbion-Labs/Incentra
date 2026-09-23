@@ -67,7 +67,8 @@ public sealed class ReturnEvaluationForRevisionCommandHandler : IRequestHandler<
         var from = entity.Status;
         var userId = this.currentUserService.UserId ?? 0;
         entity.ControllerComment = request.RevisionComment.Trim();
-        EvaluationWorkflow.ApplyTransition(entity, from, next, userId, request.RevisionComment.Trim());
+        EvaluationWorkflow.ApplyTransition(
+            entity, from, next, userId, this.currentUserService.ActiveRole, request.RevisionComment.Trim());
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);

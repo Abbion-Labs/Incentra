@@ -161,6 +161,9 @@ public sealed class EvaluationStatusHistoryResponse
 
     public long ChangedByUserId { get; init; }
 
+    /// <summary>The role the user was working in when they changed the status.</summary>
+    public string? ChangedByRoleCode { get; init; }
+
     public string? Comment { get; init; }
 
     public DateTime ChangedAt { get; init; }
