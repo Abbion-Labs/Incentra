@@ -48,12 +48,15 @@ public sealed class GetEvaluatorAnalyticsQueryHandler
             return Result.Failure<EvaluatorAnalyticsResponse>(ErrorCodes.UserNotLinkedToEmployee);
         }
 
+        // The session works in one role, and the token carries only that role.
+        var sessionRole = this.currentUserService.ActiveRole;
+
         long? evaluatorEmployeeId = request.EvaluatorEmployeeId;
         if (this.currentUserService.IsAdmin)
         {
             evaluatorEmployeeId ??= currentEmployeeId;
         }
-        else if (this.currentUserService.IsInRole(RoleCodes.Evaluator))
+        else if (sessionRole == RoleCodes.Evaluator)
         {
             if (evaluatorEmployeeId is not null && evaluatorEmployeeId != currentEmployeeId)
             {
@@ -62,7 +65,7 @@ public sealed class GetEvaluatorAnalyticsQueryHandler
 
             evaluatorEmployeeId = currentEmployeeId;
         }
-        else if (this.currentUserService.IsInRole(RoleCodes.Controller))
+        else if (sessionRole == RoleCodes.Controller)
         {
             if (evaluatorEmployeeId is null)
             {

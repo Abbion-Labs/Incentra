@@ -213,10 +213,54 @@ public class EmployeeAccessTests
         result.Items.Should().HaveCount(2);
     }
 
+    [Theory]
+    [InlineData(RoleCodes.Evaluator)]
+    [InlineData(RoleCodes.Controller)]
+    public async Task GetEmployees_ScopesToTheRoleOfTheSession(string sessionRole)
+    {
+        this.userService.Roles = [sessionRole];
+        this.ReturnNoEmployeesFromTheRepository();
+        var handler = this.CreateListHandler();
+
+        await handler.Handle(ListQuery(), CancellationToken.None);
+
+        await this.employeeRepository.Received(1).GetPagedAsync(
+            1,
+            20,
+            null,
+            sessionRole == RoleCodes.Evaluator ? CurrentEmployeeId : null,
+            null,
+            null,
+            sessionRole == RoleCodes.Controller ? CurrentEmployeeId : null,
+            null,
+            null,
+            null,
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task GetEmployees_AdminSession_QueriesWithoutAScope()
+    {
+        this.userService.Roles = [RoleCodes.Admin];
+        this.ReturnNoEmployeesFromTheRepository();
+        var handler = this.CreateListHandler();
+
+        await handler.Handle(ListQuery(), CancellationToken.None);
+
+        await this.employeeRepository.Received(1).GetPagedAsync(
+            1, 20, null, null, null, null, null, null, null, null, Arg.Any<CancellationToken>());
+    }
+
     private static Employee Employee(long id) => new EmployeeBuilder().WithId(id).Build();
 
     private static GetEmployeesQuery ListQuery() => new(1, 20, null, null, null, null, null, null, null);
 
     private GetEmployeesQueryHandler CreateListHandler() =>
         new(this.employeeRepository, this.userService, this.employeeContext);
+
+    private void ReturnNoEmployeesFromTheRepository() =>
+        this.employeeRepository.GetPagedAsync(
+                Arg.Any<int>(), Arg.Any<int>(), Arg.Any<long?>(), Arg.Any<long?>(), Arg.Any<string?>(), Arg.Any<bool?>(),
+                Arg.Any<long?>(), Arg.Any<short?>(), Arg.Any<byte?>(), Arg.Any<string?>(), Arg.Any<CancellationToken>())
+            .Returns((new List<Employee>(), 0));
 }
