@@ -31,6 +31,40 @@ public class EvaluationAccessServiceTests
     }
 
     [Fact]
+    public async Task EnsureCanEditDraftAsync_Admin_Fails()
+    {
+        this.userService.Roles = [RoleCodes.Admin];
+        this.employeeContext.EmployeeId = 2;
+
+        var result = await this.service.EnsureCanEditDraftAsync(new EvaluationBuilder().WithEvaluator(2).Build(), CancellationToken.None);
+
+        result.Error.Should().Be(ErrorCodes.EvaluatorOnlyEditDraft);
+    }
+
+    [Fact]
+    public async Task EnsureCanReviewAsync_Admin_Fails()
+    {
+        this.userService.Roles = [RoleCodes.Admin];
+        this.employeeContext.EmployeeId = 3;
+
+        var result = await this.service.EnsureCanReviewAsync(new EvaluationBuilder().WithController(3).Build(), CancellationToken.None);
+
+        result.Error.Should().Be(ErrorCodes.ControllerOnlyReview);
+    }
+
+    [Fact]
+    public async Task EnsureCanReviewAsync_ControllerOwnEvaluation_Fails()
+    {
+        this.userService.Roles = [RoleCodes.Controller];
+        this.employeeContext.EmployeeId = 3;
+        var evaluation = new EvaluationBuilder().WithEmployee(3).WithController(3).Build();
+
+        var result = await this.service.EnsureCanReviewAsync(evaluation, CancellationToken.None);
+
+        result.Error.Should().Be(ErrorCodes.ControllerOwnEvaluation);
+    }
+
+    [Fact]
     public async Task EnsureCanViewAsync_EmployeeOwnEvaluation_Succeeds()
     {
         this.userService.Roles = [RoleCodes.Employee];

@@ -7,6 +7,7 @@ import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { AdminPageHeader } from './components/AdminPageHeader';
 import { adminEvaluatorAnalyticsState } from './adminNavigation';
+import { NO_CONTROLLER, controllerIdFromForm } from './evaluatorController';
 
 interface SettingsFormValues {
   evaluatorId: string;
@@ -21,7 +22,10 @@ const emptyForm = (): SettingsFormValues => ({
 function settingsToForm(settings: EvaluatorSettings): SettingsFormValues {
   return {
     evaluatorId: String(settings.employeeId),
-    controllerId: String(settings.controllerEmployeeId),
+    controllerId:
+      settings.controllerEmployeeId === null
+        ? NO_CONTROLLER
+        : String(settings.controllerEmployeeId),
   };
 }
 
@@ -73,8 +77,11 @@ export function AdminEvaluatorSettings() {
         .filter((u) => u.roles.includes('CONTROLLER') && u.employeeId != null)
         .map((u) => u.employeeId as number),
     );
-    return employees.filter((e) => controllerEmployeeIds.has(e.id));
-  }, [employees, users]);
+    // Ocenjivač ne može biti sam sebi kontrolor; za to postoji „Bez kontrolora“.
+    return employees.filter(
+      (e) => controllerEmployeeIds.has(e.id) && e.id !== editingId,
+    );
+  }, [employees, users, editingId]);
 
   const editingEvaluatorName = useMemo(
     () =>
@@ -113,7 +120,7 @@ export function AdminEvaluatorSettings() {
 
     setSaving(true);
     const payload = {
-      controllerEmployeeId: Number(form.controllerId),
+      controllerEmployeeId: controllerIdFromForm(form.controllerId),
     };
     try {
       await api.put(`/api/evaluator-settings/${editingId}`, payload);
@@ -169,6 +176,11 @@ export function AdminEvaluatorSettings() {
               >
                 <option value="">
                   {formatMessage({ id: 'common.selectPlaceholder' })}
+                </option>
+                <option value={NO_CONTROLLER}>
+                  {formatMessage({
+                    id: 'admin.evaluatorSettings.noController',
+                  })}
                 </option>
                 {controllerOptions.map((emp) => (
                   <option key={emp.id} value={emp.id}>
@@ -240,7 +252,12 @@ export function AdminEvaluatorSettings() {
                       <td className="cell-primary col-text">
                         {item.employeeFullName}
                       </td>
-                      <td className="col-text">{item.controllerFullName}</td>
+                      <td className="col-text">
+                        {item.controllerFullName ??
+                          formatMessage({
+                            id: 'admin.evaluatorSettings.noControllerShort',
+                          })}
+                      </td>
                       <td className="col-actions">
                         <button
                           type="button"

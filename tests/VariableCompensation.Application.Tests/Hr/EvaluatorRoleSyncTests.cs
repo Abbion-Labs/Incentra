@@ -42,13 +42,38 @@ public class EvaluatorRoleSyncTests
     }
 
     [Fact]
-    public async Task GrantingTheRole_WithoutAController_IsRejected()
+    public async Task GrantingTheRole_WithoutAController_CreatesSettingsWhoseEvaluationsNeedNoReview()
     {
         var (employees, settings) = LinkedEmployee();
 
         var result = await Apply(employees, settings, hasRole: true, controllerEmployeeId: null);
 
-        result.Error.Should().Be(ErrorCodes.EvaluatorControllerRequired);
+        result.IsSuccess.Should().BeTrue();
+        settings.Store[EmployeeId].ControllerEmployeeId.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task GrantingTheRole_AsTheirOwnController_IsRejected()
+    {
+        var (employees, settings) = LinkedEmployee();
+
+        var result = await Apply(employees, settings, hasRole: true, controllerEmployeeId: EmployeeId);
+
+        result.Error.Should().Be(ErrorCodes.EvaluatorOwnController);
+        settings.Store.Should().BeEmpty();
+    }
+
+    [Fact]
+    public async Task GrantingTheRole_WithAControllerTheEvaluatorRates_IsRejected()
+    {
+        var (employees, settings) = LinkedEmployee();
+        employees.ExistingEmployeeIds.Add(ControllerId);
+        employees.EmployeesById[ControllerId] = new Employee { Id = ControllerId, EvaluatorEmployeeId = EmployeeId };
+
+        var result = await Apply(employees, settings, hasRole: true, controllerEmployeeId: ControllerId);
+
+        result.Error.Should().Be(ErrorCodes.ControllerRatedByEvaluator);
+        settings.Store.Should().BeEmpty();
     }
 
     [Fact]

@@ -60,7 +60,12 @@ export function SubmitEvaluationPanel({
         >
           {saving
             ? formatMessage({ id: 'buttons.submitting' })
-            : formatMessage({ id: 'buttons.submitToController' })}
+            : formatMessage({
+                id:
+                  evaluation.controllerEmployeeId == null
+                    ? 'buttons.submitFinal'
+                    : 'buttons.submitToController',
+              })}
         </button>
       </div>
     </section>

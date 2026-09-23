@@ -17,6 +17,7 @@ import {
   currentYear,
 } from '../../components/PeriodFilters';
 
+import { useAuth } from '../../auth/AuthContext';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
@@ -49,6 +50,9 @@ export function EvaluatorGoalsDashboard() {
   const [activeTab, setActiveTab] = useState<GoalsBucket>(initialTab);
 
   const [creatingFor, setCreatingFor] = useState<number | null>(null);
+  // Ocene pravi samo ocenjivač; admin ovde samo gleda.
+  const { activeRole } = useAuth();
+  const canPlan = activeRole === 'EVALUATOR';
 
   const [year, setYear] = useState(currentYear);
 
@@ -241,7 +245,7 @@ export function EvaluatorGoalsDashboard() {
                   employees={pendingEmployees}
                   creatingFor={creatingFor}
                   search={search}
-                  onStartPlanning={startPlanning}
+                  onStartPlanning={canPlan ? startPlanning : undefined}
                   evaluationLabel={() =>
                     formatMessage({ id: 'evaluation.setGoals' })
                   }

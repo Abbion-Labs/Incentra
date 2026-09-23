@@ -42,13 +42,9 @@ public static class EvaluatorRoleSync
             return Result.Success();
         }
 
-        if (controllerEmployeeId is null)
-        {
-            return Result.Failure(ErrorCodes.EvaluatorControllerRequired);
-        }
-
-        var controllerCheck = await ControllerRoleCheck.EnsureIsAControllerAsync(
-            controllerEmployeeId.Value,
+        var controllerCheck = await ControllerRoleCheck.EnsureCanControlAsync(
+            employee.Id,
+            controllerEmployeeId,
             employeeRepository,
             userRepository,
             cancellationToken);
@@ -61,7 +57,7 @@ public static class EvaluatorRoleSync
             new EvaluatorSettingsEntity
             {
                 EmployeeId = employee.Id,
-                ControllerEmployeeId = controllerEmployeeId.Value,
+                ControllerEmployeeId = controllerEmployeeId,
             },
             cancellationToken);
 

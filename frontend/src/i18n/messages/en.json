@@ -40,6 +40,7 @@
     "backToList": "Back to list",
     "submitting": "Submitting...",
     "submitToController": "Submit to controller",
+    "submitFinal": "Submit and finish",
     "calculating": "Calculating...",
     "processing": "Processing..."
   },
@@ -223,6 +224,8 @@
     "setPlanningBeforeRating": "Before rating, at least one goal, condition, and criterion must be set.",
     "submitToControllerTitle": "Submit to controller",
     "submitToControllerConfirm": "Are you sure you want to submit this evaluation to controller review?",
+    "submitFinalTitle": "Finish evaluation",
+    "submitFinalConfirm": "No controller reviews your evaluations, so this evaluation will be approved right away and can no longer be changed. Do you want to continue?",
     "bucket": {
       "planning": "Goal planning",
       "unrated": "Not rated",
@@ -313,7 +316,7 @@
       "passwordOptionalPlaceholder": "Leave blank to keep current password",
       "rolesHint": "Select one or more roles. The user must have at least one role.",
       "evaluatorController": "Evaluator's controller",
-      "evaluatorControllerHint": "An evaluator reports to a controller who reviews their ratings. The controller can be changed later on the Evaluators tab.",
+      "evaluatorControllerHint": "An evaluator reports to a controller who reviews their ratings. For an evaluator at the top of the organization choose \"No controller\": their evaluations are approved as soon as they submit them. The controller can be changed later on the Evaluators tab.",
       "evaluatorNeedsLinkedEmployee": "This account is not linked to an employee. Link it on the employee form before granting the evaluator role.",
       "evaluatorNotAvailableAtCreate": "The evaluator role is granted by editing the account, since it must be linked to an employee first."
     },
@@ -339,7 +342,9 @@
       "newSettings": "New settings",
       "noSettings": "No settings.",
       "selectToEdit": "Pick an evaluator from the table to change their settings.",
-      "closeEditor": "Close editor"
+      "closeEditor": "Close editor",
+      "noController": "No controller (the evaluation is final once submitted)",
+      "noControllerShort": "No controller"
     },
     "salaries": {
       "loadingEmployees": "Loading employees...",
@@ -496,6 +501,7 @@
     "finalizedResults": "{count} results finalized.",
     "evaluationSaved": "Evaluation saved.",
     "evaluationSubmitted": "Evaluation submitted to controller.",
+    "evaluationApprovedOnSubmit": "Evaluation submitted and approved.",
     "goalsPlanningSaved": "Goals, conditions, and criteria are set.",
     "copiedFromQuarter": "Copied from Q{quarter}/{year}. Update content and set goals.",
     "evaluationApproved": "Evaluation approved.",

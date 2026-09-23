@@ -201,17 +201,17 @@ Workflow statusa: `Draft` → `Submitted` → `UnderReview` → `Approved` (ili 
 - `GET /api/evaluations` — paginacija (`?page&pageSize&year&quarter&status&employeeId&evaluatorEmployeeId&organizationUnitId`)
 - `GET /api/evaluations/{id}`
 - `GET /api/evaluations/{id}/status-history`
-- `POST /api/evaluations` — ADMIN, EVALUATOR
+- `POST /api/evaluations` — EVALUATOR
 - `PUT /api/evaluations/{id}` — izmena draft-a (version obavezan)
 - `PUT /api/evaluations/{id}/goals` — zamena ciljeva (draft)
 - `PUT /api/evaluations/{id}/measures` — zamena merila (draft)
 - `PUT /api/evaluations/{id}/criteria` — zamena kriterijuma (draft)
 - `PUT /api/evaluations/{id}/conditions` — zamena uslova (draft)
 - `PUT /api/evaluations/{id}/training` — obuka/razvoj (draft)
-- `POST /api/evaluations/{id}/submit` — ADMIN, EVALUATOR
-- `POST /api/evaluations/{id}/start-review` — ADMIN, CONTROLLER
-- `POST /api/evaluations/{id}/approve` — ADMIN, CONTROLLER
-- `POST /api/evaluations/{id}/return-for-revision` — ADMIN, CONTROLLER
+- `POST /api/evaluations/{id}/submit` — EVALUATOR; ocena ocenjivača bez kontrolora je odmah odobrena
+- `POST /api/evaluations/{id}/start-review` — CONTROLLER
+- `POST /api/evaluations/{id}/approve` — CONTROLLER
+- `POST /api/evaluations/{id}/return-for-revision` — CONTROLLER
 
 Svaka izmena zahteva `version` za optimističko zaključavanje. Prosek se računa automatski pri čuvanju ciljeva/merila i pri submit-u.
 
@@ -219,12 +219,12 @@ Svaka izmena zahteva `version` za optimističko zaključavanje. Prosek se račun
 
 ### Podešavanja ocenjivača (dodeljeni kontrolor)
 
-Podešavanja nastaju dodelom uloge `EVALUATOR` i nose samo kontrolora ocenjivača. Opsezi ocena i preporučeni udeli su zajednički za celu organizaciju i podešavaju se na opisnim ocenama.
+Podešavanja nastaju dodelom uloge `EVALUATOR` i nose samo kontrolora ocenjivača. Ocenjivač na vrhu organizacije može biti **bez kontrolora**: njegove ocene niko ne kontroliše, pa su odobrene čim ih pošalje. Ocenjivač ne može biti sam sebi kontrolor, a kontrolor ne može kontrolisati ocenjivača koji ocenjuje njega (niko ne odobrava sopstvenu ocenu). Opsezi ocena i preporučeni udeli su zajednički za celu organizaciju i podešavaju se na opisnim ocenama.
 
 - `GET /api/evaluator-settings` — ADMIN (lista svih)
 - `GET /api/evaluator-settings/me` — EVALUATOR (sopstvena podešavanja)
 - `GET /api/evaluator-settings/{employeeId}` — ADMIN ili evaluator (samo svoj `employeeId`)
-- `PUT /api/evaluator-settings/{employeeId}` — ADMIN — body: `{ "controllerEmployeeId": 5 }`
+- `PUT /api/evaluator-settings/{employeeId}` — ADMIN — body: `{ "controllerEmployeeId": 5 }` ili `{ "controllerEmployeeId": null }` (bez kontrolora)
 
 ### Povezivanje korisnika sa zaposlenim
 - `PUT /api/employees/{id}/user` — ADMIN — body: `{ "userId": 2 }` ili `{ "userId": null }`
@@ -234,7 +234,7 @@ Podešavanja nastaju dodelom uloge `EVALUATOR` i nose samo kontrolora ocenjivač
 ### Role-based pristup ocenama
 | Uloga | Pristup |
 |-------|---------|
-| `ADMIN` | pun pristup |
+| `ADMIN` | vidi sve ocene, ali ne učestvuje u toku: ne kreira, ne menja, ne šalje, ne odobrava i ne vraća ocene |
 | `EVALUATOR` | vidi/uređuje ocene gde je dodeljen kao ocenjivač |
 | `CONTROLLER` | vidi/review/approve ocene gde je dodeljen kao kontroler; može vratiti na doradu |
 | `EMPLOYEE` | read-only sopstvene ocene |

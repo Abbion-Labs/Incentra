@@ -11,6 +11,7 @@ import { LoadingEmpty } from '../../components/common/LoadingEmpty';
 import { FormSection } from '../../components/forms/FormSection';
 import { TextListEditor } from '../../components/forms/TextListEditor';
 import { AppLayout } from '../../components/AppLayout';
+import { useAuth } from '../../auth/AuthContext';
 import { useLookups, useToast, useUnsavedChangesGuard } from '../../hooks';
 import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import {
@@ -49,7 +50,9 @@ export function GoalsPlanningPage() {
   const [evaluatorComment, setEvaluatorComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  const editable = evaluation?.status === 'Draft';
+  const { activeRole } = useAuth();
+  // Nacrt menja samo ocenjivač; admin ga samo gleda.
+  const editable = evaluation?.status === 'Draft' && activeRole === 'EVALUATOR';
   const goalsLocked = evaluation ? isGoalsPlanningComplete(evaluation) : false;
   const canEditPlanning = editable && !goalsLocked;
 

@@ -74,6 +74,6 @@ internal static class HrMappings
             EmployeeId = entity.EmployeeId,
             EmployeeFullName = entity.Employee.FullName,
             ControllerEmployeeId = entity.ControllerEmployeeId,
-            ControllerFullName = entity.Controller.FullName
+            ControllerFullName = entity.Controller?.FullName
         };
 }

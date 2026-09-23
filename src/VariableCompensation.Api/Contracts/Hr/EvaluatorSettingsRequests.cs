@@ -2,7 +2,8 @@ namespace VariableCompensation.Api.Contracts.Hr;
 
 public sealed class UpdateEvaluatorSettingsRequest
 {
-    public long ControllerEmployeeId { get; init; }
+    /// <summary>Null for an evaluator whose evaluations need no review.</summary>
+    public long? ControllerEmployeeId { get; init; }
 }
 
 public sealed class LinkEmployeeUserRequest

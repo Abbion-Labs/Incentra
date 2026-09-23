@@ -10,6 +10,7 @@ import { SubmitEvaluationPanel } from '../../components/evaluation/SubmitEvaluat
 import { TrainingSection } from '../../components/evaluation/TrainingSection';
 import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import { AppLayout } from '../../components/AppLayout';
+import { useAuth } from '../../auth/AuthContext';
 import {
   useEvaluation,
   useLookups,
@@ -59,7 +60,11 @@ export function EvaluationEditorPage() {
   const [conditionsNotMetComment, setConditionsNotMetComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  const editable = evaluation?.status === 'Draft';
+  const { activeRole } = useAuth();
+  // Nacrt menja samo ocenjivač; admin ga samo gleda.
+  const editable = evaluation?.status === 'Draft' && activeRole === 'EVALUATOR';
+  // Ocenjivač bez kontrolora: poslata ocena je odmah odobrena.
+  const approvesOnSubmit = evaluation?.controllerEmployeeId == null;
   const notRatedLevelId = findNotRatedLevelId(ratingLevels);
 
   const markDirty = useCallback(() => {
@@ -329,7 +334,14 @@ export function EvaluationEditorPage() {
       );
       setEvaluation(updated);
       setIsDirty(false);
-      toast.success(formatMessage({ id: 'alerts.evaluationSubmitted' }));
+      toast.success(
+        formatMessage({
+          id:
+            updated.status === 'Approved'
+              ? 'alerts.evaluationApprovedOnSubmit'
+              : 'alerts.evaluationSubmitted',
+        }),
+      );
       setConfirmSubmit(false);
     } catch (e) {
       toast.error(
@@ -519,9 +531,15 @@ export function EvaluationEditorPage() {
         <>
           <ConfirmDialog
             open={confirmSubmit}
-            title={formatMessage({ id: 'evaluation.submitToControllerTitle' })}
+            title={formatMessage({
+              id: approvesOnSubmit
+                ? 'evaluation.submitFinalTitle'
+                : 'evaluation.submitToControllerTitle',
+            })}
             message={formatMessage({
-              id: 'evaluation.submitToControllerConfirm',
+              id: approvesOnSubmit
+                ? 'evaluation.submitFinalConfirm'
+                : 'evaluation.submitToControllerConfirm',
             })}
             confirmLabel={formatMessage({ id: 'buttons.submit' })}
             busy={saving}

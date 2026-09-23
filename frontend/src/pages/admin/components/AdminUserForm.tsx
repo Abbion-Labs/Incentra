@@ -1,6 +1,7 @@
 import type { AdminUser, Employee } from '../../../api/types';
 import { useIntl } from '../../../i18n';
 import { roleLabel } from '../../../utils/status';
+import { NO_CONTROLLER } from '../evaluatorController';
 
 const ROLE_ORDER = [
   'EMPLOYEE',
@@ -215,6 +216,9 @@ export function AdminUserForm({
             required
           >
             <option value="">--</option>
+            <option value={NO_CONTROLLER}>
+              {formatMessage({ id: 'admin.evaluatorSettings.noController' })}
+            </option>
             {controllerOptions.map((employee) => (
               <option key={employee.id} value={employee.id}>
                 {employee.fullName}

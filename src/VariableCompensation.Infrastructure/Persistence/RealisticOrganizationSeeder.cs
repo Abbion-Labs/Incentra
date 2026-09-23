@@ -339,7 +339,8 @@ internal static class RealisticOrganizationSeeder
         }
 
         var controllerEmployeeIds = settings
-            .Select(s => s.ControllerEmployeeId)
+            .Where(s => s.ControllerEmployeeId is not null)
+            .Select(s => s.ControllerEmployeeId!.Value)
             .Distinct()
             .ToList();
 

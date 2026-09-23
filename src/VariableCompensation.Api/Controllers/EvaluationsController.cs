@@ -72,7 +72,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> Create([FromBody] CreateEvaluationRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
@@ -85,7 +85,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> UpdateDraft(long id, [FromBody] UpdateEvaluationDraftRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
@@ -96,7 +96,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}/planning-draft")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> SavePlanningDraft(long id, [FromBody] SaveEvaluationPlanningDraftRequest request, CancellationToken cancellationToken)
     {
         var goals = request.Goals.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder)).ToList();
@@ -119,7 +119,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}/rating-draft")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> SaveRatingDraft(long id, [FromBody] SaveEvaluationRatingDraftRequest request, CancellationToken cancellationToken)
     {
         var goals = request.Goals?.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder)).ToList();
@@ -150,7 +150,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}/goals")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> ReplaceGoals(long id, [FromBody] ReplaceEvaluationGoalsRequest request, CancellationToken cancellationToken)
     {
         var goals = request.Goals.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder)).ToList();
@@ -159,7 +159,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}/measures")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> ReplaceMeasures(long id, [FromBody] ReplaceEvaluationMeasuresRequest request, CancellationToken cancellationToken)
     {
         var measures = request.Measures.Select(m => new EvaluationMeasureItem(
@@ -169,7 +169,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}/criteria")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> ReplaceCriteria(long id, [FromBody] ReplaceEvaluationCriteriaRequest request, CancellationToken cancellationToken)
     {
         var criteria = request.Criteria.Select(c => new EvaluationCriterionItem(c.Description, c.SortOrder)).ToList();
@@ -178,7 +178,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}/conditions")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> ReplaceConditions(long id, [FromBody] ReplaceEvaluationConditionsRequest request, CancellationToken cancellationToken)
     {
         var conditions = request.Conditions.Select(c => new EvaluationConditionItem(c.Description, c.SortOrder)).ToList();
@@ -187,7 +187,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPut("{id:long}/training")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> UpsertTraining(long id, [FromBody] UpsertEvaluationTrainingRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
@@ -204,7 +204,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPost("{id:long}/submit")]
-    [Authorize(Roles = "ADMIN,EVALUATOR")]
+    [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> Submit(long id, [FromBody] EvaluationVersionRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(new SubmitEvaluationCommand(id, request.Version), cancellationToken);
@@ -212,7 +212,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPost("{id:long}/start-review")]
-    [Authorize(Roles = "ADMIN,CONTROLLER")]
+    [Authorize(Roles = "CONTROLLER")]
     public async Task<IActionResult> StartReview(long id, [FromBody] EvaluationVersionRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(new StartReviewEvaluationCommand(id, request.Version), cancellationToken);
@@ -220,7 +220,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPost("{id:long}/approve")]
-    [Authorize(Roles = "ADMIN,CONTROLLER")]
+    [Authorize(Roles = "CONTROLLER")]
     public async Task<IActionResult> Approve(long id, [FromBody] ApproveEvaluationRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(new ApproveEvaluationCommand(id, request.Version, request.ControllerComment), cancellationToken);
@@ -228,7 +228,7 @@ public sealed class EvaluationsController : ControllerBase
     }
 
     [HttpPost("{id:long}/return-for-revision")]
-    [Authorize(Roles = "ADMIN,CONTROLLER")]
+    [Authorize(Roles = "CONTROLLER")]
     public async Task<IActionResult> ReturnForRevision(long id, [FromBody] ReturnEvaluationForRevisionRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(

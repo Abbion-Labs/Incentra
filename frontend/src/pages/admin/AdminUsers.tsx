@@ -11,6 +11,7 @@ import {
   type UserFormValues,
 } from './components/AdminUserForm';
 import { AdminPageHeader } from './components/AdminPageHeader';
+import { controllerIdFromForm } from './evaluatorController';
 import { roleLabel } from '../../utils/status';
 import { useToast } from '../../hooks';
 
@@ -94,9 +95,9 @@ export function AdminUsers() {
           email: formValues.email.trim(),
           isActive: formValues.isActive,
           roleCodes: formValues.roleCodes,
-          controllerEmployeeId: formValues.controllerEmployeeId
-            ? Number(formValues.controllerEmployeeId)
-            : null,
+          controllerEmployeeId: controllerIdFromForm(
+            formValues.controllerEmployeeId,
+          ),
         });
         if (formValues.password.trim()) {
           await api.put(`/api/users/${editingUser.id}/password`, {

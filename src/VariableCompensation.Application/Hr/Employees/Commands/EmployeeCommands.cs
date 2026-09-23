@@ -229,6 +229,13 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
         if (evaluatorChanged && request.EvaluatorEmployeeId is { } newEvaluatorId)
         {
             var controllerId = await this.evaluationRepository.GetControllerEmployeeIdAsync(newEvaluatorId, cancellationToken);
+
+            // The employee reviews this evaluator, so they would end up reviewing their own evaluations.
+            if (controllerId == request.Id)
+            {
+                return Result.Failure<EmployeeResponse>(ErrorCodes.ControllerRatedByEvaluator);
+            }
+
             var drafts = await this.evaluationRepository.GetForUpdateByEmployeeAsync(
                 request.Id,
                 EvaluationStatus.Draft,
