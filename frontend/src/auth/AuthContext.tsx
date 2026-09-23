@@ -25,7 +25,10 @@ interface AuthContextValue {
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
-  hasRole: (...roles: string[]) => boolean;
+  /** Uloga u kojoj sesija radi; stiže sa servera, iz tokena. */
+  activeRole: string | null;
+  /** Prelazak u drugu korisnikovu ulogu; server izdaje novu sesiju samo za nju. */
+  selectRole: (role: string) => Promise<void>;
   updateEmployeeProfile: (
     patch: Partial<
       Pick<
@@ -124,6 +127,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionChannel.current?.announce('signed-in');
   }, []);
 
+  const selectRole = useCallback(async (role: string) => {
+    const response = await api.post<AuthResponse>('/api/auth/select-role', {
+      roleCode: role,
+    });
+    setAccessToken(response.accessToken);
+    setUser(response.user);
+    // Sesija koju su ostali tabovi koristili je završena; kolačić sada nosi novu.
+    sessionChannel.current?.announce('signed-in');
+  }, []);
+
   const logout = useCallback(() => {
     revokeRefreshToken();
     clearToken();
@@ -131,10 +144,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionChannel.current?.announce('signed-out');
   }, []);
 
-  const hasRole = useCallback(
-    (...roles: string[]) => roles.some((r) => user?.roles.includes(r) ?? false),
-    [user],
-  );
+  const activeRole = user?.activeRole ?? null;
 
   const value = useMemo(
     () => ({
@@ -142,7 +152,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       login,
       logout,
-      hasRole,
+      activeRole,
+      selectRole,
       updateEmployeeProfile,
       updateNotificationPreferences,
     }),
@@ -151,7 +162,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       loading,
       login,
       logout,
-      hasRole,
+      activeRole,
+      selectRole,
       updateEmployeeProfile,
       updateNotificationPreferences,
     ],

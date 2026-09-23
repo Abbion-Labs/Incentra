@@ -14,7 +14,14 @@
     "controllerEvaluators": "Moji ocenjivači",
     "employeeEvaluations": "Moje ocene",
     "adminCrud": "CRUD",
-    "adminVariableCompensation": "Varijabila"
+    "adminVariableCompensation": "Varijabila",
+    "activeRole": "Aktivna uloga"
+  },
+  "roleSwitch": {
+    "pageNeedsRole": "Ova stranica pripada ulozi {role}, a vi trenutno radite u drugoj.",
+    "action": "Pređi u ulogu {role}",
+    "inProgress": "Prelazak u drugu ulogu...",
+    "failed": "Prelazak u drugu ulogu nije uspeo."
   },
   "buttons": {
     "save": "Sačuvaj",

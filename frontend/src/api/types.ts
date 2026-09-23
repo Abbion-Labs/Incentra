@@ -2,6 +2,8 @@ export interface UserProfile {
   id: number;
   email: string;
   roles: string[];
+  /** Uloga u kojoj sesija radi; token nosi samo nju. */
+  activeRole: string | null;
   employeeId: number | null;
   employeeFullName: string | null;
   employeeFirstName: string | null;
@@ -101,6 +103,8 @@ export interface EvaluationStatusHistoryEntry {
   fromStatus: string | null;
   toStatus: string;
   changedByUserId: number;
+  /** Uloga u kojoj je korisnik radio kada je promenio status. */
+  changedByRoleCode: string | null;
   comment: string | null;
   changedAt: string;
 }

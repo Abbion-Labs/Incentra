@@ -1,11 +1,17 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import type { CSSProperties } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useIntl } from '../i18n';
 import { BrandMark } from './BrandMark';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import type { ActiveRoleNavigationState } from './ProtectedRoute';
 import { roleLabel } from '../utils/status';
-import { sortNavByGroup, type NavGroup } from '../utils/homeNavigation';
+import {
+  homePathForRole,
+  sortNavByGroup,
+  switchableRoles,
+  type NavGroup,
+} from '../utils/homeNavigation';
 import { SidebarNavIcon, type SidebarNavIconName } from './SidebarNavIcon';
 import { TopbarUserAvatar } from './common/TopbarUserAvatar';
 
@@ -113,16 +119,28 @@ export function AppLayout({
   title: string;
   children: React.ReactNode;
 }) {
-  const { user, logout, hasRole } = useAuth();
+  const { user, logout, activeRole } = useAuth();
   const { formatMessage } = useIntl();
   const location = useLocation();
+  const navigate = useNavigate();
 
   const visibleNav = sortNavByGroup(
-    navItems.filter((item) => item.roles.some((r) => hasRole(r))),
+    navItems.filter(
+      (item) => activeRole !== null && item.roles.includes(activeRole),
+    ),
   );
-  const roleSummary = user?.roles
-    .map((role) => roleLabel(role, formatMessage))
-    .join(', ');
+  const roleOptions = user ? switchableRoles(user.roles) : [];
+  const showRoleSwitch = roleOptions.length > 1 && activeRole !== null;
+  const activeRoleLabel = activeRole
+    ? roleLabel(activeRole, formatMessage)
+    : null;
+
+  // Prvo navigacija, pa promena uloge na početnoj stranici te uloge. Tako
+  // upozorenje o nesačuvanim izmenama stigne pre nego što se sesija promeni.
+  function switchRole(role: string) {
+    const state: ActiveRoleNavigationState = { switchingTo: role };
+    navigate(homePathForRole(role) ?? '/', { state });
+  }
   const showSidebar = visibleNav.length > 1;
   const shellStyle = {
     '--sidebar-width': showSidebar ? SIDEBAR_WIDTH : '0px',
@@ -153,6 +171,21 @@ export function AppLayout({
           <LocaleSwitcher />
         </div>
         <div className="topbar-meta">
+          {showRoleSwitch && (
+            <select
+              className="topbar-role-switch"
+              value={activeRole ?? ''}
+              onChange={(e) => switchRole(e.target.value)}
+              aria-label={formatMessage({ id: 'navigation.activeRole' })}
+              title={formatMessage({ id: 'navigation.activeRole' })}
+            >
+              {roleOptions.map((role) => (
+                <option key={role} value={role}>
+                  {roleLabel(role, formatMessage)}
+                </option>
+              ))}
+            </select>
+          )}
           {user && (
             <Link
               to="/account"
@@ -164,8 +197,8 @@ export function AppLayout({
                 <span className="topbar-user__name">
                   {user.employeeFullName ?? user.email}
                 </span>
-                {roleSummary && (
-                  <span className="topbar-user__role">{roleSummary}</span>
+                {activeRoleLabel && !showRoleSwitch && (
+                  <span className="topbar-user__role">{activeRoleLabel}</span>
                 )}
               </div>
             </Link>
