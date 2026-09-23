@@ -8,6 +8,12 @@ public sealed class UserProfileResponse
 
     public IReadOnlyList<string> Roles { get; init; } = Array.Empty<string>();
 
+    /// <summary>
+    /// The role the session works in, one of <see cref="Roles"/>. Null only for
+    /// a user without roles.
+    /// </summary>
+    public string? ActiveRole { get; init; }
+
     public long? EmployeeId { get; init; }
 
     public string? EmployeeFullName { get; init; }

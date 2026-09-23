@@ -121,6 +121,7 @@ internal sealed class EvaluationStatusHistoryConfiguration : IEntityTypeConfigur
         builder.HasKey(x => x.Id);
         builder.Property(x => x.FromStatus).HasMaxLength(30);
         builder.Property(x => x.ToStatus).HasMaxLength(30).IsRequired();
+        builder.Property(x => x.ChangedByRoleCode).HasMaxLength(50);
         builder.HasOne(x => x.Evaluation).WithMany(x => x.StatusHistory).HasForeignKey(x => x.EvaluationId).OnDelete(DeleteBehavior.Cascade);
     }
 }

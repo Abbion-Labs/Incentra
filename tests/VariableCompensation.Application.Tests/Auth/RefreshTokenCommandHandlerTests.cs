@@ -2,10 +2,12 @@ using FluentAssertions;
 using Microsoft.Extensions.Logging.Abstractions;
 using NSubstitute;
 using VariableCompensation.Application.Abstractions.Auth;
+using VariableCompensation.Application.Auth;
 using VariableCompensation.Application.Auth.Commands.Login;
 using VariableCompensation.Application.Auth.Commands.RefreshToken;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Identity;
+using VariableCompensation.Domain.Enums;
 using VariableCompensation.Testing.Common.Fakes;
 
 namespace VariableCompensation.Application.Tests.Auth;
@@ -35,7 +37,7 @@ public class RefreshTokenCommandHandlerTests
 
         this.handler = new RefreshTokenCommandHandler(
             this.userRepository,
-            new FakeEmployeeRepository(),
+            new AuthSessionIssuer(this.userRepository, new FakeEmployeeRepository(), this.jwtTokenService),
             this.jwtTokenService,
             this.time,
             NullLogger<RefreshTokenCommandHandler>.Instance);
@@ -150,10 +152,70 @@ public class RefreshTokenCommandHandlerTests
         result.Error.Should().Be(ErrorCodes.RefreshTokenInvalid);
     }
 
+    [Fact]
+    public async Task Handle_KeepsTheRoleTheSessionWorksIn()
+    {
+        this.userRepository.Users[1] = AuthTestUsers.WithRoles(
+            1,
+            "user@local.dev",
+            RoleCodes.Evaluator,
+            RoleCodes.Controller);
+        this.AddToken("plain", activeRole: RoleCodes.Controller);
+
+        var result = await this.RefreshAsync("plain");
+
+        result.Value.User.ActiveRole.Should().Be(RoleCodes.Controller);
+        this.jwtTokenService.Received(1).GenerateAccessToken(
+            Arg.Any<User>(),
+            Arg.Is<IEnumerable<string>>(roles => roles.SequenceEqual(new[] { RoleCodes.Controller })),
+            Arg.Any<Guid>());
+        this.FindToken("issued-1").ActiveRoleCode.Should().Be(RoleCodes.Controller);
+    }
+
+    [Fact]
+    public async Task Handle_DoesNotOverwriteTheRoleTheAccountLastChose()
+    {
+        var user = AuthTestUsers.WithRoles(1, "user@local.dev", RoleCodes.Evaluator, RoleCodes.Controller);
+        user.LastActiveRoleCode = RoleCodes.Controller;
+        this.userRepository.Users[1] = user;
+        this.AddToken("plain", activeRole: RoleCodes.Evaluator);
+
+        var result = await this.RefreshAsync("plain");
+
+        result.Value.User.ActiveRole.Should().Be(RoleCodes.Evaluator);
+        this.userRepository.Users[1].LastActiveRoleCode.Should().Be(RoleCodes.Controller);
+    }
+
+    [Fact]
+    public async Task Handle_RoleOfTheSessionWasTakenAway_FallsBackToARoleTheUserHolds()
+    {
+        this.userRepository.Users[1] = AuthTestUsers.WithRoles(1, "user@local.dev", RoleCodes.Employee);
+        this.AddToken("plain", activeRole: RoleCodes.Controller);
+
+        var result = await this.RefreshAsync("plain");
+
+        result.Value.User.ActiveRole.Should().Be(RoleCodes.Employee);
+    }
+
+    [Fact]
+    public async Task Handle_SessionFromBeforeTheRoleWasCarried_GetsTheLastOrFirstRole()
+    {
+        this.userRepository.Users[1] = AuthTestUsers.WithRoles(
+            1,
+            "user@local.dev",
+            RoleCodes.Admin,
+            RoleCodes.Evaluator);
+        this.AddToken("plain", activeRole: null);
+
+        var result = await this.RefreshAsync("plain");
+
+        result.Value.User.ActiveRole.Should().Be(RoleCodes.Evaluator);
+    }
+
     private Task<CSharpFunctionalExtensions.Result<Application.Auth.Models.AuthResponse>> RefreshAsync(string plain) =>
         this.handler.Handle(new RefreshTokenCommand(plain), CancellationToken.None);
 
-    private RefreshToken AddToken(string plain, Guid? sessionId = null)
+    private RefreshToken AddToken(string plain, Guid? sessionId = null, string? activeRole = null)
     {
         var token = new RefreshToken
         {
@@ -161,6 +223,7 @@ public class RefreshTokenCommandHandlerTests
             SessionId = sessionId ?? this.sessionId,
             TokenHash = LoginCommandHandler.HashToken(plain),
             ExpiresAt = this.Now.AddDays(7),
+            ActiveRoleCode = activeRole,
         };
         this.userRepository.RefreshTokens.Add(token);
         return token;

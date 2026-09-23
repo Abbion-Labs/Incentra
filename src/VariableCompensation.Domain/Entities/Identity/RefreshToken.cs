@@ -17,6 +17,12 @@ public class RefreshToken
     /// </summary>
     public Guid SessionId { get; set; }
 
+    /// <summary>
+    /// The role the session works in. A refreshed access token keeps carrying only this role, so a user with
+    /// several roles stays in the one they are working in until they switch or sign in again.
+    /// </summary>
+    public string? ActiveRoleCode { get; set; }
+
     public DateTime ExpiresAt { get; set; }
 
     /// <summary>

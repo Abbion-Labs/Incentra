@@ -1,4 +1,4 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
@@ -42,6 +42,7 @@ public sealed class GetCurrentUserQueryHandler : IRequestHandler<GetCurrentUserQ
 
         var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
         var employee = await this.employeeRepository.FindByUserIdAsync(user.Id, cancellationToken);
-        return Result.Success(UserProfileMapper.Map(user, roles, employee));
+        return Result.Success(
+            UserProfileMapper.Map(user, roles, employee, this.currentUserService.ActiveRole));
     }
 }

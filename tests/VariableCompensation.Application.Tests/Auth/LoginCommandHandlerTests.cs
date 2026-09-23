@@ -2,9 +2,11 @@ using FluentAssertions;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using VariableCompensation.Application.Abstractions.Auth;
+using VariableCompensation.Application.Auth;
 using VariableCompensation.Application.Auth.Commands.Login;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Identity;
+using VariableCompensation.Domain.Enums;
 using VariableCompensation.Infrastructure.Auth;
 using VariableCompensation.Testing.Common.Fakes;
 
@@ -37,9 +39,8 @@ public class LoginCommandHandlerTests
 
         this.handler = new LoginCommandHandler(
             this.userRepository,
-            new FakeEmployeeRepository(),
             this.passwordHasher,
-            this.jwtTokenService,
+            new AuthSessionIssuer(this.userRepository, new FakeEmployeeRepository(), this.jwtTokenService),
             limiter);
     }
 
@@ -119,5 +120,50 @@ public class LoginCommandHandlerTests
         result.IsSuccess.Should().BeTrue();
         this.userRepository.RefreshTokens.Should().NotContain(expired);
         this.userRepository.RefreshTokens.Should().Contain([active, otherUsersExpired]);
+    }
+
+    [Fact]
+    public async Task Handle_SignsInToTheRoleTheAccountLastWorkedIn()
+    {
+        var user = AuthTestUsers.WithRoles(1, "user@local.dev", RoleCodes.Evaluator, RoleCodes.Controller);
+        user.LastActiveRoleCode = RoleCodes.Controller;
+        this.userRepository.Users[1] = user;
+
+        var result = await this.handler.Handle(new LoginCommand("user@local.dev", "correct"), CancellationToken.None);
+
+        result.Value.User.ActiveRole.Should().Be(RoleCodes.Controller);
+        this.jwtTokenService.Received(1).GenerateAccessToken(
+            Arg.Any<User>(),
+            Arg.Is<IEnumerable<string>>(roles => roles.SequenceEqual(new[] { RoleCodes.Controller })),
+            Arg.Any<Guid>());
+        this.userRepository.RefreshTokens.Single().ActiveRoleCode.Should().Be(RoleCodes.Controller);
+    }
+
+    [Fact]
+    public async Task Handle_WithoutALastRole_SignsInToTheFirstRoleByPriority()
+    {
+        this.userRepository.Users[1] = AuthTestUsers.WithRoles(
+            1,
+            "user@local.dev",
+            RoleCodes.Admin,
+            RoleCodes.Controller);
+
+        var result = await this.handler.Handle(new LoginCommand("user@local.dev", "correct"), CancellationToken.None);
+
+        result.Value.User.ActiveRole.Should().Be(RoleCodes.Controller);
+        // Signing in reads the last role; only choosing a role writes it.
+        this.userRepository.Users[1].LastActiveRoleCode.Should().BeNull();
+    }
+
+    [Fact]
+    public async Task Handle_LastRoleTakenAway_SignsInToARoleTheUserStillHolds()
+    {
+        var user = AuthTestUsers.WithRoles(1, "user@local.dev", RoleCodes.Evaluator);
+        user.LastActiveRoleCode = RoleCodes.Payroll;
+        this.userRepository.Users[1] = user;
+
+        var result = await this.handler.Handle(new LoginCommand("user@local.dev", "correct"), CancellationToken.None);
+
+        result.Value.User.ActiveRole.Should().Be(RoleCodes.Evaluator);
     }
 }
