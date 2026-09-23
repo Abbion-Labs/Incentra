@@ -99,7 +99,7 @@ public sealed class EvaluationsController : ControllerBase
     [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> SavePlanningDraft(long id, [FromBody] SaveEvaluationPlanningDraftRequest request, CancellationToken cancellationToken)
     {
-        var goals = request.Goals.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder)).ToList();
+        var goals = request.Goals.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder, g.Id)).ToList();
         var conditions = request.Conditions.Select(c => new EvaluationConditionItem(c.Description, c.SortOrder)).ToList();
         var criteria = request.Criteria.Select(c => new EvaluationCriterionItem(c.Description, c.SortOrder)).ToList();
         var result = await this.mediator.Send(
@@ -122,7 +122,7 @@ public sealed class EvaluationsController : ControllerBase
     [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> SaveRatingDraft(long id, [FromBody] SaveEvaluationRatingDraftRequest request, CancellationToken cancellationToken)
     {
-        var goals = request.Goals?.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder)).ToList();
+        var goals = request.Goals?.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder, g.Id)).ToList();
         var measures = request.Measures?.Select(m => new EvaluationMeasureItem(
             m.MeasureTypeId, m.RatingComment, m.RatingLevelId, m.SortOrder)).ToList();
         EvaluationTrainingDraftItem? training = request.Training is null
@@ -153,7 +153,7 @@ public sealed class EvaluationsController : ControllerBase
     [Authorize(Roles = "EVALUATOR")]
     public async Task<IActionResult> ReplaceGoals(long id, [FromBody] ReplaceEvaluationGoalsRequest request, CancellationToken cancellationToken)
     {
-        var goals = request.Goals.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder)).ToList();
+        var goals = request.Goals.Select(g => new EvaluationGoalItem(g.Description, g.RatingLevelId, g.Comment, g.Weight, g.SortOrder, g.Id)).ToList();
         var result = await this.mediator.Send(new ReplaceEvaluationGoalsCommand(id, request.Version, goals), cancellationToken);
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
     }

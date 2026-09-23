@@ -203,7 +203,7 @@ Workflow statusa: `Draft` → `Submitted` → `UnderReview` → `Approved` (ili 
 - `GET /api/evaluations/{id}/status-history`
 - `POST /api/evaluations` — EVALUATOR
 - `PUT /api/evaluations/{id}` — izmena draft-a (version obavezan)
-- `PUT /api/evaluations/{id}/goals` — zamena ciljeva (draft)
+- `PUT /api/evaluations/{id}/goals` — zamena ciljeva dok plan nije postavljen; posle toga samo ocena i komentar postojećih ciljeva (po `id`)
 - `PUT /api/evaluations/{id}/measures` — zamena merila (draft)
 - `PUT /api/evaluations/{id}/criteria` — zamena kriterijuma (draft)
 - `PUT /api/evaluations/{id}/conditions` — zamena uslova (draft)
@@ -345,7 +345,7 @@ Korisnik sa više uloga vidi sve stavke menija za uloge koje poseduje (npr. `ADM
 
 ### Tok ocenjivanja u UI
 
-1. **Postavljanje ciljeva** (`/evaluator/goals`) — razgovor, ciljevi, uslovi i kriterijumi; automatsko čuvanje nacrta
+1. **Postavljanje ciljeva** (`/evaluator/goals`) — razgovor, ciljevi, uslovi i kriterijumi; čuvanjem se plan zaključava: posle toga se ciljevi, uslovi i kriterijumi više ne menjaju, ni posle vraćanja na doradu
 2. **Ocenjivanje** (`/evaluator/evaluations/:id`) — ocene ciljeva, merila, obuka, slanje kontroloru
 3. **Kontrolor** (`/controller/evaluations/:id`) — odobrenje ili vraćanje na doradu
 4. **Zaposleni** (`/employee`) — pregled ocena po statusu (neocenjene, vraćene, poslate, odobrene); filter po godini i kvartalu (uključujući „Svi kvartali“)

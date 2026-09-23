@@ -19,19 +19,6 @@ public static class EvaluationPlanningRules
     public static bool IsGoalsPlanningComplete(EvaluationEntity evaluation) =>
         HasDefinedGoals(evaluation) && HasDefinedConditions(evaluation) && HasDefinedCriteria(evaluation);
 
-    public static bool IsGoalsPlanningRequest(IReadOnlyList<EvaluationGoalItem> goals) =>
-        goals.Count > 0 && goals.All(g => g.RatingLevelId is null);
-
-    public static Result EnsureGoalsPlanningEditable(EvaluationEntity evaluation, IReadOnlyList<EvaluationGoalItem> goals)
-    {
-        if (IsGoalsPlanningComplete(evaluation) && IsGoalsPlanningRequest(goals))
-        {
-            return Result.Failure(ErrorCodes.GoalsPlanningLocked);
-        }
-
-        return Result.Success();
-    }
-
     public static Result EnsureConditionsPlanningEditable(EvaluationEntity evaluation)
     {
         if (IsGoalsPlanningComplete(evaluation))

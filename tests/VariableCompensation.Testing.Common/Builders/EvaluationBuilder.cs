@@ -15,6 +15,7 @@ public sealed class EvaluationBuilder
     private int version = 1;
     private readonly List<EvaluationGoal> goals = [];
     private readonly List<EvaluationMeasure> measures = [];
+    private bool agreedPlan;
     private bool conditionsFulfilled = true;
     private string? evaluatorComment;
     private string? conditionsNotMetComment;
@@ -80,6 +81,13 @@ public sealed class EvaluationBuilder
         return this;
     }
 
+    /// <summary>Adds a condition and a criterion, so that together with the goals the plan counts as set.</summary>
+    public EvaluationBuilder WithAgreedPlan()
+    {
+        this.agreedPlan = true;
+        return this;
+    }
+
     public EvaluationBuilder AddGoal(long ratingLevelId, decimal? weight = null, string description = "Goal")
     {
         this.goals.Add(new EvaluationGoal
@@ -132,6 +140,12 @@ public sealed class EvaluationBuilder
         {
             measure.EvaluationId = evaluation.Id;
             evaluation.Measures.Add(measure);
+        }
+
+        if (this.agreedPlan)
+        {
+            evaluation.Conditions.Add(new EvaluationCondition { Id = 1, EvaluationId = evaluation.Id, Description = "Uslov", SortOrder = 1 });
+            evaluation.Criteria.Add(new EvaluationCriterion { Id = 1, EvaluationId = evaluation.Id, Description = "Kriterijum", SortOrder = 1 });
         }
 
         return evaluation;

@@ -14,7 +14,8 @@ public sealed record EvaluationGoalItem(
     long? RatingLevelId,
     string? Comment,
     decimal? Weight,
-    int SortOrder);
+    int SortOrder,
+    long? Id = null);
 
 public sealed record ReplaceEvaluationGoalsCommand(long Id, int Version, IReadOnlyList<EvaluationGoalItem> Goals)
     : IRequest<Result<EvaluationDetailResponse>>;
@@ -53,48 +54,16 @@ public sealed class ReplaceEvaluationGoalsCommandHandler : IRequestHandler<Repla
 
         entity = validation.Value;
 
-        var planningLock = EvaluationPlanningRules.EnsureGoalsPlanningEditable(entity!, request.Goals);
-        if (planningLock.IsFailure)
+        var goalsResult = await EvaluationDraftMutator.ApplyGoalsAsync(
+            entity!, request.Goals, this.lookupRepository, cancellationToken);
+        if (goalsResult.IsFailure)
         {
-            return Result.Failure<EvaluationDetailResponse>(planningLock.Error);
+            return Result.Failure<EvaluationDetailResponse>(goalsResult.Error);
         }
 
         var ratingLevels = await this.lookupRepository.GetRatingLevelsAsync(cancellationToken);
-        var notRatedLevel = ratingLevels.FirstOrDefault(r => r.Value == RatingLevelRules.NotRatedValue);
-        if (notRatedLevel is null)
-        {
-            return Result.Failure<EvaluationDetailResponse>(ErrorCodes.NotRatedLevelMissing);
-        }
-
-        foreach (var item in request.Goals)
-        {
-            if (string.IsNullOrWhiteSpace(item.Description))
-            {
-                return Result.Failure<EvaluationDetailResponse>(ErrorCodes.GoalDescriptionRequired);
-            }
-
-            if (item.RatingLevelId is not null &&
-                !await this.lookupRepository.RatingLevelExistsAsync(item.RatingLevelId.Value, cancellationToken))
-            {
-                return Result.Failure<EvaluationDetailResponse>($"{ErrorCodes.RatingLevelNotFound}?id={item.RatingLevelId}");
-            }
-        }
-
-        entity!.Goals.Clear();
-        foreach (var item in request.Goals.OrderBy(g => g.SortOrder))
-        {
-            entity.Goals.Add(new EvaluationGoal
-            {
-                Description = item.Description.Trim(),
-                RatingLevelId = item.RatingLevelId ?? notRatedLevel.Id,
-                Comment = item.Comment,
-                Weight = item.Weight,
-                SortOrder = item.SortOrder
-            });
-        }
-
         var descriptiveRatings = await this.lookupRepository.GetDescriptiveRatingsAsync(cancellationToken);
-        this.scoringService.Recalculate(entity, ratingLevels, descriptiveRatings);
+        this.scoringService.Recalculate(entity!, ratingLevels, descriptiveRatings);
 
         entity.UpdatedAt = DateTime.UtcNow;
         entity.UpdatedByUserId = this.currentUserService.UserId;
