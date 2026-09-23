@@ -20,6 +20,7 @@ import {
   toTextDrafts,
   type TextItemDraft,
 } from '../../utils/goalsPlanning';
+import { roleListPath } from '../../utils/evaluationApi';
 import { fetchLatestEvaluation } from '../../utils/evaluationSave';
 import { previousQuarter } from '../../utils/status';
 import { CopyFromPreviousQuarterButton } from './components/CopyFromPreviousQuarterButton';
@@ -268,7 +269,7 @@ export function GoalsPlanningPage() {
     setCopying(true);
     try {
       const list = await api.get<PagedResult<EvaluationSummary>>(
-        `/api/evaluations?pageSize=5&year=${year}&quarter=${quarter}&employeeId=${evaluation.employeeId}`,
+        `${roleListPath('evaluations', 'evaluator')}?pageSize=5&year=${year}&quarter=${quarter}&employeeId=${evaluation.employeeId}`,
       );
       const previous = list.items[0];
       if (!previous) {
