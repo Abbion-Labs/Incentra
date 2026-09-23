@@ -14,7 +14,6 @@ public sealed record CreateCompensationParametersCommand(
     decimal MonetaryPool,
     string Currency,
     decimal AcceptablePerformanceRating,
-    decimal UpperLimitCoefficient,
     decimal DependencyWeight,
     decimal Exponent,
     bool AllowNegativeVariable) : IRequest<Result<CompensationParametersResponse>>;
@@ -41,7 +40,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
             request.MonetaryPool,
             request.Currency,
             request.AcceptablePerformanceRating,
-            request.UpperLimitCoefficient,
             request.DependencyWeight,
             request.Exponent);
         if (validation.IsFailure)
@@ -66,7 +64,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
             MonetaryPool = request.MonetaryPool,
             Currency = request.Currency.Trim().ToUpperInvariant(),
             AcceptablePerformanceRating = request.AcceptablePerformanceRating,
-            UpperLimitCoefficient = request.UpperLimitCoefficient,
             DependencyWeight = request.DependencyWeight,
             Exponent = request.Exponent,
             AllowNegativeVariable = request.AllowNegativeVariable,
@@ -85,7 +82,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
         decimal monetaryPool,
         string currency,
         decimal acceptablePerformanceRating,
-        decimal upperLimit,
         decimal dependencyWeight,
         decimal exponent)
     {
@@ -102,11 +98,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
         if (acceptablePerformanceRating < 1 || acceptablePerformanceRating > 5)
         {
             return Result.Failure(ErrorCodes.AcceptablePerformanceRatingInvalid);
-        }
-
-        if (upperLimit <= 0 || upperLimit > 1)
-        {
-            return Result.Failure(ErrorCodes.UpperLimitCoefficientInvalid);
         }
 
         if (dependencyWeight <= 0)
@@ -128,7 +119,6 @@ public sealed record UpdateCompensationParametersCommand(
     decimal MonetaryPool,
     string Currency,
     decimal AcceptablePerformanceRating,
-    decimal UpperLimitCoefficient,
     decimal DependencyWeight,
     decimal Exponent,
     bool AllowNegativeVariable,
@@ -146,7 +136,6 @@ public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler
             request.MonetaryPool,
             request.Currency,
             request.AcceptablePerformanceRating,
-            request.UpperLimitCoefficient,
             request.DependencyWeight,
             request.Exponent);
         if (validation.IsFailure)
@@ -168,7 +157,6 @@ public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler
         entity.MonetaryPool = request.MonetaryPool;
         entity.Currency = request.Currency.Trim().ToUpperInvariant();
         entity.AcceptablePerformanceRating = request.AcceptablePerformanceRating;
-        entity.UpperLimitCoefficient = request.UpperLimitCoefficient;
         entity.DependencyWeight = request.DependencyWeight;
         entity.Exponent = request.Exponent;
         entity.AllowNegativeVariable = request.AllowNegativeVariable;

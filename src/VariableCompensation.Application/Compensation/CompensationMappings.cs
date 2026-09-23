@@ -16,7 +16,6 @@ internal static class CompensationMappings
             MonetaryPool = entity.MonetaryPool,
             Currency = entity.Currency,
             AcceptablePerformanceRating = entity.AcceptablePerformanceRating,
-            UpperLimitCoefficient = entity.UpperLimitCoefficient,
             DependencyWeight = entity.DependencyWeight,
             Exponent = entity.Exponent,
             AllowNegativeVariable = entity.AllowNegativeVariable,

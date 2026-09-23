@@ -31,8 +31,6 @@ interface PreviewProfileForm {
   referenceSalaryPerPoint: string;
 }
 
-const UPPER_LIMIT_COEFFICIENT = 0.25;
-
 function paramsToForm(params: CompensationParameters): CompensationParamsForm {
   return {
     monetaryPool: String(params.monetaryPool),
@@ -216,7 +214,6 @@ export function AdminCompensation() {
         monetaryPool: Number(form.monetaryPool),
         currency: form.currency.trim().toUpperCase(),
         acceptablePerformanceRating: Number(form.acceptablePerformanceRating),
-        upperLimitCoefficient: UPPER_LIMIT_COEFFICIENT,
         dependencyWeight: Number(form.dependencyWeight),
         exponent: Number(form.exponent),
         allowNegativeVariable: form.allowNegativeVariable,

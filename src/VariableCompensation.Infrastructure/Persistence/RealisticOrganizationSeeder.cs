@@ -475,7 +475,6 @@ internal static class RealisticOrganizationSeeder
             MonetaryPool = pool,
             Currency = "RSD",
             AcceptablePerformanceRating = 2.5m,
-            UpperLimitCoefficient = 0.25m,
             DependencyWeight = 1.0m,
             Exponent = 1.5m,
             AllowNegativeVariable = false,

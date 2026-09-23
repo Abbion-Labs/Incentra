@@ -51,7 +51,6 @@
     "vn-0050": "Monetary pool must be greater than zero.",
     "vn-0051": "Currency must be a 3-letter code.",
     "vn-0052": "Acceptable performance rating must be between 1 and 5.",
-    "vn-0053": "Upper limit coefficient must be between 0 and 1.",
     "vn-0054": "Dependency weight must be greater than zero.",
     "vn-0055": "Exponent must be greater than zero.",
     "vn-0056": "Cannot update parameters with finalized results.",

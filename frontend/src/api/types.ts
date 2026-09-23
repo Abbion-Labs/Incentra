@@ -182,7 +182,6 @@ export interface CompensationParameters {
   monetaryPool: number;
   currency: string;
   acceptablePerformanceRating: number;
-  upperLimitCoefficient: number;
   dependencyWeight: number;
   exponent: number;
   allowNegativeVariable: boolean;

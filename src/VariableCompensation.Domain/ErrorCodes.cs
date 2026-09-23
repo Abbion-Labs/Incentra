@@ -51,7 +51,6 @@ public static class ErrorCodes
     public const string MonetaryPoolInvalid = "vn-0050";
     public const string CurrencyInvalid = "vn-0051";
     public const string AcceptablePerformanceRatingInvalid = "vn-0052";
-    public const string UpperLimitCoefficientInvalid = "vn-0053";
     public const string DependencyWeightInvalid = "vn-0054";
     public const string ExponentInvalid = "vn-0055";
     public const string UpdateFinalizedParametersForbidden = "vn-0056";

@@ -12,8 +12,6 @@ public sealed class CreateCompensationParametersRequest
 
     public decimal AcceptablePerformanceRating { get; init; }
 
-    public decimal UpperLimitCoefficient { get; init; } = 0.25m;
-
     public decimal DependencyWeight { get; init; }
 
     public decimal Exponent { get; init; }
@@ -28,8 +26,6 @@ public sealed class UpdateCompensationParametersRequest
     public string Currency { get; init; } = "RSD";
 
     public decimal AcceptablePerformanceRating { get; init; }
-
-    public decimal UpperLimitCoefficient { get; init; }
 
     public decimal DependencyWeight { get; init; }
 

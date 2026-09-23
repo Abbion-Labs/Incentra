@@ -45,7 +45,6 @@ function parameters(id: number, orgId: number): CompensationParameters {
     monetaryPool: 1000000,
     currency: 'EUR',
     acceptablePerformanceRating: 3,
-    upperLimitCoefficient: 0.25,
     dependencyWeight: 1,
     exponent: 1,
     allowNegativeVariable: false,
