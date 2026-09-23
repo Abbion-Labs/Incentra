@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Domain.Entities.Lookup;
 using VariableCompensation.Domain.Enums;
+using VariableCompensation.Infrastructure.Persistence;
 
 namespace VariableCompensation.Infrastructure.Persistence.Initialization;
 
@@ -108,7 +109,7 @@ public sealed class DatabaseSeeder(
             await context.SaveChangesAsync();
         }
 
-        await Persistence.RealisticOrganizationSeeder.EnsureAsync(context, encryption);
+        await RealisticOrganizationSeeder.EnsureAsync(context, encryption);
     }
 
     private static IReadOnlyList<MeasureType> CreateDefaultMeasureTypes() =>
