@@ -1,8 +1,12 @@
+using VariableCompensation.Domain.Common;
+
 namespace VariableCompensation.Domain.Entities.Lookup;
 
-public class DescriptiveRating
+public class DescriptiveRating : IVersioned
 {
     public long Id { get; set; }
+
+    public int Version { get; set; }
 
     public string Code { get; set; } = string.Empty;
 

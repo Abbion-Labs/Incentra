@@ -21,6 +21,9 @@ public sealed class CreateCompensationParametersRequest
 
 public sealed class UpdateCompensationParametersRequest
 {
+    /// <summary>The version the edit was made from. Required: an edit from an outdated copy is refused.</summary>
+    public int? Version { get; init; }
+
     public decimal MonetaryPool { get; init; }
 
     public string Currency { get; init; } = "RSD";

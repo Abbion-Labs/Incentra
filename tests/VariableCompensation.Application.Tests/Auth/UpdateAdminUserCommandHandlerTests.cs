@@ -43,7 +43,7 @@ public class UpdateAdminUserCommandHandlerTests
             new FakeRoleLookup());
 
         var result = await handler.Handle(
-            new UpdateAdminUserCommand(1, "user@local.dev", true, ["EVALUATOR", "CONTROLLER"]),
+            new UpdateAdminUserCommand(1, "user@local.dev", true, ["EVALUATOR", "CONTROLLER"], ControllerEmployeeId: null, Version: 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -80,7 +80,7 @@ public class UpdateAdminUserCommandHandlerTests
             new FakeRoleLookup());
 
         var result = await handler.Handle(
-            new UpdateAdminUserCommand(1, "user@local.dev", staysActive, ["EMPLOYEE"]),
+            new UpdateAdminUserCommand(1, "user@local.dev", staysActive, ["EMPLOYEE"], ControllerEmployeeId: null, Version: 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
@@ -100,7 +100,7 @@ public class UpdateAdminUserCommandHandlerTests
             new FakeRoleLookup());
 
         var result = await handler.Handle(
-            new UpdateAdminUserCommand(1, "user@local.dev", true, []),
+            new UpdateAdminUserCommand(1, "user@local.dev", true, [], ControllerEmployeeId: null, Version: 0),
             CancellationToken.None);
 
         result.IsFailure.Should().BeTrue();
@@ -117,7 +117,7 @@ public class UpdateAdminUserCommandHandlerTests
         userRepository.Users[1] = admin;
 
         var result = await CreateHandler(userRepository).Handle(
-            new UpdateAdminUserCommand(1, "admin@local.dev", staysActive, [remainingRole]),
+            new UpdateAdminUserCommand(1, "admin@local.dev", staysActive, [remainingRole], ControllerEmployeeId: null, Version: 0),
             CancellationToken.None);
 
         result.Error.Should().Be(ErrorCodes.LastActiveAdministrator);
@@ -133,7 +133,7 @@ public class UpdateAdminUserCommandHandlerTests
         userRepository.Users[2] = Administrator(2, "former@local.dev", isActive: false);
 
         var result = await CreateHandler(userRepository).Handle(
-            new UpdateAdminUserCommand(1, "admin@local.dev", false, ["ADMIN"]),
+            new UpdateAdminUserCommand(1, "admin@local.dev", false, ["ADMIN"], ControllerEmployeeId: null, Version: 0),
             CancellationToken.None);
 
         result.Error.Should().Be(ErrorCodes.LastActiveAdministrator);
@@ -148,7 +148,7 @@ public class UpdateAdminUserCommandHandlerTests
         userRepository.Users[2] = Administrator(2, "second@local.dev", isActive: true);
 
         var result = await CreateHandler(userRepository).Handle(
-            new UpdateAdminUserCommand(1, "admin@local.dev", true, ["EMPLOYEE"]),
+            new UpdateAdminUserCommand(1, "admin@local.dev", true, ["EMPLOYEE"], ControllerEmployeeId: null, Version: 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();

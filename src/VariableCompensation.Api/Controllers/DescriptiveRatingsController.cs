@@ -56,7 +56,8 @@ public sealed class DescriptiveRatingsController : ControllerBase
                 request.MaxAverage,
                 request.SortOrder,
                 request.RecommendedShare,
-                request.IsActive),
+                request.IsActive,
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

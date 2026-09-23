@@ -1,8 +1,12 @@
+using VariableCompensation.Domain.Common;
+
 namespace VariableCompensation.Domain.Entities.Hr;
 
-public class EvaluatorSettings
+public class EvaluatorSettings : IVersioned
 {
     public long EmployeeId { get; set; }
+
+    public int Version { get; set; }
 
     public Employee Employee { get; set; } = null!;
 

@@ -7,6 +7,7 @@ import type {
 } from '../../../api/types';
 import { useToast } from '../../../hooks';
 import { useIntl } from '../../../i18n';
+import { isEditConflict } from '../../../utils/editConflict';
 
 type LookupKind = 'org' | 'position' | 'education';
 type LookupItem = OrganizationUnit | JobPosition | EducationLevel;
@@ -50,6 +51,8 @@ export function LookupCrudPanel({
   const toast = useToast();
   const config = CONFIG[kind];
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Verzija stavke sa kojom je forma otvorena; šalje se uz izmenu.
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [name, setName] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -63,12 +66,14 @@ export function LookupCrudPanel({
 
   function resetForm() {
     setEditingId(null);
+    setEditingVersion(null);
     setName('');
     setIsActive(true);
   }
 
   function startEdit(item: LookupItem) {
     setEditingId(item.id);
+    setEditingVersion(item.version);
     setName(item.name);
     setIsActive(item.isActive);
   }
@@ -81,10 +86,15 @@ export function LookupCrudPanel({
 
       if (editingId) {
         if (kind === 'org') {
+          const existing = rows.find(
+            (item) => item.id === editingId,
+          ) as OrganizationUnit;
           await api.put(`${config.endpoint}/${editingId}`, {
             name: trimmedName,
-            code: null,
+            // Šifra se ovde ne uređuje, pa ostaje kakva jeste.
+            code: existing.code,
             isActive,
+            version: editingVersion,
           });
         } else {
           const existing = rows.find((item) => item.id === editingId) as
@@ -93,6 +103,7 @@ export function LookupCrudPanel({
             name: trimmedName,
             sortOrder: existing.sortOrder,
             isActive,
+            version: editingVersion,
           });
         }
         toast.success(formatMessage({ id: 'alerts.changesSaved' }));
@@ -111,6 +122,12 @@ export function LookupCrudPanel({
       resetForm();
       await onReload();
     } catch (err) {
+      if (isEditConflict(err)) {
+        toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+        resetForm();
+        await onReload();
+        return;
+      }
       toast.error(
         err instanceof Error
           ? err.message

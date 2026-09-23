@@ -101,4 +101,5 @@ public static class ErrorCodes
     public const string ControllerRatedByEvaluator = "vn-0103";
     public const string ControllerOwnEvaluation = "vn-0104";
     public const string LastActiveAdministrator = "vn-0105";
+    public const string VersionRequired = "vn-0106";
 }

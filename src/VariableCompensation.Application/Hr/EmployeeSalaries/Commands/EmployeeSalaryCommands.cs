@@ -3,6 +3,7 @@ using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Abstractions.Security;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Hr.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Hr;
@@ -15,7 +16,8 @@ public sealed record UpsertEmployeeSalaryCommand(
     int Points,
     decimal SalaryPerPoint,
     DateOnly EffectiveFrom,
-    string Currency = "RSD") : IRequest<Result<EmployeeSalaryResponse>>;
+    string Currency,
+    int? Version) : IRequest<Result<EmployeeSalaryResponse>>;
 
 public sealed class UpsertEmployeeSalaryCommandHandler : IRequestHandler<UpsertEmployeeSalaryCommand, Result<EmployeeSalaryResponse>>
 {
@@ -65,6 +67,22 @@ public sealed class UpsertEmployeeSalaryCommandHandler : IRequestHandler<UpsertE
         var encryptedSalaryPerPoint = this.encryptionService.EncryptDecimal(request.SalaryPerPoint);
         var currency = string.IsNullOrWhiteSpace(request.Currency) ? "RSD" : request.Currency.Trim().ToUpperInvariant();
         var current = await this.salaryRepository.FindCurrentByEmployeeIdForUpdateAsync(request.EmployeeId, cancellationToken);
+
+        // The version is the one of the salary in force the edit was made from, and absent only for an employee who
+        // had no salary yet. Two first salaries entered at once are stopped by the one-current-salary index.
+        if (current is not null)
+        {
+            var version = EditVersion.Claim(current, request.Version);
+            if (version.IsFailure)
+            {
+                return Result.Failure<EmployeeSalaryResponse>(version.Error);
+            }
+        }
+        else if (request.Version is not null)
+        {
+            return Result.Failure<EmployeeSalaryResponse>(ErrorCodes.ConcurrencyConflict);
+        }
+
         EmployeeSalary saved;
 
         if (current is null)
@@ -137,6 +155,7 @@ public sealed class UpsertEmployeeSalaryCommandHandler : IRequestHandler<UpsertE
         return Result.Success(new EmployeeSalaryResponse
         {
             Id = saved.Id,
+            Version = saved.Version,
             EmployeeId = request.EmployeeId,
             EmployeeFullName = employee.FullName,
             OrganizationUnitName = employee.OrganizationUnit?.Name ?? string.Empty,

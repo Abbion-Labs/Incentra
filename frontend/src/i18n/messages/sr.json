@@ -455,6 +455,7 @@
     "generic": "Došlo je do neočekivane greške.",
     "loadFailed": "Greška pri učitavanju.",
     "saveFailed": "Čuvanje nije uspelo.",
+    "recordChangedMeanwhile": "Zapis je u međuvremenu izmenio neko drugi. Prikazano je njegovo novo stanje; unesite svoje izmene ponovo.",
     "submitFailed": "Slanje nije uspelo.",
     "finalizeFailed": "Finalizacija nije uspela.",
     "exportFailed": "Izvoz nije uspeo.",

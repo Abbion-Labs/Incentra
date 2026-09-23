@@ -147,6 +147,18 @@ Podešavanja:
 
 U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
 
+## Istovremene izmene
+
+Svaki zapis koji se menja kroz formu (zaposleni, korisnici, podešavanja ocenjivača, organizacione jedinice, radna mesta, nivoi obrazovanja, opisne ocene, parametri kompenzacije, plate) ima polje `version`. API ga vraća uz zapis, a svaka izmena (`PUT`) mora da pošalje verziju sa koje je napravljena:
+
+- bez verzije: `400` sa `vn-0106`,
+- zapis je u međuvremenu izmenjen: `400` sa `vn-0090` (ili `409` ako su se dve izmene sudarile u istom trenutku),
+- inače izmena prolazi i verzija raste za 1.
+
+Kod plata je to verzija trenutno važeće plate, a izostavlja se samo pri unosu prve plate. Ocene imaju svoj `version` sa istim značenjem. Forma koja dobije konflikt prikazuje poruku i učitava novo stanje.
+
+Izuzeci su akcije nad jednim poljem koje ne mogu da pregaze tuđe podatke: promena lozinke, reset lozinke, obaveštenja i avatar.
+
 ## HR modul (Faza 4)
 
 Lookup podaci se seed-uju pri pokretanju (org. jedinice, radna mesta, nivoi obrazovanja).

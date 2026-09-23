@@ -184,6 +184,9 @@ public sealed class DescriptiveRatingResponse
 {
     public long Id { get; init; }
 
+    /// <summary>Sent back with an edit; see <c>IVersioned</c>.</summary>
+    public int Version { get; init; }
+
     public string Code { get; init; } = string.Empty;
 
     public string Name { get; init; } = string.Empty;

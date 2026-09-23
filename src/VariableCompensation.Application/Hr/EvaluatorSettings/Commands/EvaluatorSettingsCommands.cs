@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Evaluation.Services;
 using VariableCompensation.Application.Hr.Models;
 using EvaluatorSettingsEntity = VariableCompensation.Domain.Entities.Hr.EvaluatorSettings;
@@ -19,7 +20,8 @@ namespace VariableCompensation.Application.Hr.EvaluatorSettings.Commands;
 /// </summary>
 public sealed record UpdateEvaluatorSettingsCommand(
     long EmployeeId,
-    long? ControllerEmployeeId) : IRequest<Result<EvaluatorSettingsResponse>>;
+    long? ControllerEmployeeId,
+    int? Version) : IRequest<Result<EvaluatorSettingsResponse>>;
 
 public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<UpdateEvaluatorSettingsCommand, Result<EvaluatorSettingsResponse>>
 {
@@ -46,6 +48,12 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
         if (entity is null)
         {
             return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.EvaluatorSettingsNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<EvaluatorSettingsResponse>(version.Error);
         }
 
         var controllerCheck = await Services.ControllerRoleCheck.EnsureCanControlAsync(
@@ -82,7 +90,7 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
     }
 }
 
-public sealed record LinkEmployeeUserCommand(long EmployeeId, long? UserId) : IRequest<Result<EmployeeResponse>>;
+public sealed record LinkEmployeeUserCommand(long EmployeeId, long? UserId, int? Version) : IRequest<Result<EmployeeResponse>>;
 
 public sealed class LinkEmployeeUserCommandHandler : IRequestHandler<LinkEmployeeUserCommand, Result<EmployeeResponse>>
 {
@@ -106,6 +114,12 @@ public sealed class LinkEmployeeUserCommandHandler : IRequestHandler<LinkEmploye
         if (entity is null)
         {
             return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<EmployeeResponse>(version.Error);
         }
 
         if (request.UserId is not null)

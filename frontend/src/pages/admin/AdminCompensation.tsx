@@ -15,6 +15,7 @@ import { previewCompensationByRating } from './compensationPreview';
 import { CompensationRatingPreviewChart } from './components/CompensationRatingPreviewChart';
 import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
+import { isEditConflict } from '../../utils/editConflict';
 import { FormLabelWithHint } from './components/FormLabelWithHint';
 
 interface CompensationParamsForm {
@@ -55,6 +56,8 @@ export function AdminCompensation() {
     ...DEFAULT_PREVIEW_PROFILE,
   });
   const [existingId, setExistingId] = useState<number | null>(null);
+  // Verzija parametara sa kojom je forma učitana; šalje se uz izmenu.
+  const [existingVersion, setExistingVersion] = useState<number | null>(null);
   const [calculationStatus, setCalculationStatus] =
     useState<CompensationCalculationStatus | null>(null);
 
@@ -102,6 +105,7 @@ export function AdminCompensation() {
         if (!isLatest()) return;
         if (data.length > 0) {
           setExistingId(data[0].id);
+          setExistingVersion(data[0].version);
           setForm(paramsToForm(data[0]));
           setCalculateAllowNegative(data[0].allowNegativeVariable);
           const status = await fetchCalculationStatus(data[0].id);
@@ -109,6 +113,7 @@ export function AdminCompensation() {
           setCalculationStatus(status);
         } else {
           setExistingId(null);
+          setExistingVersion(null);
           setCalculationStatus(null);
           setForm({ ...DEFAULT_COMPENSATION_PARAMS });
           setCalculateAllowNegative(
@@ -223,6 +228,7 @@ export function AdminCompensation() {
         await api.put(`/api/compensation-parameters/${existingId}`, {
           ...payload,
           isActive: true,
+          version: existingVersion,
         });
         toast.success(formatMessage({ id: 'alerts.parametersSaved' }));
       } else {
@@ -240,6 +246,11 @@ export function AdminCompensation() {
 
       await loadParameters(organizationUnitId, year);
     } catch (err) {
+      if (isEditConflict(err)) {
+        toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+        await loadParameters(organizationUnitId, year);
+        return;
+      }
       toast.error(
         err instanceof Error
           ? err.message

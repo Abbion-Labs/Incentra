@@ -5,6 +5,7 @@ using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Auth;
 using VariableCompensation.Application.Auth.Commands.RegisterUser;
 using VariableCompensation.Application.Auth.Models;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Hr.EvaluatorSettings.Services;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Enums;
@@ -16,7 +17,8 @@ public sealed record UpdateAdminUserCommand(
     string Email,
     bool IsActive,
     IReadOnlyList<string> RoleCodes,
-    long? ControllerEmployeeId = null)
+    long? ControllerEmployeeId,
+    int? Version)
     : IRequest<Result<AdminUserListItemResponse>>;
 
 public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminUserCommand, Result<AdminUserListItemResponse>>
@@ -52,6 +54,12 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
         if (user is null)
         {
             return Result.Failure<AdminUserListItemResponse>(ErrorCodes.UserNotFound);
+        }
+
+        var version = EditVersion.Claim(user, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<AdminUserListItemResponse>(version.Error);
         }
 
         if (await this.userRepository.EmailExistsAsync(email, request.UserId, cancellationToken))
@@ -184,6 +192,7 @@ internal static class AdminUserMapper
         return new AdminUserListItemResponse
         {
             Id = user.Id,
+            Version = user.Version,
             Email = user.Email,
             Roles = user.UserRoles.Select(ur => ur.Role.Code).OrderBy(code => code).ToList(),
             IsActive = user.IsActive,

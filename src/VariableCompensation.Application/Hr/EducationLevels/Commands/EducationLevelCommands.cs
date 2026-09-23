@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Hr.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Lookup;
@@ -35,7 +36,7 @@ public sealed class CreateEducationLevelCommandHandler : IRequestHandler<CreateE
     }
 }
 
-public sealed record UpdateEducationLevelCommand(long Id, string Name, int SortOrder, bool IsActive) : IRequest<Result<EducationLevelResponse>>;
+public sealed record UpdateEducationLevelCommand(long Id, string Name, int SortOrder, bool IsActive, int? Version) : IRequest<Result<EducationLevelResponse>>;
 
 public sealed class UpdateEducationLevelCommandHandler : IRequestHandler<UpdateEducationLevelCommand, Result<EducationLevelResponse>>
 {
@@ -49,6 +50,12 @@ public sealed class UpdateEducationLevelCommandHandler : IRequestHandler<UpdateE
         if (entity is null)
         {
             return Result.Failure<EducationLevelResponse>(ErrorCodes.EducationLevelNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<EducationLevelResponse>(version.Error);
         }
 
         var name = request.Name.Trim();

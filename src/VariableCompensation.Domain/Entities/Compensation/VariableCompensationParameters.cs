@@ -1,8 +1,12 @@
+using VariableCompensation.Domain.Common;
+
 namespace VariableCompensation.Domain.Entities.Compensation;
 
-public class VariableCompensationParameters
+public class VariableCompensationParameters : IVersioned
 {
     public long Id { get; set; }
+
+    public int Version { get; set; }
 
     public long OrganizationUnitId { get; set; }
 

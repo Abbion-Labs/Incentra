@@ -59,7 +59,8 @@ public class SessionIntegrationTests
             HttpMethod.Put,
             $"/api/users/{user.Id}",
             admin.AccessToken,
-            new { email = user.Email, isActive = false, roleCodes = new[] { "EMPLOYEE" } });
+            // A new account has not been edited yet.
+            new { email = user.Email, isActive = false, roleCodes = new[] { "EMPLOYEE" }, version = 0 });
 
         deactivate.StatusCode.Should().Be(HttpStatusCode.OK);
         (await this.GetMeAsync(session.AccessToken)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);

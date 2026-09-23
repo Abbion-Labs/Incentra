@@ -55,7 +55,8 @@ public sealed class EvaluatorSettingsController : ControllerBase
         var result = await this.mediator.Send(
             new UpdateEvaluatorSettingsCommand(
                 employeeId,
-                request.ControllerEmployeeId),
+                request.ControllerEmployeeId,
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Evaluation.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Lookup;
@@ -24,7 +25,8 @@ public sealed record UpdateDescriptiveRatingCommand(
     decimal MaxAverage,
     int SortOrder,
     decimal RecommendedShare,
-    bool IsActive) : IRequest<Result<DescriptiveRatingResponse>>;
+    bool IsActive,
+    int? Version) : IRequest<Result<DescriptiveRatingResponse>>;
 
 public sealed class CreateDescriptiveRatingCommandHandler
     : IRequestHandler<CreateDescriptiveRatingCommand, Result<DescriptiveRatingResponse>>
@@ -86,6 +88,12 @@ public sealed class UpdateDescriptiveRatingCommandHandler
         if (entity is null)
         {
             return Result.Failure<DescriptiveRatingResponse>(ErrorCodes.DescriptiveRatingNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<DescriptiveRatingResponse>(version.Error);
         }
 
         var validation = await DescriptiveRatingValidation.ValidateAsync(

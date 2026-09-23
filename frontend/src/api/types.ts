@@ -38,6 +38,8 @@ export interface EvaluationBucketCounts {
 
 export interface Employee {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   firstName: string;
   lastName: string;
   fullName: string;
@@ -169,6 +171,8 @@ export interface MeasureType {
 
 export interface OrganizationUnit {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   name: string;
   code: string | null;
   isActive: boolean;
@@ -176,6 +180,8 @@ export interface OrganizationUnit {
 
 export interface CompensationParameters {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   organizationUnitId: number;
   organizationUnitName: string;
   year: number;
@@ -245,6 +251,8 @@ export interface CompensationAnalytics {
 
 export interface JobPosition {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   name: string;
   sortOrder: number;
   isActive: boolean;
@@ -252,6 +260,8 @@ export interface JobPosition {
 
 export interface EducationLevel {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   name: string;
   sortOrder: number;
   isActive: boolean;
@@ -259,6 +269,8 @@ export interface EducationLevel {
 
 export interface DescriptiveRating {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   code: string;
   name: string;
   minAverage: number | null;
@@ -270,6 +282,8 @@ export interface DescriptiveRating {
 
 export interface EvaluatorSettings {
   employeeId: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   employeeFullName: string;
   /** Null kada ocenjivač nema kontrolora i njegove ocene se ne kontrolišu. */
   controllerEmployeeId: number | null;
@@ -334,6 +348,8 @@ export interface ControllerEvaluatorSummary {
 
 export interface AdminUser {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   email: string;
   roles: string[];
   isActive: boolean;
@@ -343,6 +359,8 @@ export interface AdminUser {
 
 export interface EmployeeSalary {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   employeeId: number;
   employeeFullName: string;
   organizationUnitName: string;

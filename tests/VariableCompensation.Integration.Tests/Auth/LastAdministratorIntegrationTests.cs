@@ -42,11 +42,16 @@ public class LastAdministratorIntegrationTests
         var token = (await login.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("accessToken").GetString();
         admin.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
+        var users = await admin.GetFromJsonAsync<JsonElement>("/api/users");
+        var version = users.EnumerateArray().Single(u => u.GetProperty("id").GetInt64() == adminId)
+            .GetProperty("version").GetInt32();
+
         var response = await admin.PutAsJsonAsync($"/api/users/{adminId}", new
         {
             email = TestCredentials.AdminEmail,
             isActive,
             roleCodes = new[] { roleCode },
+            version,
         });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);

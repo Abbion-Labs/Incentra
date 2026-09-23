@@ -455,6 +455,7 @@
     "generic": "An unexpected error occurred.",
     "loadFailed": "Failed to load data.",
     "saveFailed": "Saving failed.",
+    "recordChangedMeanwhile": "The record was changed by someone else in the meantime. Its new state is shown; enter your changes again.",
     "submitFailed": "Submit failed.",
     "finalizeFailed": "Finalization failed.",
     "exportFailed": "Export failed.",

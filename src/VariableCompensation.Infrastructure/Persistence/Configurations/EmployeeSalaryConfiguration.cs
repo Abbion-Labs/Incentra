@@ -13,7 +13,11 @@ internal sealed class EmployeeSalaryConfiguration : IEntityTypeConfiguration<Emp
         builder.Property(x => x.Points).IsRequired();
         builder.Property(x => x.EncryptedSalaryPerPoint).IsRequired();
         builder.Property(x => x.Currency).HasMaxLength(3).IsRequired();
-        builder.HasIndex(x => x.EmployeeId);
+        // One current salary per employee, even when two people enter the first one at the same moment.
+        builder.HasIndex(x => x.EmployeeId)
+            .IsUnique()
+            .HasFilter("\"EffectiveTo\" IS NULL")
+            .HasDatabaseName("IX_employee_salaries_EmployeeId_current");
         builder.HasIndex(x => new { x.EmployeeId, x.EffectiveFrom });
         builder.HasOne(x => x.Employee)
             .WithMany()
