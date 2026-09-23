@@ -55,9 +55,9 @@ dotnet ef database update \
   --startup-project src/VariableCompensation.Host
 ```
 
-Migracije i seed se pokreću kroz `MigrateAndSeedAsync` pri pokretanju aplikacije. Podrazumevana `DbInit:Policy` je `OnStart`, pa lokalni razvoj inicijalizaciju izvršava pri svakom pokretanju.
+Migracije i seed se pokreću kroz `IDbInitializator`. Podrazumevana `DbInit:Policy` je `OnStart`, pa lokalni razvoj inicijalizaciju izvršava pri svakom pokretanju. `DbInit:Seed` određuje da li se nakon migracija izvršava seed.
 
-Na Vercelu je `DbInit__Policy=OnDeploy`. Tada se migracija i seed izvršavaju samo jednom za isti `VERCEL_DEPLOYMENT_ID`; ostale instance tog deployment-a proveravaju zapis u tabeli `deployment_initializations` i preskaču inicijalizaciju.
+Na Vercelu je `DbInit__Policy=OnDeploy`. `OnDeployDbInitPolicy` koristi `VERCEL_DEPLOYMENT_ID` kao identitet deployment-a i PostgreSQL store da samo jedna instanca za taj identitet dobije dozvolu za inicijalizaciju.
 
 ## pgAdmin
 
@@ -367,6 +367,7 @@ Email__Password
 Email__FromAddress
 Email__FrontendBaseUrl
 DbInit__Policy
+DbInit__Seed
 ```
 
 ### SMTP konfiguracija
