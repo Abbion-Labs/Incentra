@@ -260,10 +260,14 @@ public sealed class CompensationRepository : ICompensationRepository
     public async Task AddResultAsync(VariableCompensationResult entity, CancellationToken cancellationToken) =>
         await this.context.VariableCompensationResults.AddAsync(entity, cancellationToken);
 
-    public Task RemoveResultAsync(VariableCompensationResult entity, CancellationToken cancellationToken)
+    public async Task RemoveDraftResultsAsync(long parametersId, CancellationToken cancellationToken)
     {
-        this.context.VariableCompensationResults.Remove(entity);
-        return Task.CompletedTask;
+        var drafts = await this.context.VariableCompensationResults
+            .Include(r => r.EvaluationLinks)
+            .Where(r => r.ParametersId == parametersId && !r.IsFinal)
+            .ToListAsync(cancellationToken);
+
+        this.context.VariableCompensationResults.RemoveRange(drafts);
     }
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) =>
