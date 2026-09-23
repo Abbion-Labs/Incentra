@@ -56,16 +56,38 @@ const DESCRIPTIVE_RATING_CHART_COLOR_BY_CODE: Record<string, string> = {
   OUTSTANDING: '#059669',
 };
 
-function bandsFromRatings(ratings: DescriptiveRating[]) {
+interface RatingBand {
+  min: number;
+  max: number;
+  code: string;
+  name?: string;
+}
+
+function bandsFromRatings(ratings: DescriptiveRating[]): RatingBand[] {
   return ratings
-    .filter((r) => r.isActive && r.minAverage != null && r.maxAverage != null)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((r) => r.isActive && r.minAverage != null)
     .map((r) => ({
       min: r.minAverage!,
-      max: r.maxAverage!,
+      max: r.maxAverage ?? Number.POSITIVE_INFINITY,
       code: r.code,
       name: r.name,
     }));
+}
+
+/**
+ * Isto pravilo kao na serveru: opseg ide od svog minimuma do minimuma sledećeg,
+ * pa svaki prosek upada u tačno jedan. Maksimum važi samo za najviši opseg.
+ */
+function findBand(
+  bands: readonly RatingBand[],
+  average: number,
+): RatingBand | undefined {
+  const sorted = [...bands].sort((a, b) => a.min - b.min);
+  const reached = sorted.filter((item) => item.min <= average);
+  const band = reached[reached.length - 1];
+  if (!band) return undefined;
+  const isTopBand = band === sorted[sorted.length - 1];
+  return isTopBand && average > band.max ? undefined : band;
 }
 
 export function descriptiveRatingCodeFromName(
@@ -116,7 +138,7 @@ export function descriptiveRatingCodeFromAverage(
   ratings?: DescriptiveRating[],
 ): string | null {
   const bands = ratings?.length ? bandsFromRatings(ratings) : FALLBACK_BANDS;
-  const band = bands.find((item) => average >= item.min && average <= item.max);
+  const band = findBand(bands, average);
   return band?.code ?? null;
 }
 
@@ -125,9 +147,9 @@ export function descriptiveRatingNameFromAverage(
   ratings?: DescriptiveRating[],
 ): string | null {
   const bands = ratings?.length ? bandsFromRatings(ratings) : FALLBACK_BANDS;
-  const band = bands.find((item) => average >= item.min && average <= item.max);
+  const band = findBand(bands, average);
   if (!band) return null;
-  if ('name' in band && band.name) return band.name;
+  if (band.name) return band.name;
   return FALLBACK_NAME_BY_CODE[band.code] ?? null;
 }
 
