@@ -4,6 +4,7 @@ using Microsoft.Extensions.FileProviders;
 using VariableCompensation.Api;
 using VariableCompensation.Host.Middleware;
 using VariableCompensation.Infrastructure;
+using VariableCompensation.Infrastructure.Persistence.Initialization;
 using VariableCompensation.Infrastructure.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,7 +45,9 @@ app.MapApiEndpoints();
 
 if (!app.Environment.IsEnvironment("Testing"))
 {
-    await VariableCompensation.Infrastructure.DependencyInjection.MigrateAndSeedAsync(app.Services);
+    using var scope = app.Services.CreateScope();
+    var dbInitializator = scope.ServiceProvider.GetRequiredService<IDbInitializator>();
+    await dbInitializator.InitializeAsync();
 }
 
 app.Run();

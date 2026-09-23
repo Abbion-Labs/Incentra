@@ -3,9 +3,9 @@ using VariableCompensation.Infrastructure.Deployment;
 namespace VariableCompensation.Infrastructure.Persistence.Initialization;
 
 public sealed class OnDeployDbInitPolicy(
-    IDeployIdProvider deployIdProvider,
-    IDeployInitStore deployInitStore) : IDbInitPolicy
+    IDeploymentIdentityProvider identityProvider,
+    IDeploymentIdentityStore identityStore) : IDbInitPolicy
 {
-    public Task RunAsync(Func<Task> initialization) =>
-        deployInitStore.RunOnceAsync(deployIdProvider.GetId(), initialization);
+    public Task<bool> ShouldInitAsync() =>
+        identityStore.TryAddAsync(identityProvider.GetIdentity());
 }

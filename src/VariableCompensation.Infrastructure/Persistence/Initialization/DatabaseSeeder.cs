@@ -3,11 +3,13 @@ using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Domain.Entities.Lookup;
 using VariableCompensation.Domain.Enums;
 
-namespace VariableCompensation.Infrastructure.Persistence;
+namespace VariableCompensation.Infrastructure.Persistence.Initialization;
 
-public static class DatabaseSeeder
+public sealed class DatabaseSeeder(
+    AppDbContext context,
+    ISensitiveDataEncryptionService encryption) : IDatabaseSeeder
 {
-    public static async Task SeedAsync(AppDbContext context, ISensitiveDataEncryptionService encryption)
+    public async Task SeedAsync()
     {
         if (!await context.Roles.AnyAsync())
         {
@@ -59,7 +61,7 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
-        await EnsureMeasureTypeDefinitionsAsync(context);
+        await EnsureMeasureTypeDefinitionsAsync();
 
         if (!await context.Users.AnyAsync())
         {
@@ -106,7 +108,7 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
-        await RealisticOrganizationSeeder.EnsureAsync(context, encryption);
+        await Persistence.RealisticOrganizationSeeder.EnsureAsync(context, encryption);
     }
 
     private static IReadOnlyList<MeasureType> CreateDefaultMeasureTypes() =>
@@ -120,7 +122,7 @@ public static class DatabaseSeeder
             })
             .ToList();
 
-    private static async Task EnsureMeasureTypeDefinitionsAsync(AppDbContext context)
+    private async Task EnsureMeasureTypeDefinitionsAsync()
     {
         var changed = false;
         foreach (var definition in MeasureTypeDefinitions)

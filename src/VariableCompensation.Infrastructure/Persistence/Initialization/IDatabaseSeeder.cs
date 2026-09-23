@@ -1,6 +1,6 @@
 namespace VariableCompensation.Infrastructure.Persistence.Initialization;
 
-public interface IDbInitPolicy
+public interface IDatabaseSeeder
 {
-    Task<bool> ShouldInitAsync();
+    Task SeedAsync();
 }

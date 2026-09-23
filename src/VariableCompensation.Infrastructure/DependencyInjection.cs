@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using VariableCompensation.Application;
-using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Application.Abstractions.Storage;
 using VariableCompensation.Infrastructure.Deployment;
 using VariableCompensation.Infrastructure.Persistence;
@@ -31,48 +30,27 @@ public static class DependencyInjection
         return services;
     }
 
-    public static async Task MigrateAndSeedAsync(IServiceProvider services)
-    {
-        using var scope = services.CreateScope();
-        var serviceProvider = scope.ServiceProvider;
-        var policy = serviceProvider.GetRequiredService<IDbInitPolicy>();
-        var context = serviceProvider.GetRequiredService<AppDbContext>();
-        var encryption = serviceProvider.GetRequiredService<ISensitiveDataEncryptionService>();
-
-        await policy.RunAsync(async () =>
-        {
-            await MigrateDatabaseAsync(context);
-            await SeedDatabaseAsync(context, encryption);
-        });
-    }
-
-    private static Task MigrateDatabaseAsync(AppDbContext context) =>
-        context.Database.MigrateAsync();
-
-    private static Task SeedDatabaseAsync(
-        AppDbContext context,
-        ISensitiveDataEncryptionService encryption) =>
-        DatabaseSeeder.SeedAsync(context, encryption);
-
     private static void AddDatabaseInitialization(
         IServiceCollection services,
         IConfiguration configuration,
         string connectionString)
     {
-        var policyName = configuration["DbInit:Policy"] ?? "OnStart";
+        var section = configuration.GetSection(DbInitOptions.SectionName);
+        var options = section.Get<DbInitOptions>() ?? new DbInitOptions();
 
-        services.AddSingleton<IDeployIdProvider, VercelDeployIdProvider>();
-        services.AddSingleton<IDeployInitStore>(
-            _ => new PostgresDeployInitStore(connectionString));
-        services.AddScoped<OnStartDbInitPolicy>();
-        services.AddScoped<OnDeployDbInitPolicy>();
-        services.AddScoped<IDbInitPolicy>(serviceProvider => policyName switch
-        {
-            "OnStart" => serviceProvider.GetRequiredService<OnStartDbInitPolicy>(),
-            "OnDeploy" => serviceProvider.GetRequiredService<OnDeployDbInitPolicy>(),
-            _ => throw new InvalidOperationException(
-                $"Unsupported DbInit policy '{policyName}'. Expected 'OnStart' or 'OnDeploy'."),
-        });
+        services.Configure<DbInitOptions>(section);
+
+        services.AddScoped<IDbInitializator, DbInitializator>();
+        services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
+
+        services.AddSingleton<IDeploymentIdentityProvider, VercelDeploymentIdentityProvider>();
+        services.AddSingleton<IDeploymentIdentityStore>(
+            _ => new PostgresDeploymentIdentityStore(connectionString));
+
+        services.AddKeyedScoped<IDbInitPolicy, OnStartDbInitPolicy>(DbInitOptions.OnStartPolicy);
+        services.AddKeyedScoped<IDbInitPolicy, OnDeployDbInitPolicy>(DbInitOptions.OnDeployPolicy);
+        services.AddScoped<IDbInitPolicy>(
+            serviceProvider => serviceProvider.GetRequiredKeyedService<IDbInitPolicy>(options.Policy));
     }
 
     private static void AddEmployeeAvatarStorage(IServiceCollection services, IConfiguration configuration)
