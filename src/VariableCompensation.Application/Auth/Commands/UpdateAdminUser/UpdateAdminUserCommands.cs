@@ -65,6 +65,16 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
             return Result.Failure<AdminUserListItemResponse>(roleIdsResult.Error);
         }
 
+        // Without an active administrator nobody can manage accounts any more, and nobody could restore one.
+        var isActiveAdministrator = user.IsActive && user.UserRoles.Any(ur => ur.Role.Code == RoleCodes.Admin);
+        var staysActiveAdministrator = request.IsActive
+            && request.RoleCodes.Any(code => string.Equals(code.Trim(), RoleCodes.Admin, StringComparison.OrdinalIgnoreCase));
+        if (isActiveAdministrator && !staysActiveAdministrator
+            && !await this.userRepository.HasOtherActiveUserInRoleAsync(RoleCodes.Admin, user.Id, cancellationToken))
+        {
+            return Result.Failure<AdminUserListItemResponse>(ErrorCodes.LastActiveAdministrator);
+        }
+
         var controllerRoleId = await this.roleLookup.FindRoleIdByCodeAsync(RoleCodes.Controller, cancellationToken);
         var hadControllerRole = controllerRoleId is not null
             && user.UserRoles.Any(ur => ur.RoleId == controllerRoleId.Value);

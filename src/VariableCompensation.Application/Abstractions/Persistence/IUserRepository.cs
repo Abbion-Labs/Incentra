@@ -16,6 +16,9 @@ public interface IUserRepository
 
     Task<User?> FindByEmployeeIdAsync(long employeeId, CancellationToken cancellationToken);
 
+    /// <summary>Whether an active user other than <paramref name="excludeUserId"/> holds <paramref name="roleCode"/>.</summary>
+    Task<bool> HasOtherActiveUserInRoleAsync(string roleCode, long excludeUserId, CancellationToken cancellationToken);
+
     Task RevokeAllRefreshTokensAsync(long userId, CancellationToken cancellationToken);
 
     /// <summary>

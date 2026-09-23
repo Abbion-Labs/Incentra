@@ -98,6 +98,7 @@
     "vn-0101": "Zaposleni ima ocene koje još nisu odobrene, pa mora imati ocenjivača. Umesto uklanjanja izaberite novog ocenjivača.",
     "vn-0102": "Ocenjivač ne može biti sam sebi kontrolor. Ako njegove ocene ne treba kontrolisati, izaberite „Bez kontrolora“.",
     "vn-0103": "Kontrolor ne može kontrolisati ocenjivača koji ocenjuje njega, jer bi tako kontrolisao sopstvenu ocenu.",
-    "vn-0104": "Ne možete odobriti niti vratiti sopstvenu ocenu. Administrator treba da promeni kontrolora."
+    "vn-0104": "Ne možete odobriti niti vratiti sopstvenu ocenu. Administrator treba da promeni kontrolora.",
+    "vn-0105": "Ovo je jedini aktivni administrator. Pre nego što mu uklonite ulogu administratora ili deaktivirate nalog, dodelite tu ulogu nekom drugom aktivnom korisniku."
   }
 }

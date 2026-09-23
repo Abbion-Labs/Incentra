@@ -98,6 +98,7 @@
     "vn-0101": "The employee has evaluations that are not approved yet, so they need an evaluator. Choose a new evaluator instead of removing it.",
     "vn-0102": "An evaluator cannot be their own controller. If their evaluations need no review, choose \"No controller\".",
     "vn-0103": "A controller cannot review the evaluator who rates them, as they would be reviewing their own evaluation.",
-    "vn-0104": "You cannot approve or return your own evaluation. An administrator needs to change the controller."
+    "vn-0104": "You cannot approve or return your own evaluation. An administrator needs to change the controller.",
+    "vn-0105": "This is the only active administrator. Give the administrator role to another active user before removing it here or deactivating this account."
   }
 }

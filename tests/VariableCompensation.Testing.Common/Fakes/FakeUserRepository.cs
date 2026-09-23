@@ -41,6 +41,10 @@ public sealed class FakeUserRepository : IUserRepository
     public Task<User?> FindByEmployeeIdAsync(long employeeId, CancellationToken cancellationToken) =>
         Task.FromResult(this.Users.Values.FirstOrDefault(u => u.Employee?.Id == employeeId));
 
+    public Task<bool> HasOtherActiveUserInRoleAsync(string roleCode, long excludeUserId, CancellationToken cancellationToken) =>
+        Task.FromResult(this.Users.Values.Any(u =>
+            u.Id != excludeUserId && u.IsActive && u.UserRoles.Any(ur => ur.Role?.Code == roleCode)));
+
     public List<RefreshToken> RefreshTokens { get; } = [];
 
     /// <summary>

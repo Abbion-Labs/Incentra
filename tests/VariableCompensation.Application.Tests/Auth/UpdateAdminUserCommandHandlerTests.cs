@@ -106,4 +106,67 @@ public class UpdateAdminUserCommandHandlerTests
         result.IsFailure.Should().BeTrue();
         result.Error.Should().Be(ErrorCodes.UserRolesRequired);
     }
+
+    [Theory]
+    [InlineData(false, "ADMIN")]
+    [InlineData(true, "EMPLOYEE")]
+    public async Task Handle_LastActiveAdministrator_CannotLoseTheRole(bool staysActive, string remainingRole)
+    {
+        var userRepository = new FakeUserRepository();
+        var admin = Administrator(1, "admin@local.dev", isActive: true);
+        userRepository.Users[1] = admin;
+
+        var result = await CreateHandler(userRepository).Handle(
+            new UpdateAdminUserCommand(1, "admin@local.dev", staysActive, [remainingRole]),
+            CancellationToken.None);
+
+        result.Error.Should().Be(ErrorCodes.LastActiveAdministrator);
+        admin.IsActive.Should().BeTrue();
+        admin.UserRoles.Select(ur => ur.Role.Code).Should().Equal("ADMIN");
+    }
+
+    [Fact]
+    public async Task Handle_InactiveOtherAdministrator_DoesNotCount()
+    {
+        var userRepository = new FakeUserRepository();
+        userRepository.Users[1] = Administrator(1, "admin@local.dev", isActive: true);
+        userRepository.Users[2] = Administrator(2, "former@local.dev", isActive: false);
+
+        var result = await CreateHandler(userRepository).Handle(
+            new UpdateAdminUserCommand(1, "admin@local.dev", false, ["ADMIN"]),
+            CancellationToken.None);
+
+        result.Error.Should().Be(ErrorCodes.LastActiveAdministrator);
+    }
+
+    [Fact]
+    public async Task Handle_AnotherActiveAdministrator_AllowsHandingOver()
+    {
+        var userRepository = new FakeUserRepository();
+        var admin = Administrator(1, "admin@local.dev", isActive: true);
+        userRepository.Users[1] = admin;
+        userRepository.Users[2] = Administrator(2, "second@local.dev", isActive: true);
+
+        var result = await CreateHandler(userRepository).Handle(
+            new UpdateAdminUserCommand(1, "admin@local.dev", true, ["EMPLOYEE"]),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        admin.UserRoles.Select(ur => ur.RoleId).Should().Equal(5);
+    }
+
+    private static UpdateAdminUserCommandHandler CreateHandler(FakeUserRepository userRepository) =>
+        new(
+            userRepository,
+            new FakeEmployeeRepository(),
+            new FakeEvaluatorSettingsRepository(),
+            new FakeRoleLookup());
+
+    private static User Administrator(long id, string email, bool isActive) => new()
+    {
+        Id = id,
+        Email = email,
+        IsActive = isActive,
+        UserRoles = { new UserRole { UserId = id, RoleId = 1, Role = new Role { Id = 1, Code = "ADMIN", Name = "Administrator" } } },
+    };
 }
