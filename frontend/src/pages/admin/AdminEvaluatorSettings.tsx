@@ -11,45 +11,17 @@ import { adminEvaluatorAnalyticsState } from './adminNavigation';
 interface SettingsFormValues {
   evaluatorId: string;
   controllerId: string;
-  thresholdDoesNotMeet: string;
-  thresholdMeets: string;
-  thresholdGood: string;
-  thresholdExceeds: string;
-  percentDoesNotMeet: string;
-  percentMeets: string;
-  percentGood: string;
-  percentExceeds: string;
 }
-
-const DEFAULT_THRESHOLDS = {
-  thresholdDoesNotMeet: '2',
-  thresholdMeets: '2.5',
-  thresholdGood: '3.5',
-  thresholdExceeds: '4.5',
-  percentDoesNotMeet: '0',
-  percentMeets: '25',
-  percentGood: '50',
-  percentExceeds: '100',
-};
 
 const emptyForm = (): SettingsFormValues => ({
   evaluatorId: '',
   controllerId: '',
-  ...DEFAULT_THRESHOLDS,
 });
 
 function settingsToForm(settings: EvaluatorSettings): SettingsFormValues {
   return {
     evaluatorId: String(settings.employeeId),
     controllerId: String(settings.controllerEmployeeId),
-    thresholdDoesNotMeet: String(settings.thresholdDoesNotMeet),
-    thresholdMeets: String(settings.thresholdMeets),
-    thresholdGood: String(settings.thresholdGood),
-    thresholdExceeds: String(settings.thresholdExceeds),
-    percentDoesNotMeet: String(settings.percentDoesNotMeet),
-    percentMeets: String(settings.percentMeets),
-    percentGood: String(settings.percentGood),
-    percentExceeds: String(settings.percentExceeds),
   };
 }
 
@@ -142,14 +114,6 @@ export function AdminEvaluatorSettings() {
     setSaving(true);
     const payload = {
       controllerEmployeeId: Number(form.controllerId),
-      thresholdDoesNotMeet: Number(form.thresholdDoesNotMeet),
-      thresholdMeets: Number(form.thresholdMeets),
-      thresholdGood: Number(form.thresholdGood),
-      thresholdExceeds: Number(form.thresholdExceeds),
-      percentDoesNotMeet: Number(form.percentDoesNotMeet),
-      percentMeets: Number(form.percentMeets),
-      percentGood: Number(form.percentGood),
-      percentExceeds: Number(form.percentExceeds),
     };
     try {
       await api.put(`/api/evaluator-settings/${editingId}`, payload);
@@ -213,126 +177,6 @@ export function AdminEvaluatorSettings() {
                 ))}
               </select>
             </div>
-            <div className="form-row">
-              <label htmlFor="thr-dnm">
-                {formatMessage({
-                  id: 'admin.evaluatorSettings.thresholdDoesNotMeet',
-                })}
-              </label>
-              <input
-                id="thr-dnm"
-                type="number"
-                step="0.01"
-                value={form.thresholdDoesNotMeet}
-                onChange={(e) =>
-                  setField('thresholdDoesNotMeet', e.target.value)
-                }
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label htmlFor="thr-meets">
-                {formatMessage({
-                  id: 'admin.evaluatorSettings.thresholdMeets',
-                })}
-              </label>
-              <input
-                id="thr-meets"
-                type="number"
-                step="0.01"
-                value={form.thresholdMeets}
-                onChange={(e) => setField('thresholdMeets', e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label htmlFor="thr-good">
-                {formatMessage({ id: 'admin.evaluatorSettings.thresholdGood' })}
-              </label>
-              <input
-                id="thr-good"
-                type="number"
-                step="0.01"
-                value={form.thresholdGood}
-                onChange={(e) => setField('thresholdGood', e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label htmlFor="thr-exceeds">
-                {formatMessage({
-                  id: 'admin.evaluatorSettings.thresholdExceeds',
-                })}
-              </label>
-              <input
-                id="thr-exceeds"
-                type="number"
-                step="0.01"
-                value={form.thresholdExceeds}
-                onChange={(e) => setField('thresholdExceeds', e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label htmlFor="pct-dnm">
-                {formatMessage({
-                  id: 'admin.evaluatorSettings.percentDoesNotMeet',
-                })}
-              </label>
-              <input
-                id="pct-dnm"
-                type="number"
-                step="1"
-                min="0"
-                value={form.percentDoesNotMeet}
-                onChange={(e) => setField('percentDoesNotMeet', e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label htmlFor="pct-meets">
-                {formatMessage({ id: 'admin.evaluatorSettings.percentMeets' })}
-              </label>
-              <input
-                id="pct-meets"
-                type="number"
-                step="1"
-                min="0"
-                value={form.percentMeets}
-                onChange={(e) => setField('percentMeets', e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label htmlFor="pct-good">
-                {formatMessage({ id: 'admin.evaluatorSettings.percentGood' })}
-              </label>
-              <input
-                id="pct-good"
-                type="number"
-                step="1"
-                min="0"
-                value={form.percentGood}
-                onChange={(e) => setField('percentGood', e.target.value)}
-                required
-              />
-            </div>
-            <div className="form-row">
-              <label htmlFor="pct-exceeds">
-                {formatMessage({
-                  id: 'admin.evaluatorSettings.percentExceeds',
-                })}
-              </label>
-              <input
-                id="pct-exceeds"
-                type="number"
-                step="1"
-                min="0"
-                value={form.percentExceeds}
-                onChange={(e) => setField('percentExceeds', e.target.value)}
-                required
-              />
-            </div>
           </div>
           <div className="actions">
             <button type="submit" className="btn btn-primary" disabled={saving}>
@@ -365,16 +209,6 @@ export function AdminEvaluatorSettings() {
                   <th className="col-text">
                     {formatMessage({ id: 'roles.CONTROLLER' })}
                   </th>
-                  <th className="col-num">
-                    {formatMessage({
-                      id: 'admin.evaluatorSettings.thresholds',
-                    })}
-                  </th>
-                  <th className="col-num">
-                    {formatMessage({
-                      id: 'admin.evaluatorSettings.compensationPercent',
-                    })}
-                  </th>
                   <th
                     className="col-actions"
                     aria-label={formatMessage({ id: 'admin.actions' })}
@@ -384,7 +218,7 @@ export function AdminEvaluatorSettings() {
               <tbody>
                 {settings.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="empty">
+                    <td colSpan={3} className="empty">
                       {formatMessage({
                         id: 'admin.evaluatorSettings.noSettings',
                       })}
@@ -407,14 +241,6 @@ export function AdminEvaluatorSettings() {
                         {item.employeeFullName}
                       </td>
                       <td className="col-text">{item.controllerFullName}</td>
-                      <td className="col-num admin-settings-thresholds">
-                        {item.thresholdDoesNotMeet} / {item.thresholdMeets} /{' '}
-                        {item.thresholdGood} / {item.thresholdExceeds}
-                      </td>
-                      <td className="col-num admin-settings-thresholds">
-                        {item.percentDoesNotMeet}% / {item.percentMeets}% /{' '}
-                        {item.percentGood}% / {item.percentExceeds}%
-                      </td>
                       <td className="col-actions">
                         <button
                           type="button"

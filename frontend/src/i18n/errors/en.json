@@ -43,8 +43,6 @@
     "vn-0040": "Recommended share must be between 0 and 1.",
     "vn-0041": "Descriptive rating with this code already exists.",
     "vn-0042": "Average range overlaps with \"{name}\".",
-    "vn-0043": "Thresholds must be in ascending order.",
-    "vn-0044": "Percent values cannot be negative.",
     "vn-0045": "Evaluator settings already exist for this employee.",
     "vn-0046": "Evaluator settings not found.",
     "vn-0047": "Controller employee not found.",

@@ -43,8 +43,6 @@
     "vn-0040": "Preporučeni udeo mora biti između 0 i 1.",
     "vn-0041": "Opisna ocena sa ovom šifrom već postoji.",
     "vn-0042": "Opseg proseka se preklapa sa ocenom \"{name}\".",
-    "vn-0043": "Pragovi moraju biti u rastućem redosledu.",
-    "vn-0044": "Procenti ne mogu biti negativni.",
     "vn-0045": "Podešavanja ocenjivača već postoje za ovog zaposlenog.",
     "vn-0046": "Podešavanja ocenjivača nisu pronađena.",
     "vn-0047": "Kontrolor nije pronađen.",

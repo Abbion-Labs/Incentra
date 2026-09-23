@@ -217,12 +217,14 @@ Svaka izmena zahteva `version` za optimističko zaključavanje. Prosek se račun
 
 ## Evaluator settings i RBAC (Faza 6)
 
-### Podešavanja ocenjivača (pragovi i procenti)
+### Podešavanja ocenjivača (dodeljeni kontrolor)
+
+Podešavanja nastaju dodelom uloge `EVALUATOR` i nose samo kontrolora ocenjivača. Opsezi ocena i preporučeni udeli su zajednički za celu organizaciju i podešavaju se na opisnim ocenama.
+
 - `GET /api/evaluator-settings` — ADMIN (lista svih)
 - `GET /api/evaluator-settings/me` — EVALUATOR (sopstvena podešavanja)
 - `GET /api/evaluator-settings/{employeeId}` — ADMIN ili evaluator (samo svoj `employeeId`)
-- `POST /api/evaluator-settings` — ADMIN
-- `PUT /api/evaluator-settings/{employeeId}` — ADMIN
+- `PUT /api/evaluator-settings/{employeeId}` — ADMIN — body: `{ "controllerEmployeeId": 5 }`
 
 ### Povezivanje korisnika sa zaposlenim
 - `PUT /api/employees/{id}/user` — ADMIN — body: `{ "userId": 2 }` ili `{ "userId": null }`
@@ -241,7 +243,7 @@ Korisnik mora biti povezan sa zaposlenim (`userId` na employee) da bi scoped pri
 
 ## Varijabilna kompenzacija (Faza 7)
 
-Kalkulacija koristi **samo odobrene** (`Approved`) kvartalne ocene i `EvaluatorSettings` pragove za procenat.
+Kalkulacija koristi **samo odobrene** (`Approved`) kvartalne ocene i parametre organizacione jedinice (prihvatljiva ocena, eksponent, težina zavisnosti, fond).
 
 ### Parametri
 - `GET /api/compensation-parameters` — PAYROLL

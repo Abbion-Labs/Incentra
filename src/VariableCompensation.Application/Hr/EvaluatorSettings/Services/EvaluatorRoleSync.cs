@@ -13,17 +13,6 @@ namespace VariableCompensation.Application.Hr.EvaluatorSettings.Services;
 /// </summary>
 public static class EvaluatorRoleSync
 {
-    // Mirrors the defaults the admin form has always pre-filled, so that
-    // granting the role produces the same settings an admin would have typed.
-    public const decimal DefaultThresholdDoesNotMeet = 2m;
-    public const decimal DefaultThresholdMeets = 2.5m;
-    public const decimal DefaultThresholdGood = 3.5m;
-    public const decimal DefaultThresholdExceeds = 4.5m;
-    public const decimal DefaultPercentDoesNotMeet = 0m;
-    public const decimal DefaultPercentMeets = 25m;
-    public const decimal DefaultPercentGood = 50m;
-    public const decimal DefaultPercentExceeds = 100m;
-
     public static async Task<Result> ApplyAsync(
         long userId,
         bool hasEvaluatorRole,
@@ -47,7 +36,7 @@ public static class EvaluatorRoleSync
             return Result.Failure(ErrorCodes.EvaluatorUserNotLinkedToEmployee);
         }
 
-        // Already an evaluator: leave the thresholds the admin has tuned alone.
+        // Already an evaluator: keep the controller the admin has assigned.
         if (await evaluatorSettingsRepository.ExistsAsync(employee.Id, cancellationToken))
         {
             return Result.Success();
@@ -73,14 +62,6 @@ public static class EvaluatorRoleSync
             {
                 EmployeeId = employee.Id,
                 ControllerEmployeeId = controllerEmployeeId.Value,
-                ThresholdDoesNotMeet = DefaultThresholdDoesNotMeet,
-                ThresholdMeets = DefaultThresholdMeets,
-                ThresholdGood = DefaultThresholdGood,
-                ThresholdExceeds = DefaultThresholdExceeds,
-                PercentDoesNotMeet = DefaultPercentDoesNotMeet,
-                PercentMeets = DefaultPercentMeets,
-                PercentGood = DefaultPercentGood,
-                PercentExceeds = DefaultPercentExceeds,
             },
             cancellationToken);
 

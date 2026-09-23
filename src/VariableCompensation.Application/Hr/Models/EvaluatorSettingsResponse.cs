@@ -9,20 +9,4 @@ public sealed class EvaluatorSettingsResponse
     public long ControllerEmployeeId { get; init; }
 
     public string ControllerFullName { get; init; } = string.Empty;
-
-    public decimal ThresholdDoesNotMeet { get; init; }
-
-    public decimal ThresholdMeets { get; init; }
-
-    public decimal ThresholdGood { get; init; }
-
-    public decimal ThresholdExceeds { get; init; }
-
-    public decimal PercentDoesNotMeet { get; init; }
-
-    public decimal PercentMeets { get; init; }
-
-    public decimal PercentGood { get; init; }
-
-    public decimal PercentExceeds { get; init; }
 }

@@ -13,48 +13,12 @@ namespace VariableCompensation.Application.Hr.EvaluatorSettings.Commands;
 /// Evaluator settings are created by granting the EVALUATOR role, never on
 /// their own: a settings row without the role would be an evaluator who
 /// cannot sign in and rate anyone, which is the drift this design removes.
-/// Only the thresholds and the controller can be changed here.
+/// Only the controller can be changed here; rating bands and their shares
+/// are organisation-wide and live on the descriptive ratings.
 /// </summary>
-internal static class EvaluatorSettingsValidation
-{
-    internal static Result ThresholdsAndPercents(
-        decimal thresholdDoesNotMeet,
-        decimal thresholdMeets,
-        decimal thresholdGood,
-        decimal thresholdExceeds,
-        decimal percentDoesNotMeet,
-        decimal percentMeets,
-        decimal percentGood,
-        decimal percentExceeds)
-    {
-        if (thresholdDoesNotMeet >= thresholdMeets ||
-            thresholdMeets >= thresholdGood ||
-            thresholdGood >= thresholdExceeds)
-        {
-            return Result.Failure(ErrorCodes.ThresholdOrderInvalid);
-        }
-
-        if (percentDoesNotMeet < 0 || percentMeets < 0 ||
-            percentGood < 0 || percentExceeds < 0)
-        {
-            return Result.Failure(ErrorCodes.PercentNegative);
-        }
-
-        return Result.Success();
-    }
-}
-
 public sealed record UpdateEvaluatorSettingsCommand(
     long EmployeeId,
-    long ControllerEmployeeId,
-    decimal ThresholdDoesNotMeet,
-    decimal ThresholdMeets,
-    decimal ThresholdGood,
-    decimal ThresholdExceeds,
-    decimal PercentDoesNotMeet,
-    decimal PercentMeets,
-    decimal PercentGood,
-    decimal PercentExceeds) : IRequest<Result<EvaluatorSettingsResponse>>;
+    long ControllerEmployeeId) : IRequest<Result<EvaluatorSettingsResponse>>;
 
 public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<UpdateEvaluatorSettingsCommand, Result<EvaluatorSettingsResponse>>
 {
@@ -74,21 +38,6 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
 
     public async Task<Result<EvaluatorSettingsResponse>> Handle(UpdateEvaluatorSettingsCommand request, CancellationToken cancellationToken)
     {
-        var validation = EvaluatorSettingsValidation.ThresholdsAndPercents(
-            request.ThresholdDoesNotMeet,
-            request.ThresholdMeets,
-            request.ThresholdGood,
-            request.ThresholdExceeds,
-            request.PercentDoesNotMeet,
-            request.PercentMeets,
-            request.PercentGood,
-            request.PercentExceeds);
-
-        if (validation.IsFailure)
-        {
-            return Result.Failure<EvaluatorSettingsResponse>(validation.Error);
-        }
-
         var entity = await this.repository.FindByEmployeeIdForUpdateAsync(request.EmployeeId, cancellationToken);
         if (entity is null)
         {
@@ -106,14 +55,6 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
         }
 
         entity.ControllerEmployeeId = request.ControllerEmployeeId;
-        entity.ThresholdDoesNotMeet = request.ThresholdDoesNotMeet;
-        entity.ThresholdMeets = request.ThresholdMeets;
-        entity.ThresholdGood = request.ThresholdGood;
-        entity.ThresholdExceeds = request.ThresholdExceeds;
-        entity.PercentDoesNotMeet = request.PercentDoesNotMeet;
-        entity.PercentMeets = request.PercentMeets;
-        entity.PercentGood = request.PercentGood;
-        entity.PercentExceeds = request.PercentExceeds;
         entity.UpdatedAt = DateTime.UtcNow;
 
         await this.repository.SaveChangesAsync(cancellationToken);

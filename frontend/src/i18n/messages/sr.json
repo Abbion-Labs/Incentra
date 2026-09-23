@@ -313,7 +313,7 @@
       "passwordOptionalPlaceholder": "Ostavite prazno ako se ne menja",
       "rolesHint": "Izaberite jednu ili više uloga. Korisnik mora imati bar jednu ulogu.",
       "evaluatorController": "Kontrolor ocenjivača",
-      "evaluatorControllerHint": "Ocenjivač se dodeljuje kontroloru koji pregleda njegove ocene. Pragovi se popunjavaju podrazumevanim vrednostima i menjaju se na kartici Ocenjivači.",
+      "evaluatorControllerHint": "Ocenjivač se dodeljuje kontroloru koji pregleda njegove ocene. Kontrolor se kasnije može promeniti na kartici Ocenjivači.",
       "evaluatorNeedsLinkedEmployee": "Ovaj nalog nije povezan ni sa jednim zaposlenim. Povežite ga u formi zaposlenog pre nego što mu dodelite ulogu ocenjivača.",
       "evaluatorNotAvailableAtCreate": "Ulogu ocenjivača dodeljujete izmenom naloga, pošto prvo mora da bude povezan sa zaposlenim."
     },
@@ -336,17 +336,7 @@
     },
     "evaluatorSettings": {
       "newSettings": "Novo podešavanje",
-      "thresholdExceeds": "Prag: ističe se",
-      "percentExceeds": "% kompenzacije: ističe se",
-      "percentDoesNotMeet": "% kompenzacije: ne zadovoljava",
-      "percentMeets": "% kompenzacije: zadovoljava",
-      "percentGood": "% kompenzacije: dobar",
-      "compensationPercent": "% kompenzacije",
       "noSettings": "Nema podešavanja.",
-      "thresholdDoesNotMeet": "Prag: ne zadovoljava",
-      "thresholdMeets": "Prag: zadovoljava",
-      "thresholdGood": "Prag: dobar",
-      "thresholds": "Pragovi",
       "selectToEdit": "Izaberite ocenjivača iz tabele da biste izmenili njegova podešavanja.",
       "closeEditor": "Zatvori izmenu"
     },

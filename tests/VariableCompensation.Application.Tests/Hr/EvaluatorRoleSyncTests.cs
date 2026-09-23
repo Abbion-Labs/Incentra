@@ -16,7 +16,7 @@ public class EvaluatorRoleSyncTests
     private const long ControllerId = 9;
 
     [Fact]
-    public async Task GrantingTheRole_CreatesSettingsWithTheDefaultThresholds()
+    public async Task GrantingTheRole_CreatesSettingsWithTheGivenController()
     {
         var (employees, settings) = LinkedEmployee();
         employees.ExistingEmployeeIds.Add(ControllerId);
@@ -27,9 +27,6 @@ public class EvaluatorRoleSyncTests
         settings.Store.Should().ContainKey(EmployeeId);
         var created = settings.Store[EmployeeId];
         created.ControllerEmployeeId.Should().Be(ControllerId);
-        created.ThresholdDoesNotMeet.Should().Be(EvaluatorRoleSync.DefaultThresholdDoesNotMeet);
-        created.ThresholdExceeds.Should().Be(EvaluatorRoleSync.DefaultThresholdExceeds);
-        created.PercentExceeds.Should().Be(EvaluatorRoleSync.DefaultPercentExceeds);
     }
 
     [Fact]
@@ -82,20 +79,20 @@ public class EvaluatorRoleSyncTests
     }
 
     [Fact]
-    public async Task GrantingTheRole_ToSomeoneAlreadyConfigured_LeavesTunedThresholdsAlone()
+    public async Task GrantingTheRole_ToSomeoneAlreadyConfigured_LeavesTheAssignedControllerAlone()
     {
+        const long OtherControllerId = 11;
         var (employees, settings) = LinkedEmployee();
         settings.Store[EmployeeId] = new EvaluatorSettings
         {
             EmployeeId = EmployeeId,
             ControllerEmployeeId = ControllerId,
-            ThresholdExceeds = 4.9m,
         };
 
-        var result = await Apply(employees, settings, hasRole: true, controllerEmployeeId: ControllerId);
+        var result = await Apply(employees, settings, hasRole: true, controllerEmployeeId: OtherControllerId);
 
         result.IsSuccess.Should().BeTrue();
-        settings.Store[EmployeeId].ThresholdExceeds.Should().Be(4.9m);
+        settings.Store[EmployeeId].ControllerEmployeeId.Should().Be(ControllerId);
     }
 
     [Fact]
