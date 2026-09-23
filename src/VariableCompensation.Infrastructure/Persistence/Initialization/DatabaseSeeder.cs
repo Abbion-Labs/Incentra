@@ -2,15 +2,16 @@ using Microsoft.EntityFrameworkCore;
 using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Domain.Entities.Lookup;
 using VariableCompensation.Domain.Enums;
+using VariableCompensation.Infrastructure.Persistence;
 
-namespace VariableCompensation.Infrastructure.Persistence;
+namespace VariableCompensation.Infrastructure.Persistence.Initialization;
 
-public static class DatabaseSeeder
+public sealed class DatabaseSeeder(
+    AppDbContext context,
+    ISensitiveDataEncryptionService encryption) : IDatabaseSeeder
 {
-    public static async Task SeedAsync(AppDbContext context, ISensitiveDataEncryptionService encryption)
+    public async Task SeedAsync()
     {
-        await context.Database.MigrateAsync();
-
         if (!await context.Roles.AnyAsync())
         {
             context.Roles.AddRange(
@@ -61,7 +62,7 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
-        await EnsureMeasureTypeDefinitionsAsync(context);
+        await EnsureMeasureTypeDefinitionsAsync();
 
         if (!await context.Users.AnyAsync())
         {
@@ -122,7 +123,7 @@ public static class DatabaseSeeder
             })
             .ToList();
 
-    private static async Task EnsureMeasureTypeDefinitionsAsync(AppDbContext context)
+    private async Task EnsureMeasureTypeDefinitionsAsync()
     {
         var changed = false;
         foreach (var definition in MeasureTypeDefinitions)

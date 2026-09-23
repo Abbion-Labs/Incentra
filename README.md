@@ -55,7 +55,9 @@ dotnet ef database update \
   --startup-project src/VariableCompensation.Host
 ```
 
-Migracije se automatski primenjuju pri pokretanju aplikacije (`MigrateAndSeedAsync`).
+Migracije i seed se pokreću kroz `IDbInitializator`. Podrazumevana `DbInit:Policy` je `OnStart`, pa lokalni razvoj inicijalizaciju izvršava pri svakom pokretanju. `DbInit:Seed` određuje da li se nakon migracija izvršava seed.
+
+Na Vercelu su `DbInit__Policy=OnDeploy`, `Deployment__IdentityProvider=Vercel` i `Deployment__IdentityStore=Postgres`. `OnDeployDbInitPolicy` zavisi samo od `IDeploymentIdentityProvider` i `IDeploymentIdentityStore`, dok konfiguracija bira njihove konkretne implementacije. Vercel provider koristi `VERCEL_DEPLOYMENT_ID`, a PostgreSQL store obezbeđuje da samo jedna instanca za taj identitet dobije dozvolu za inicijalizaciju.
 
 ## pgAdmin
 
@@ -142,7 +144,7 @@ U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
 
 ## HR modul (Faza 4)
 
-Lookup podaci se seed-uju pri pokretanju (org. jedinice, radna mesta, nivoi obrazovanja).
+Lookup podaci se seed-uju pri inicijalizaciji baze (org. jedinice, radna mesta, nivoi obrazovanja).
 
 Svi GET endpointi zahtevaju JWT. POST/PUT zahtevaju `ADMIN` ulogu.
 
@@ -352,7 +354,7 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 - Zaposleni: `marko@local.dev` / `Marko123!` (Marko Marković)
 - Plate/varijabila: korisnik sa `PAYROLL` ulogom (kreirati u administraciji ako nije u seed-u)
 
-Demo seed pri pokretanju API-ja kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
+Demo seed pri inicijalizaciji baze kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
 
 ## Skladištenje avatara
 
@@ -400,6 +402,10 @@ Email__Username
 Email__Password
 Email__FromAddress
 Email__FrontendBaseUrl
+DbInit__Policy
+DbInit__Seed
+Deployment__IdentityProvider
+Deployment__IdentityStore
 ```
 
 ### SMTP konfiguracija

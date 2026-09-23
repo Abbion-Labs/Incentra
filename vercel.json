@@ -1,6 +1,11 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "regions": ["dub1"],
+  "env": {
+    "DbInit__Policy": "OnDeploy",
+    "Deployment__IdentityProvider": "Vercel",
+    "Deployment__IdentityStore": "Postgres"
+  },
   "git": {
     "deploymentEnabled": {
       "**/*": false,
