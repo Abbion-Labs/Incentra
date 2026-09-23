@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Compensation.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Compensation;
@@ -122,7 +123,8 @@ public sealed record UpdateCompensationParametersCommand(
     decimal DependencyWeight,
     decimal Exponent,
     bool AllowNegativeVariable,
-    bool IsActive) : IRequest<Result<CompensationParametersResponse>>;
+    bool IsActive,
+    int? Version) : IRequest<Result<CompensationParametersResponse>>;
 
 public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler<UpdateCompensationParametersCommand, Result<CompensationParametersResponse>>
 {
@@ -147,6 +149,12 @@ public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler
         if (entity is null)
         {
             return Result.Failure<CompensationParametersResponse>(ErrorCodes.CompensationParametersNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<CompensationParametersResponse>(version.Error);
         }
 
         if (await this.repository.HasFinalResultsAsync(request.Id, cancellationToken))

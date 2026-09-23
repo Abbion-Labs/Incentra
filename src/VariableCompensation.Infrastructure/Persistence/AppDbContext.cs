@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using VariableCompensation.Domain.Common;
 using VariableCompensation.Domain.Entities.Audit;
 using VariableCompensation.Domain.Entities.Compensation;
 using VariableCompensation.Domain.Entities.Evaluation;
@@ -66,6 +67,17 @@ public class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
+
+        // Every versioned record takes part in optimistic concurrency: the update only succeeds when the row still
+        // has the version it was read with, so two edits racing each other cannot both get through.
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes()
+                     .Where(t => typeof(IVersioned).IsAssignableFrom(t.ClrType)))
+        {
+            modelBuilder.Entity(entityType.ClrType)
+                .Property(nameof(IVersioned.Version))
+                .IsConcurrencyToken();
+        }
+
         base.OnModelCreating(modelBuilder);
     }
 }

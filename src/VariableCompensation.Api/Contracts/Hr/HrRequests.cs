@@ -9,6 +9,9 @@ public sealed class CreateOrganizationUnitRequest
 
 public sealed class UpdateOrganizationUnitRequest
 {
+    /// <summary>The version the edit was made from. Required: an edit from an outdated copy is refused.</summary>
+    public int? Version { get; init; }
+
     public string Name { get; init; } = string.Empty;
 
     public string? Code { get; init; }
@@ -25,6 +28,9 @@ public sealed class CreateJobPositionRequest
 
 public sealed class UpdateJobPositionRequest
 {
+    /// <summary>The version the edit was made from. Required: an edit from an outdated copy is refused.</summary>
+    public int? Version { get; init; }
+
     public string Name { get; init; } = string.Empty;
 
     public int SortOrder { get; init; }
@@ -41,6 +47,9 @@ public sealed class CreateEducationLevelRequest
 
 public sealed class UpdateEducationLevelRequest
 {
+    /// <summary>The version the edit was made from. Required: an edit from an outdated copy is refused.</summary>
+    public int? Version { get; init; }
+
     public string Name { get; init; } = string.Empty;
 
     public int SortOrder { get; init; }
@@ -67,6 +76,9 @@ public sealed class CreateEmployeeRequest
 
 public sealed class UpdateEmployeeRequest
 {
+    /// <summary>The version the edit was made from. Required: an edit from an outdated copy is refused.</summary>
+    public int? Version { get; init; }
+
     public string FirstName { get; init; } = string.Empty;
 
     public string LastName { get; init; } = string.Empty;

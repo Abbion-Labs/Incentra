@@ -3,6 +3,7 @@ using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Common.Models;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Evaluation.Services;
 using VariableCompensation.Application.Hr.Models;
 using VariableCompensation.Domain;
@@ -127,7 +128,8 @@ public sealed record UpdateEmployeeCommand(
     long? EducationLevelId,
     long? EvaluatorEmployeeId,
     DateOnly? HiredAt,
-    bool IsActive) : IRequest<Result<EmployeeResponse>>;
+    bool IsActive,
+    int? Version) : IRequest<Result<EmployeeResponse>>;
 
 public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmployeeCommand, Result<EmployeeResponse>>
 {
@@ -163,6 +165,12 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
         if (entity is null)
         {
             return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<EmployeeResponse>(version.Error);
         }
 
         if (string.IsNullOrWhiteSpace(request.FirstName) || string.IsNullOrWhiteSpace(request.LastName))

@@ -5,6 +5,7 @@ import { fetchAllPages } from '../../api/paged';
 import type { AdminUser, Employee, EvaluatorSettings } from '../../api/types';
 import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
+import { isEditConflict } from '../../utils/editConflict';
 import { AdminPageHeader } from './components/AdminPageHeader';
 import { adminEvaluatorAnalyticsState } from './adminNavigation';
 import { NO_CONTROLLER, controllerIdFromForm } from './evaluatorController';
@@ -39,6 +40,8 @@ export function AdminEvaluatorSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Verzija podešavanja sa kojom je forma otvorena; šalje se uz izmenu.
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [form, setForm] = useState<SettingsFormValues>(emptyForm());
 
   const load = useCallback(async () => {
@@ -104,6 +107,7 @@ export function AdminEvaluatorSettings() {
   function startEdit(item: EvaluatorSettings, e?: React.MouseEvent) {
     e?.stopPropagation();
     setEditingId(item.employeeId);
+    setEditingVersion(item.version);
     setForm(settingsToForm(item));
   }
 
@@ -114,6 +118,21 @@ export function AdminEvaluatorSettings() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
+  /** Podešavanja su izmenjena posle otvaranja forme: forma se puni novim stanjem. */
+  async function reopenAfterConflict(employeeId: number) {
+    toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+    try {
+      startEdit(
+        await api.get<EvaluatorSettings>(
+          `/api/evaluator-settings/${employeeId}`,
+        ),
+      );
+    } catch {
+      closeEditor();
+    }
+    await load();
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (editingId === null) return;
@@ -121,12 +140,21 @@ export function AdminEvaluatorSettings() {
     setSaving(true);
     const payload = {
       controllerEmployeeId: controllerIdFromForm(form.controllerId),
+      version: editingVersion,
     };
     try {
-      await api.put(`/api/evaluator-settings/${editingId}`, payload);
+      const saved = await api.put<EvaluatorSettings>(
+        `/api/evaluator-settings/${editingId}`,
+        payload,
+      );
+      setEditingVersion(saved.version);
       toast.success(formatMessage({ id: 'alerts.settingsUpdated' }));
       await load();
     } catch (err) {
+      if (isEditConflict(err)) {
+        await reopenAfterConflict(editingId);
+        return;
+      }
       toast.error(
         err instanceof Error
           ? err.message

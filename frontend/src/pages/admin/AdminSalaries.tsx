@@ -18,6 +18,7 @@ import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSe
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 
 import { useIntl } from '../../i18n';
+import { isEditConflict } from '../../utils/editConflict';
 import { formatNumber } from '../../utils/formatLocale';
 
 function todayIso(): string {
@@ -75,6 +76,8 @@ export function AdminSalaries() {
   const [addEffectiveFrom, setAddEffectiveFrom] = useState(todayIso());
 
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Verzija važeće plate sa kojom je izmena otvorena; šalje se uz izmenu.
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
 
   const [editPoints, setEditPoints] = useState('');
 
@@ -226,6 +229,9 @@ export function AdminSalaries() {
     salaryPerPoint: number,
 
     effectiveFrom: string,
+
+    /** Verzija važeće plate; null kada zaposleni još nema platu. */
+    version: number | null,
   ) {
     setSaving(true);
 
@@ -238,6 +244,8 @@ export function AdminSalaries() {
         effectiveFrom,
 
         currency: 'RSD',
+
+        version,
       });
 
       toast.success(formatMessage({ id: 'alerts.salarySavedWithHistory' }));
@@ -260,6 +268,15 @@ export function AdminSalaries() {
 
       reload();
     } catch (e) {
+      if (isEditConflict(e)) {
+        toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+        cancelEdit();
+        setShowAdd(false);
+        closeHistory();
+        setWithoutSalary([]);
+        reload();
+        return;
+      }
       toast.error(
         e instanceof Error
           ? e.message
@@ -273,6 +290,8 @@ export function AdminSalaries() {
   function startEdit(row: EmployeeSalary) {
     setEditingId(row.employeeId);
 
+    setEditingVersion(row.version);
+
     setEditPoints(String(row.points));
 
     setEditSalaryPerPoint(String(row.salaryPerPoint));
@@ -284,6 +303,8 @@ export function AdminSalaries() {
 
   function cancelEdit() {
     setEditingId(null);
+
+    setEditingVersion(null);
 
     setEditPoints('');
 
@@ -319,6 +340,8 @@ export function AdminSalaries() {
       points,
       salaryPerPoint,
       addEffectiveFrom,
+      // Dodaje se prva plata: nema prethodne verzije.
+      null,
     );
   }
 
@@ -341,7 +364,13 @@ export function AdminSalaries() {
       return;
     }
 
-    await saveSalary(employeeId, points, salaryPerPoint, editEffectiveFrom);
+    await saveSalary(
+      employeeId,
+      points,
+      salaryPerPoint,
+      editEffectiveFrom,
+      editingVersion,
+    );
   }
 
   return (

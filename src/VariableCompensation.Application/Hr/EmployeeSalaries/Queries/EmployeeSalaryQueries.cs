@@ -123,6 +123,7 @@ public sealed class GetEmployeeSalariesQueryHandler : IRequestHandler<GetEmploye
         new()
         {
             Id = row.Id,
+            Version = row.Version,
             EmployeeId = row.EmployeeId,
             EmployeeFullName = row.Employee.FullName,
             OrganizationUnitName = row.Employee.OrganizationUnit?.Name ?? string.Empty,

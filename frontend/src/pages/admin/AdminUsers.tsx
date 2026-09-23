@@ -14,6 +14,7 @@ import { AdminPageHeader } from './components/AdminPageHeader';
 import { controllerIdFromForm } from './evaluatorController';
 import { roleLabel } from '../../utils/status';
 import { useToast } from '../../hooks';
+import { isEditConflict } from '../../utils/editConflict';
 
 export function AdminUsers() {
   const { formatMessage } = useIntl();
@@ -87,6 +88,24 @@ export function AdminUsers() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
+  /** Nalog je izmenjen posle otvaranja forme: forma se puni njegovim novim stanjem. */
+  async function reopenAfterConflict(userId: number) {
+    toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+    try {
+      const fresh = (await api.get<AdminUser[]>('/api/users')).find(
+        (u) => u.id === userId,
+      );
+      if (fresh) {
+        startEdit(fresh);
+      } else {
+        startCreate();
+      }
+    } catch {
+      startCreate();
+    }
+    await load();
+  }
+
   async function handleSubmit() {
     setSaving(true);
     try {
@@ -98,6 +117,7 @@ export function AdminUsers() {
           controllerEmployeeId: controllerIdFromForm(
             formValues.controllerEmployeeId,
           ),
+          version: editingUser.version,
         });
         if (formValues.password.trim()) {
           await api.put(`/api/users/${editingUser.id}/password`, {
@@ -130,6 +150,10 @@ export function AdminUsers() {
       }
       await load();
     } catch (err) {
+      if (editingUser && isEditConflict(err)) {
+        await reopenAfterConflict(editingUser.id);
+        return;
+      }
       toast.error(
         err instanceof Error
           ? err.message

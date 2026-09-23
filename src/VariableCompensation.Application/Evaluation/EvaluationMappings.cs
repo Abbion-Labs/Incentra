@@ -152,6 +152,7 @@ internal static class EvaluationMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             Code = entity.Code,
             Name = entity.Name,
             MinAverage = entity.MinAverage,

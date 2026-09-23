@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Hr.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Lookup;
@@ -41,7 +42,7 @@ public sealed class CreateOrganizationUnitCommandHandler : IRequestHandler<Creat
     }
 }
 
-public sealed record UpdateOrganizationUnitCommand(long Id, string Name, string? Code, bool IsActive) : IRequest<Result<OrganizationUnitResponse>>;
+public sealed record UpdateOrganizationUnitCommand(long Id, string Name, string? Code, bool IsActive, int? Version) : IRequest<Result<OrganizationUnitResponse>>;
 
 public sealed class UpdateOrganizationUnitCommandHandler : IRequestHandler<UpdateOrganizationUnitCommand, Result<OrganizationUnitResponse>>
 {
@@ -55,6 +56,12 @@ public sealed class UpdateOrganizationUnitCommandHandler : IRequestHandler<Updat
         if (entity is null)
         {
             return Result.Failure<OrganizationUnitResponse>(ErrorCodes.OrganizationUnitNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<OrganizationUnitResponse>(version.Error);
         }
 
         var name = request.Name.Trim();

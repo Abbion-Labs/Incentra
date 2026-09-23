@@ -1,8 +1,12 @@
+using VariableCompensation.Domain.Common;
+
 namespace VariableCompensation.Domain.Entities.Lookup;
 
-public class EducationLevel
+public class EducationLevel : IVersioned
 {
     public long Id { get; set; }
+
+    public int Version { get; set; }
 
     public string Name { get; set; } = string.Empty;
 

@@ -101,7 +101,8 @@ public sealed class EmployeesController : ControllerBase
                 request.EducationLevelId,
                 request.EvaluatorEmployeeId,
                 request.HiredAt,
-                request.IsActive),
+                request.IsActive,
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
@@ -111,7 +112,7 @@ public sealed class EmployeesController : ControllerBase
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> LinkUser(long id, [FromBody] LinkEmployeeUserRequest request, CancellationToken cancellationToken)
     {
-        var result = await this.mediator.Send(new LinkEmployeeUserCommand(id, request.UserId), cancellationToken);
+        var result = await this.mediator.Send(new LinkEmployeeUserCommand(id, request.UserId, request.Version), cancellationToken);
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
     }
 

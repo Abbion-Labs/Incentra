@@ -35,7 +35,7 @@ public class EvaluationReassignmentIntegrationTests
         var admin = await this.CreateClientAsync(TestCredentials.AdminEmail, TestCredentials.AdminPassword);
 
         // The employee gets a new evaluator: the draft moves, the submitted and approved evaluations stay.
-        var reassign = await admin.PutAsJsonAsync($"/api/employees/{seed.EmployeeId}", EmployeeBody(seed, seed.NewEvaluatorId));
+        var reassign = await admin.PutAsJsonAsync($"/api/employees/{seed.EmployeeId}", EmployeeBody(seed, seed.NewEvaluatorId, version: 0));
         reassign.StatusCode.Should().Be(HttpStatusCode.OK);
 
         (await this.AssignmentAsync(seed.DraftId)).Should().Be((seed.NewEvaluatorId, seed.NewControllerId));
@@ -43,7 +43,7 @@ public class EvaluationReassignmentIntegrationTests
         (await this.AssignmentAsync(seed.ApprovedId)).Should().Be((TestEmployeeIds.Evaluator, TestEmployeeIds.Controller));
 
         // Evaluations that are not approved yet need an evaluator.
-        var removal = await admin.PutAsJsonAsync($"/api/employees/{seed.EmployeeId}", EmployeeBody(seed, null));
+        var removal = await admin.PutAsJsonAsync($"/api/employees/{seed.EmployeeId}", EmployeeBody(seed, null, version: 1));
         removal.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await removal.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("error").GetString()
             .Should().Be(ErrorCodes.EmployeeHasOpenEvaluations);
@@ -61,7 +61,7 @@ public class EvaluationReassignmentIntegrationTests
         // The new evaluator gets another controller: their open evaluations follow, the approved one stays.
         var settings = await admin.PutAsJsonAsync(
             $"/api/evaluator-settings/{seed.NewEvaluatorId}",
-            new { controllerEmployeeId = seed.OtherControllerId });
+            new { controllerEmployeeId = seed.OtherControllerId, version = 0 });
         settings.StatusCode.Should().Be(HttpStatusCode.OK);
 
         (await this.AssignmentAsync(seed.DraftId)).Should().Be((seed.NewEvaluatorId, seed.OtherControllerId));
@@ -69,8 +69,9 @@ public class EvaluationReassignmentIntegrationTests
         (await this.AssignmentAsync(seed.ApprovedId)).Should().Be((TestEmployeeIds.Evaluator, TestEmployeeIds.Controller));
     }
 
-    private static object EmployeeBody(Seed seed, long? evaluatorEmployeeId) => new
+    private static object EmployeeBody(Seed seed, long? evaluatorEmployeeId, int version) => new
     {
+        version,
         firstName = "Premeštanje",
         lastName = "Ocena",
         organizationUnitId = seed.OrganizationUnitId,

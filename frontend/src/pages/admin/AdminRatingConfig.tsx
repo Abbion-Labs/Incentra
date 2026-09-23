@@ -4,6 +4,7 @@ import type { DescriptiveRating } from '../../api/types';
 import { useIntl } from '../../i18n';
 import { formatDescriptiveRatingLabel } from '../../utils/descriptiveRating';
 import { useToast } from '../../hooks';
+import { isEditConflict } from '../../utils/editConflict';
 import { AdminPageHeader } from './components/AdminPageHeader';
 
 interface RatingFormValues {
@@ -47,6 +48,8 @@ export function AdminRatingConfig() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Verzija opisne ocene sa kojom je forma otvorena; šalje se uz izmenu.
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [form, setForm] = useState<RatingFormValues>(emptyForm());
 
   const load = useCallback(async () => {
@@ -81,11 +84,13 @@ export function AdminRatingConfig() {
 
   function startCreate() {
     setEditingId(null);
+    setEditingVersion(null);
     setForm(emptyForm());
   }
 
   function startEdit(rating: DescriptiveRating) {
     setEditingId(rating.id);
+    setEditingVersion(rating.version);
     setForm(ratingToForm(rating));
   }
 
@@ -94,6 +99,24 @@ export function AdminRatingConfig() {
     value: RatingFormValues[K],
   ) {
     setForm((prev) => ({ ...prev, [key]: value }));
+  }
+
+  /** Opisna ocena je izmenjena posle otvaranja forme: forma se puni novim stanjem. */
+  async function reopenAfterConflict(ratingId: number) {
+    toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+    try {
+      const fresh = (
+        await api.get<DescriptiveRating[]>('/api/descriptive-ratings')
+      ).find((r) => r.id === ratingId);
+      if (fresh) {
+        startEdit(fresh);
+      } else {
+        startCreate();
+      }
+    } catch {
+      startCreate();
+    }
+    await load();
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -110,7 +133,11 @@ export function AdminRatingConfig() {
     };
     try {
       if (editingId) {
-        await api.put(`/api/descriptive-ratings/${editingId}`, payload);
+        const saved = await api.put<DescriptiveRating>(
+          `/api/descriptive-ratings/${editingId}`,
+          { ...payload, version: editingVersion },
+        );
+        setEditingVersion(saved.version);
         toast.success(formatMessage({ id: 'alerts.descriptiveRatingUpdated' }));
       } else {
         await api.post('/api/descriptive-ratings', payload);
@@ -119,6 +146,10 @@ export function AdminRatingConfig() {
       }
       await load();
     } catch (err) {
+      if (editingId && isEditConflict(err)) {
+        await reopenAfterConflict(editingId);
+        return;
+      }
       toast.error(
         err instanceof Error
           ? err.message

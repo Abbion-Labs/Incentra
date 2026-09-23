@@ -70,7 +70,8 @@ public sealed class CompensationParametersController : ControllerBase
                 request.DependencyWeight,
                 request.Exponent,
                 request.AllowNegativeVariable,
-                request.IsActive),
+                request.IsActive,
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

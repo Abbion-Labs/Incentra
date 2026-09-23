@@ -26,6 +26,7 @@ import {
   adminEvaluatorAnalyticsState,
 } from './adminNavigation';
 import { useIntl } from '../../i18n';
+import { isEditConflict } from '../../utils/editConflict';
 
 function buildEmployeePayload(
   values: EmployeeFormValues,
@@ -67,6 +68,8 @@ export function AdminEmployees() {
   const [formValues, setFormValues] =
     useState<EmployeeFormValues>(emptyEmployeeForm());
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Verzija zapisa sa kojom je forma otvorena; šalje se uz izmenu.
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [linkedUserId, setLinkedUserId] = useState('');
 
   const listQueryKey = `${debouncedSearch}|${filterOrgId}|${filterActive}`;
@@ -151,6 +154,7 @@ export function AdminEmployees() {
 
   function startCreate() {
     setEditingId(null);
+    setEditingVersion(null);
     setFormValues(emptyEmployeeForm());
     setLinkedUserId('');
   }
@@ -158,6 +162,7 @@ export function AdminEmployees() {
   function startEdit(employee: Employee, e?: React.MouseEvent) {
     e?.stopPropagation();
     setEditingId(employee.id);
+    setEditingVersion(employee.version);
     setFormValues(employeeToForm(employee));
     setLinkedUserId(employee.userId ? String(employee.userId) : '');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -202,6 +207,17 @@ export function AdminEmployees() {
     );
   }
 
+  /** Zapis je izmenjen posle otvaranja forme: forma se puni njegovim novim stanjem. */
+  async function reopenAfterConflict(employeeId: number) {
+    toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+    try {
+      startEdit(await api.get<Employee>(`/api/employees/${employeeId}`));
+    } catch {
+      startCreate();
+    }
+    await reload();
+  }
+
   async function handleSubmit() {
     if (!formValues.educationLevelId) {
       toast.warning(formatMessage({ id: 'errors.educationRequired' }));
@@ -215,13 +231,15 @@ export function AdminEmployees() {
           return;
         }
         const payload = buildEmployeePayload(formValues, true);
-        await api.put(`/api/employees/${editingId}`, payload);
-        const currentUserId =
-          employees.find((e) => e.id === editingId)?.userId ?? null;
+        const updated = await api.put<Employee>(`/api/employees/${editingId}`, {
+          ...payload,
+          version: editingVersion,
+        });
         const nextUserId = linkedUserId ? Number(linkedUserId) : null;
-        if (nextUserId !== currentUserId) {
+        if (nextUserId !== updated.userId) {
           await api.put(`/api/employees/${editingId}/user`, {
             userId: nextUserId,
+            version: updated.version,
           });
         }
         toast.success(formatMessage({ id: 'alerts.employeeUpdated' }));
@@ -233,6 +251,10 @@ export function AdminEmployees() {
       }
       await Promise.all([reload(), loadLookups()]);
     } catch (e) {
+      if (editingId && isEditConflict(e)) {
+        await reopenAfterConflict(editingId);
+        return;
+      }
       toast.error(
         e instanceof Error
           ? e.message

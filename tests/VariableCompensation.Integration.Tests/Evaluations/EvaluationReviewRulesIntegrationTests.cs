@@ -37,14 +37,14 @@ public class EvaluationReviewRulesIntegrationTests
         // Their own controller is not allowed; no controller is.
         var ownController = await admin.PutAsJsonAsync(
             $"/api/evaluator-settings/{seed.EvaluatorId}",
-            new { controllerEmployeeId = seed.EvaluatorId });
+            new { controllerEmployeeId = seed.EvaluatorId, version = 0 });
         ownController.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         (await ownController.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("error").GetString()
             .Should().Be(ErrorCodes.EvaluatorOwnController);
 
         var noController = await admin.PutAsJsonAsync(
             $"/api/evaluator-settings/{seed.EvaluatorId}",
-            new { controllerEmployeeId = (long?)null });
+            new { controllerEmployeeId = (long?)null, version = 0 });
         noController.StatusCode.Should().Be(HttpStatusCode.OK);
 
         // An administrator takes no part in rating.

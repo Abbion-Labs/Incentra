@@ -4,6 +4,9 @@ public sealed class JobPositionResponse
 {
     public long Id { get; init; }
 
+    /// <summary>Sent back with an edit; see <c>IVersioned</c>.</summary>
+    public int Version { get; init; }
+
     public string Name { get; init; } = string.Empty;
 
     public int SortOrder { get; init; }

@@ -10,6 +10,7 @@ internal static class CompensationMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             OrganizationUnitId = entity.OrganizationUnitId,
             OrganizationUnitName = entity.OrganizationUnit?.Name ?? string.Empty,
             Year = entity.Year,
