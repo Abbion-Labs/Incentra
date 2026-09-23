@@ -7,9 +7,10 @@
     ],
     "measures": [{ "ratingLevelId": 5 }, { "ratingLevelId": 5 }],
     "expected": {
-      "goalsAverage": 4.33,
+      "goalsAverage": 4.3333,
       "measuresAverage": 4,
-      "overallAverage": 4.17
+      "overallAverage": 4.1666,
+      "descriptiveRatingCode": "EXCEEDS"
     }
   },
   {
@@ -19,7 +20,27 @@
     "expected": {
       "goalsAverage": null,
       "measuresAverage": 4,
-      "overallAverage": 4
+      "overallAverage": 4,
+      "descriptiveRatingCode": "EXCEEDS"
+    }
+  },
+  {
+    "name": "average_between_band_bounds",
+    "goals": [
+      { "ratingLevelId": 4, "weight": 0.33 },
+      { "ratingLevelId": 5, "weight": 0.33 },
+      { "ratingLevelId": 4, "weight": 0.34 }
+    ],
+    "measures": [
+      { "ratingLevelId": 4 },
+      { "ratingLevelId": 5 },
+      { "ratingLevelId": 5 }
+    ],
+    "expected": {
+      "goalsAverage": 3.33,
+      "measuresAverage": 3.6667,
+      "overallAverage": 3.4984,
+      "descriptiveRatingCode": "GOOD"
     }
   }
 ]

@@ -9,6 +9,7 @@ import {
   hasLocalIncompleteRatings,
   isNotRated,
 } from './scoring';
+import { descriptiveRatingCodeFromAverage } from './descriptiveRating';
 
 const ratingLevels: RatingLevel[] = [
   { id: 1, value: 0, label: '/', description: '' },
@@ -71,6 +72,7 @@ describe('scoring', () => {
         goalsAverage: number | null;
         measuresAverage: number | null;
         overallAverage: number | null;
+        descriptiveRatingCode: string | null;
       };
     }>;
 
@@ -100,6 +102,12 @@ describe('scoring', () => {
       expect(overallAverage, testCase.name).toBe(
         testCase.expected.overallAverage,
       );
+      expect(
+        overallAverage == null
+          ? null
+          : descriptiveRatingCodeFromAverage(overallAverage),
+        testCase.name,
+      ).toBe(testCase.expected.descriptiveRatingCode);
     }
   });
 });
