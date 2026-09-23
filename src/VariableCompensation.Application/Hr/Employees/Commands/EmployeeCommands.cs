@@ -3,9 +3,11 @@ using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Common.Models;
+using VariableCompensation.Application.Evaluation.Services;
 using VariableCompensation.Application.Hr.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Hr;
+using VariableCompensation.Domain.Enums;
 
 namespace VariableCompensation.Application.Hr.Employees.Commands;
 
@@ -134,6 +136,7 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
     private readonly IJobPositionRepository jobPositionRepository;
     private readonly IEducationLevelRepository educationLevelRepository;
     private readonly IEvaluatorSettingsRepository evaluatorSettingsRepository;
+    private readonly IEvaluationRepository evaluationRepository;
     private readonly ICurrentUserService currentUserService;
 
     public UpdateEmployeeCommandHandler(
@@ -142,6 +145,7 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
         IJobPositionRepository jobPositionRepository,
         IEducationLevelRepository educationLevelRepository,
         IEvaluatorSettingsRepository evaluatorSettingsRepository,
+        IEvaluationRepository evaluationRepository,
         ICurrentUserService currentUserService)
     {
         this.employeeRepository = employeeRepository;
@@ -149,6 +153,7 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
         this.jobPositionRepository = jobPositionRepository;
         this.educationLevelRepository = educationLevelRepository;
         this.evaluatorSettingsRepository = evaluatorSettingsRepository;
+        this.evaluationRepository = evaluationRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -208,6 +213,29 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
             if (!await this.evaluatorSettingsRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
             {
                 return Result.Failure<EmployeeResponse>(ErrorCodes.EvaluatorNotConfigured);
+            }
+        }
+
+        var evaluatorChanged = entity.EvaluatorEmployeeId != request.EvaluatorEmployeeId;
+
+        // An evaluation that is not approved yet still needs someone to rate it, or to take it back when the
+        // controller returns it for revision.
+        if (evaluatorChanged && request.EvaluatorEmployeeId is null
+            && await this.evaluationRepository.HasUnapprovedForEmployeeAsync(request.Id, cancellationToken))
+        {
+            return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeHasOpenEvaluations);
+        }
+
+        if (evaluatorChanged && request.EvaluatorEmployeeId is { } newEvaluatorId)
+        {
+            var controllerId = await this.evaluationRepository.GetControllerEmployeeIdAsync(newEvaluatorId, cancellationToken);
+            var drafts = await this.evaluationRepository.GetForUpdateByEmployeeAsync(
+                request.Id,
+                EvaluationStatus.Draft,
+                cancellationToken);
+            foreach (var draft in drafts)
+            {
+                EvaluationReassignment.Assign(draft, newEvaluatorId, controllerId);
             }
         }
 

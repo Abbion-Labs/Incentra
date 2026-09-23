@@ -11,6 +11,8 @@ public sealed class FakeEmployeeRepository : IEmployeeRepository
 
     public HashSet<long> EvaluatorsWithSubordinates { get; } = [];
 
+    public Dictionary<long, Employee> EmployeesById { get; } = [];
+
     public Task<Employee?> FindByIdAsync(long id, CancellationToken cancellationToken) =>
         Task.FromResult<Employee?>(null);
 
@@ -51,7 +53,7 @@ public sealed class FakeEmployeeRepository : IEmployeeRepository
         Task.FromResult(this.EvaluatorsWithSubordinates.Contains(evaluatorEmployeeId));
 
     public Task<Employee?> FindByIdWithEvaluatorAsync(long id, CancellationToken cancellationToken) =>
-        Task.FromResult<Employee?>(null);
+        Task.FromResult(this.EmployeesById.GetValueOrDefault(id));
 
     public Task<IReadOnlyDictionary<long, Employee>> GetEmployeesByUserIdsAsync(CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyDictionary<long, Employee>>(new Dictionary<long, Employee>());

@@ -320,7 +320,8 @@
     "employeeForm": {
       "newEmployee": "Novi zaposleni",
       "addEmployee": "Dodaj zaposlenog",
-      "educationLevel": "Stručna sprema"
+      "educationLevel": "Stručna sprema",
+      "reassignConfirm": "Zaposleni dobija novog ocenjivača.\n\nNacrti ocena koji prelaze na novog ocenjivača: {drafts}\nPoslate ocene koje ostaju kod dosadašnjeg ocenjivača dok ih kontrolor ne vrati na doradu: {submitted}\n\nDa li želite da nastavite?"
     },
     "ratingConfig": {
       "newDescriptiveRating": "Nova opisna ocena",

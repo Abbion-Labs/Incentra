@@ -16,6 +16,7 @@ public sealed record ReturnEvaluationForRevisionCommand(long Id, int Version, st
 public sealed class ReturnEvaluationForRevisionCommandHandler : IRequestHandler<ReturnEvaluationForRevisionCommand, Result<EvaluationDetailResponse>>
 {
     private readonly IEvaluationRepository evaluationRepository;
+    private readonly IEmployeeRepository employeeRepository;
     private readonly ICurrentUserService currentUserService;
     private readonly EvaluationAccessService evaluationAccessService;
     private readonly IEvaluationNotificationService notificationService;
@@ -23,12 +24,14 @@ public sealed class ReturnEvaluationForRevisionCommandHandler : IRequestHandler<
 
     public ReturnEvaluationForRevisionCommandHandler(
         IEvaluationRepository evaluationRepository,
+        IEmployeeRepository employeeRepository,
         ICurrentUserService currentUserService,
         EvaluationAccessService evaluationAccessService,
         IEvaluationNotificationService notificationService,
         ILogger<ReturnEvaluationForRevisionCommandHandler> logger)
     {
         this.evaluationRepository = evaluationRepository;
+        this.employeeRepository = employeeRepository;
         this.currentUserService = currentUserService;
         this.evaluationAccessService = evaluationAccessService;
         this.notificationService = notificationService;
@@ -70,6 +73,15 @@ public sealed class ReturnEvaluationForRevisionCommandHandler : IRequestHandler<
         EvaluationWorkflow.ApplyTransition(
             entity, from, next, userId, this.currentUserService.ActiveRole, request.RevisionComment.Trim());
         entity.UpdatedByUserId = this.currentUserService.UserId;
+
+        // Written by an evaluator who has since handed the employee over: the revision is for whoever rates the
+        // employee now.
+        var employee = await this.employeeRepository.FindByIdWithEvaluatorAsync(entity.EmployeeId, cancellationToken);
+        if (employee?.EvaluatorEmployeeId is { } currentEvaluatorId && currentEvaluatorId != entity.EvaluatorEmployeeId)
+        {
+            var controllerId = await this.evaluationRepository.GetControllerEmployeeIdAsync(currentEvaluatorId, cancellationToken);
+            EvaluationReassignment.Assign(entity, currentEvaluatorId, controllerId);
+        }
 
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);
 

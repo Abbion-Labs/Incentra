@@ -143,6 +143,24 @@ public sealed class FakeEvaluationRepository : IEvaluationRepository
         CancellationToken cancellationToken) =>
         Task.FromResult<IReadOnlyList<ApprovedQuarterBenchmarkAverages>>([]);
 
+    public Task<bool> HasUnapprovedForEmployeeAsync(long employeeId, CancellationToken cancellationToken) =>
+        Task.FromResult(this.store.Values.Any(e => e.EmployeeId == employeeId && e.Status != EvaluationStatus.Approved));
+
+    public Task<IReadOnlyList<EvaluationEntity>> GetForUpdateByEmployeeAsync(
+        long employeeId,
+        EvaluationStatus status,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<EvaluationEntity>>(
+            this.store.Values.Where(e => e.EmployeeId == employeeId && e.Status == status).ToList());
+
+    public Task<IReadOnlyList<EvaluationEntity>> GetUnapprovedForUpdateByEvaluatorAsync(
+        long evaluatorEmployeeId,
+        CancellationToken cancellationToken) =>
+        Task.FromResult<IReadOnlyList<EvaluationEntity>>(
+            this.store.Values
+                .Where(e => e.EvaluatorEmployeeId == evaluatorEmployeeId && e.Status != EvaluationStatus.Approved)
+                .ToList());
+
     public Task AddAsync(EvaluationEntity entity, CancellationToken cancellationToken)
     {
         entity.Id = this.nextId++;

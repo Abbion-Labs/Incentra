@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Evaluation.Services;
 using VariableCompensation.Application.Hr.Models;
 using EvaluatorSettingsEntity = VariableCompensation.Domain.Entities.Hr.EvaluatorSettings;
 using VariableCompensation.Domain;
@@ -25,15 +26,18 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
     private readonly IEvaluatorSettingsRepository repository;
     private readonly IEmployeeRepository employeeRepository;
     private readonly IUserRepository userRepository;
+    private readonly IEvaluationRepository evaluationRepository;
 
     public UpdateEvaluatorSettingsCommandHandler(
         IEvaluatorSettingsRepository repository,
         IEmployeeRepository employeeRepository,
-        IUserRepository userRepository)
+        IUserRepository userRepository,
+        IEvaluationRepository evaluationRepository)
     {
         this.repository = repository;
         this.employeeRepository = employeeRepository;
         this.userRepository = userRepository;
+        this.evaluationRepository = evaluationRepository;
     }
 
     public async Task<Result<EvaluatorSettingsResponse>> Handle(UpdateEvaluatorSettingsCommand request, CancellationToken cancellationToken)
@@ -52,6 +56,19 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
         if (controllerCheck.IsFailure)
         {
             return Result.Failure<EvaluatorSettingsResponse>(controllerCheck.Error);
+        }
+
+        if (entity.ControllerEmployeeId != request.ControllerEmployeeId)
+        {
+            // Everything of this evaluator that still waits for a controller goes to the new one; the previous
+            // controller no longer supervises the evaluator.
+            var open = await this.evaluationRepository.GetUnapprovedForUpdateByEvaluatorAsync(
+                request.EmployeeId,
+                cancellationToken);
+            foreach (var evaluation in open)
+            {
+                EvaluationReassignment.Assign(evaluation, evaluation.EvaluatorEmployeeId, request.ControllerEmployeeId);
+            }
         }
 
         entity.ControllerEmployeeId = request.ControllerEmployeeId;
