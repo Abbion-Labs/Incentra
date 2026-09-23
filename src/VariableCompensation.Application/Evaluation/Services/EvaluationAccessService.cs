@@ -70,13 +70,12 @@ public sealed class EvaluationAccessService
         return Result.Failure(ErrorCodes.EvaluationAccessDenied);
     }
 
+    /// <summary>
+    /// Only the assigned evaluator works on a draft. An administrator can look at evaluations but takes no part
+    /// in rating or reviewing them.
+    /// </summary>
     public async Task<Result> EnsureCanEditDraftAsync(EvaluationEntity evaluation, CancellationToken cancellationToken)
     {
-        if (this.currentUserService.IsAdmin)
-        {
-            return Result.Success();
-        }
-
         if (!this.currentUserService.IsInRole(RoleCodes.Evaluator))
         {
             return Result.Failure(ErrorCodes.EvaluatorOnlyEditDraft);
@@ -99,13 +98,9 @@ public sealed class EvaluationAccessService
     public Task<Result> EnsureCanSubmitAsync(EvaluationEntity evaluation, CancellationToken cancellationToken) =>
         this.EnsureCanEditDraftAsync(evaluation, cancellationToken);
 
+    /// <summary>Only the assigned controller reviews, and never an evaluation of their own.</summary>
     public async Task<Result> EnsureCanReviewAsync(EvaluationEntity evaluation, CancellationToken cancellationToken)
     {
-        if (this.currentUserService.IsAdmin)
-        {
-            return Result.Success();
-        }
-
         if (!this.currentUserService.IsInRole(RoleCodes.Controller))
         {
             return Result.Failure(ErrorCodes.ControllerOnlyReview);
@@ -122,16 +117,16 @@ public sealed class EvaluationAccessService
             return Result.Failure(ErrorCodes.ControllerOnlyOwnAssigned);
         }
 
+        if (evaluation.EmployeeId == currentEmployeeId)
+        {
+            return Result.Failure(ErrorCodes.ControllerOwnEvaluation);
+        }
+
         return Result.Success();
     }
 
     public async Task<Result> EnsureCanCreateForEmployeeAsync(long employeeEvaluatorId, CancellationToken cancellationToken)
     {
-        if (this.currentUserService.IsAdmin)
-        {
-            return Result.Success();
-        }
-
         if (!this.currentUserService.IsInRole(RoleCodes.Evaluator))
         {
             return Result.Failure(ErrorCodes.EvaluatorOnlyCreate);

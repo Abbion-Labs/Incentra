@@ -97,15 +97,27 @@ public sealed class SubmitEvaluationCommandHandler : IRequestHandler<SubmitEvalu
         entity.ControllerViewedAt = null;
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
+        // An evaluator without a controller is at the top: nobody reviews them, so submitting is the final word.
+        var needsReview = entity.ControllerEmployeeId is not null;
+        if (!needsReview)
+        {
+            entity.ExcludedFromCompensation = !entity.ConditionsFulfilled;
+            EvaluationWorkflow.ApplyTransition(
+                entity, EvaluationStatus.Submitted, EvaluationStatus.Approved, userId, this.currentUserService.ActiveRole, null);
+        }
+
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);
 
-        try
+        if (needsReview)
         {
-            await this.notificationService.NotifySubmittedForReviewAsync(entity.Id, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogError(ex, "Failed to send submission notification for evaluation {EvaluationId}", entity.Id);
+            try
+            {
+                await this.notificationService.NotifySubmittedForReviewAsync(entity.Id, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Failed to send submission notification for evaluation {EvaluationId}", entity.Id);
+            }
         }
 
         var updated = await this.evaluationRepository.FindByIdAsync(entity.Id, cancellationToken);

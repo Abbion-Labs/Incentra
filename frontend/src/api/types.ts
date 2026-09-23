@@ -271,8 +271,9 @@ export interface DescriptiveRating {
 export interface EvaluatorSettings {
   employeeId: number;
   employeeFullName: string;
-  controllerEmployeeId: number;
-  controllerFullName: string;
+  /** Null kada ocenjivač nema kontrolora i njegove ocene se ne kontrolišu. */
+  controllerEmployeeId: number | null;
+  controllerFullName: string | null;
 }
 
 export interface EmployeeQuarterBenchmark {

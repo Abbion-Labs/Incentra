@@ -90,12 +90,14 @@
     "vn-0092": "Too many failed sign-in attempts. Try again in {seconds} seconds.",
     "vn-0093": "The selected person is not set up as an evaluator. Add them to the evaluators first.",
     "vn-0094": "This account is not linked to an employee. Link it on the employee form first, then grant the evaluator role.",
-    "vn-0095": "Pick a controller for the evaluator role.",
     "vn-0096": "This evaluator still has people assigned to them. Reassign them before removing the role.",
     "vn-0097": "People are assigned to this employee as their evaluator. Reassign them before deactivating.",
     "vn-0098": "The selected person is not a controller. Grant them the controller role on the Users tab.",
     "vn-0099": "This controller still has evaluators assigned to them. Reassign them before removing the role.",
     "vn-0100": "This role is not assigned to you. If it was just removed, sign in again.",
-    "vn-0101": "The employee has evaluations that are not approved yet, so they need an evaluator. Choose a new evaluator instead of removing it."
+    "vn-0101": "The employee has evaluations that are not approved yet, so they need an evaluator. Choose a new evaluator instead of removing it.",
+    "vn-0102": "An evaluator cannot be their own controller. If their evaluations need no review, choose \"No controller\".",
+    "vn-0103": "A controller cannot review the evaluator who rates them, as they would be reviewing their own evaluation.",
+    "vn-0104": "You cannot approve or return your own evaluation. An administrator needs to change the controller."
   }
 }

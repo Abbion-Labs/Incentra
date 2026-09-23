@@ -11,6 +11,7 @@ import {
 } from '../../components/evaluation/MeasuresEditorSection';
 import { TrainingSection } from '../../components/evaluation/TrainingSection';
 import { AppLayout } from '../../components/AppLayout';
+import { useAuth } from '../../auth/AuthContext';
 import { useEvaluation, useLookups, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { GoalsPlanningEmployeeCard } from '../evaluator/components/GoalsPlanningEmployeeCard';
@@ -38,8 +39,12 @@ export function ControllerReviewPage() {
     useState('');
   const [trainingEvaluatorComment, setTrainingEvaluatorComment] = useState('');
 
+  const { activeRole } = useAuth();
+  // Odlučuje samo kontrolor; admin ocenu samo gleda.
   const canReview =
-    evaluation?.status === 'Submitted' || evaluation?.status === 'UnderReview';
+    activeRole === 'CONTROLLER' &&
+    (evaluation?.status === 'Submitted' ||
+      evaluation?.status === 'UnderReview');
   const incompleteRatings = evaluation
     ? detailHasIncompleteRatings(evaluation)
     : false;

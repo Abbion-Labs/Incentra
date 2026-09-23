@@ -19,7 +19,7 @@ namespace VariableCompensation.Application.Hr.EvaluatorSettings.Commands;
 /// </summary>
 public sealed record UpdateEvaluatorSettingsCommand(
     long EmployeeId,
-    long ControllerEmployeeId) : IRequest<Result<EvaluatorSettingsResponse>>;
+    long? ControllerEmployeeId) : IRequest<Result<EvaluatorSettingsResponse>>;
 
 public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<UpdateEvaluatorSettingsCommand, Result<EvaluatorSettingsResponse>>
 {
@@ -48,7 +48,8 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
             return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.EvaluatorSettingsNotFound);
         }
 
-        var controllerCheck = await Services.ControllerRoleCheck.EnsureIsAControllerAsync(
+        var controllerCheck = await Services.ControllerRoleCheck.EnsureCanControlAsync(
+            request.EmployeeId,
             request.ControllerEmployeeId,
             this.employeeRepository,
             this.userRepository,

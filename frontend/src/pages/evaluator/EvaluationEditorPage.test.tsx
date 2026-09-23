@@ -21,6 +21,12 @@ vi.mock('../../components/AppLayout', () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
+const auth = vi.hoisted(() => ({ activeRole: 'EVALUATOR' as string | null }));
+
+vi.mock('../../auth/AuthContext', () => ({
+  useAuth: () => ({ activeRole: auth.activeRole }),
+}));
+
 // Uslovi nisu ispunjeni + komentar: ocena se može poslati bez ocenjivanja mera.
 const evaluation = {
   id: 5,
@@ -30,6 +36,7 @@ const evaluation = {
   quarter: 3,
   status: 'Draft',
   version: 4,
+  controllerEmployeeId: 3,
   goalsPlanningComplete: true,
   goalCount: 1,
   conditionsFulfilled: false,
@@ -60,9 +67,9 @@ const evaluation = {
   training: null,
 } as unknown as EvaluationDetail;
 
-function renderEditor() {
+function renderEditor(detail: EvaluationDetail = evaluation) {
   mockApiGetDeferred((path) => {
-    if (path === '/api/evaluations/5') return evaluation;
+    if (path === '/api/evaluations/5') return detail;
     if (path.startsWith('/api/lookups/')) return [];
     if (path.endsWith('/status-history')) return [];
     return undefined;
@@ -83,6 +90,7 @@ function renderEditor() {
 describe('EvaluationEditorPage', () => {
   beforeEach(() => {
     stubMatchMedia();
+    auth.activeRole = 'EVALUATOR';
   });
 
   afterEach(() => {
@@ -117,6 +125,31 @@ describe('EvaluationEditorPage', () => {
     expect(put).toHaveBeenCalledTimes(1);
     expect(confirm).toHaveProperty('disabled', true);
     expect(confirm.textContent).toBe('buttons.submitting');
+  });
+
+  it('finishes the evaluation for an evaluator without a controller', async () => {
+    renderEditor({ ...evaluation, controllerEmployeeId: null });
+
+    expect(
+      await screen.findByRole('button', { name: 'buttons.submitFinal' }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: 'buttons.submitToController' }),
+    ).toBeNull();
+  });
+
+  it('shows the draft read-only to an admin', async () => {
+    auth.activeRole = 'ADMIN';
+    renderEditor();
+
+    await screen.findByText('Cilj');
+    expect(screen.queryByRole('button', { name: 'buttons.save' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: 'buttons.submitToController' }),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText('evaluation.conditionsNotMetCommentLabel'),
+    ).toBeNull();
   });
 
   it('locks the rating fields while the evaluation is saving', async () => {

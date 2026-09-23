@@ -40,6 +40,7 @@
     "backToList": "Nazad na listu",
     "submitting": "Slanje...",
     "submitToController": "Pošalji kontroloru",
+    "submitFinal": "Pošalji i završi",
     "calculating": "Računanje...",
     "processing": "Obrada..."
   },
@@ -223,6 +224,8 @@
     "setPlanningBeforeRating": "Pre ocenjivanja potrebno je postaviti bar jedan cilj, jedan uslov i jedan kriterijum.",
     "submitToControllerTitle": "Slanje kontroloru",
     "submitToControllerConfirm": "Da li ste sigurni da želite da pošaljete ocenu kontroloru na pregled?",
+    "submitFinalTitle": "Završetak ocene",
+    "submitFinalConfirm": "Vaše ocene ne kontroliše kontrolor, pa će ocena biti odmah odobrena i više se neće moći menjati. Da li želite da nastavite?",
     "bucket": {
       "planning": "Postavljanje ciljeva",
       "unrated": "Neocenjene",
@@ -313,7 +316,7 @@
       "passwordOptionalPlaceholder": "Ostavite prazno ako se ne menja",
       "rolesHint": "Izaberite jednu ili više uloga. Korisnik mora imati bar jednu ulogu.",
       "evaluatorController": "Kontrolor ocenjivača",
-      "evaluatorControllerHint": "Ocenjivač se dodeljuje kontroloru koji pregleda njegove ocene. Kontrolor se kasnije može promeniti na kartici Ocenjivači.",
+      "evaluatorControllerHint": "Ocenjivač se dodeljuje kontroloru koji pregleda njegove ocene. Ocenjivaču na vrhu organizacije izaberite „Bez kontrolora“: njegove ocene su odobrene čim ih pošalje. Kontrolor se kasnije može promeniti na kartici Ocenjivači.",
       "evaluatorNeedsLinkedEmployee": "Ovaj nalog nije povezan ni sa jednim zaposlenim. Povežite ga u formi zaposlenog pre nego što mu dodelite ulogu ocenjivača.",
       "evaluatorNotAvailableAtCreate": "Ulogu ocenjivača dodeljujete izmenom naloga, pošto prvo mora da bude povezan sa zaposlenim."
     },
@@ -339,7 +342,9 @@
       "newSettings": "Novo podešavanje",
       "noSettings": "Nema podešavanja.",
       "selectToEdit": "Izaberite ocenjivača iz tabele da biste izmenili njegova podešavanja.",
-      "closeEditor": "Zatvori izmenu"
+      "closeEditor": "Zatvori izmenu",
+      "noController": "Bez kontrolora (ocena je konačna posle slanja)",
+      "noControllerShort": "Bez kontrolora"
     },
     "salaries": {
       "loadingEmployees": "Učitavanje zaposlenih...",
@@ -496,6 +501,7 @@
     "finalizedResults": "Finalizovano {count} rezultata.",
     "evaluationSaved": "Ocena sačuvana.",
     "evaluationSubmitted": "Ocena je poslata kontroloru.",
+    "evaluationApprovedOnSubmit": "Ocena je poslata i odobrena.",
     "goalsPlanningSaved": "Ciljevi, uslovi i kriterijumi su postavljeni.",
     "copiedFromQuarter": "Preuzeto iz Q{quarter}/{year}. Dopunite sadržaj i postavite ciljeve.",
     "evaluationApproved": "Ocena je odobrena.",

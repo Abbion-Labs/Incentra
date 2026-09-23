@@ -13,6 +13,12 @@ vi.mock('../../components/AppLayout', () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }));
 
+const auth = vi.hoisted(() => ({ activeRole: 'EVALUATOR' as string | null }));
+
+vi.mock('../../auth/AuthContext', () => ({
+  useAuth: () => ({ activeRole: auth.activeRole }),
+}));
+
 const evaluation = {
   id: 5,
   employeeId: 7,

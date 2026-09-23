@@ -91,11 +91,13 @@ public static class ErrorCodes
     public const string TooManyLoginAttempts = "vn-0092";
     public const string EvaluatorNotConfigured = "vn-0093";
     public const string EvaluatorUserNotLinkedToEmployee = "vn-0094";
-    public const string EvaluatorControllerRequired = "vn-0095";
     public const string EvaluatorHasSubordinates = "vn-0096";
     public const string EmployeeHasSubordinates = "vn-0097";
     public const string ControllerRoleRequired = "vn-0098";
     public const string ControllerHasEvaluators = "vn-0099";
     public const string RoleNotAssigned = "vn-0100";
     public const string EmployeeHasOpenEvaluations = "vn-0101";
+    public const string EvaluatorOwnController = "vn-0102";
+    public const string ControllerRatedByEvaluator = "vn-0103";
+    public const string ControllerOwnEvaluation = "vn-0104";
 }

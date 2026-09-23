@@ -6,7 +6,8 @@ public sealed class EvaluatorSettingsResponse
 
     public string EmployeeFullName { get; init; } = string.Empty;
 
-    public long ControllerEmployeeId { get; init; }
+    /// <summary>Null when the evaluator has no controller and their evaluations need no review.</summary>
+    public long? ControllerEmployeeId { get; init; }
 
-    public string ControllerFullName { get; init; } = string.Empty;
+    public string? ControllerFullName { get; init; }
 }

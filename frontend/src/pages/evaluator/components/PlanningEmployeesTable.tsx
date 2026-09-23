@@ -6,7 +6,8 @@ interface PlanningEmployeesTableProps {
   employees: Employee[];
   creatingFor: number | null;
   search: string;
-  onStartPlanning: (employeeId: number) => void;
+  /** Bez njega (admin samo gleda) dugme za postavljanje ciljeva se ne prikazuje. */
+  onStartPlanning?: (employeeId: number) => void;
   evaluationLabel: (employeeId: number) => string;
 }
 
@@ -63,16 +64,18 @@ export function PlanningEmployeesTable({
               </td>
               <td className="cell-muted col-text">{emp.jobPositionName}</td>
               <td className="col-actions">
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  disabled={creatingFor === emp.id}
-                  onClick={() => onStartPlanning(emp.id)}
-                >
-                  {creatingFor === emp.id
-                    ? formatMessage({ id: 'common.loading' })
-                    : evaluationLabel(emp.id)}
-                </button>
+                {onStartPlanning && (
+                  <button
+                    type="button"
+                    className="btn btn-primary btn-sm"
+                    disabled={creatingFor === emp.id}
+                    onClick={() => onStartPlanning(emp.id)}
+                  >
+                    {creatingFor === emp.id
+                      ? formatMessage({ id: 'common.loading' })
+                      : evaluationLabel(emp.id)}
+                  </button>
+                )}
               </td>
             </tr>
           ))}
