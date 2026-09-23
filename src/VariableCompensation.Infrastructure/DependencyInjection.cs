@@ -24,16 +24,43 @@ public static class DependencyInjection
         services.AddDbContext<AppDbContext>(options =>
             options.UseNpgsql(connectionString));
 
-        AddDatabaseInitialization(services, configuration, connectionString);
+        AddDeployment(services, configuration, connectionString);
+        AddDatabaseInitialization(services, configuration);
         services.AddAuthInfrastructure(configuration);
 
         return services;
     }
 
-    private static void AddDatabaseInitialization(
+    private static void AddDeployment(
         IServiceCollection services,
         IConfiguration configuration,
         string connectionString)
+    {
+        var section = configuration.GetSection(DeploymentOptions.SectionName);
+        var options = section.Get<DeploymentOptions>() ?? new DeploymentOptions();
+
+        services.Configure<DeploymentOptions>(section);
+
+        services.AddKeyedSingleton<
+            IDeploymentIdentityProvider,
+            VercelDeploymentIdentityProvider>(DeploymentOptions.VercelIdentityProvider);
+
+        services.AddKeyedSingleton<IDeploymentIdentityStore>(
+            DeploymentOptions.PostgresIdentityStore,
+            (_, _) => new PostgresDeploymentIdentityStore(connectionString));
+
+        services.AddSingleton<IDeploymentIdentityProvider>(
+            serviceProvider => serviceProvider.GetRequiredKeyedService<IDeploymentIdentityProvider>(
+                options.IdentityProvider));
+
+        services.AddSingleton<IDeploymentIdentityStore>(
+            serviceProvider => serviceProvider.GetRequiredKeyedService<IDeploymentIdentityStore>(
+                options.IdentityStore));
+    }
+
+    private static void AddDatabaseInitialization(
+        IServiceCollection services,
+        IConfiguration configuration)
     {
         var section = configuration.GetSection(DbInitOptions.SectionName);
         var options = section.Get<DbInitOptions>() ?? new DbInitOptions();
@@ -42,10 +69,6 @@ public static class DependencyInjection
 
         services.AddScoped<IDbInitializator, DbInitializator>();
         services.AddScoped<IDatabaseSeeder, DatabaseSeeder>();
-
-        services.AddSingleton<IDeploymentIdentityProvider, VercelDeploymentIdentityProvider>();
-        services.AddSingleton<IDeploymentIdentityStore>(
-            _ => new PostgresDeploymentIdentityStore(connectionString));
 
         services.AddKeyedScoped<IDbInitPolicy, OnStartDbInitPolicy>(DbInitOptions.OnStartPolicy);
         services.AddKeyedScoped<IDbInitPolicy, OnDeployDbInitPolicy>(DbInitOptions.OnDeployPolicy);

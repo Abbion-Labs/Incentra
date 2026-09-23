@@ -57,7 +57,7 @@ dotnet ef database update \
 
 Migracije i seed se pokreću kroz `IDbInitializator`. Podrazumevana `DbInit:Policy` je `OnStart`, pa lokalni razvoj inicijalizaciju izvršava pri svakom pokretanju. `DbInit:Seed` određuje da li se nakon migracija izvršava seed.
 
-Na Vercelu je `DbInit__Policy=OnDeploy`. `OnDeployDbInitPolicy` koristi `VERCEL_DEPLOYMENT_ID` kao identitet deployment-a i PostgreSQL store da samo jedna instanca za taj identitet dobije dozvolu za inicijalizaciju.
+Na Vercelu su `DbInit__Policy=OnDeploy`, `Deployment__IdentityProvider=Vercel` i `Deployment__IdentityStore=Postgres`. `OnDeployDbInitPolicy` zavisi samo od `IDeploymentIdentityProvider` i `IDeploymentIdentityStore`, dok konfiguracija bira njihove konkretne implementacije. Vercel provider koristi `VERCEL_DEPLOYMENT_ID`, a PostgreSQL store obezbeđuje da samo jedna instanca za taj identitet dobije dozvolu za inicijalizaciju.
 
 ## pgAdmin
 
@@ -368,6 +368,8 @@ Email__FromAddress
 Email__FrontendBaseUrl
 DbInit__Policy
 DbInit__Seed
+Deployment__IdentityProvider
+Deployment__IdentityStore
 ```
 
 ### SMTP konfiguracija
