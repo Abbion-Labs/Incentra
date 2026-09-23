@@ -10,7 +10,7 @@ import {
 import { IntlProvider } from 'react-intl';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { api } from '../../api/client';
+import { ApiError, api } from '../../api/client';
 import type { EvaluationDetail } from '../../api/types';
 import { ToastProvider } from '../../components/common/Toast';
 import { stubMatchMedia } from '../../test/browserStubs';
@@ -178,5 +178,42 @@ describe('EvaluationEditorPage', () => {
         .getByLabelText('evaluation.conditionsNotMetCommentLabel')
         .matches(':disabled'),
     ).toBe(false);
+  });
+
+  it('saves with the version the page was loaded with', async () => {
+    renderEditor();
+    const put = vi.spyOn(api, 'put').mockResolvedValue(evaluation);
+
+    await screen.findByLabelText('evaluation.conditionsNotMetCommentLabel');
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.save' }));
+
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    expect(put.mock.calls[0][1]).toMatchObject({ version: 4 });
+    // Ocena se pre čuvanja ne učitava ponovo, jer bi to prikrilo tuđu izmenu.
+    const evaluationLoads = vi
+      .mocked(api.get)
+      .mock.calls.filter(([path]) => path === '/api/evaluations/5');
+    expect(evaluationLoads).toHaveLength(1);
+  });
+
+  it('shows the new state when someone else saved in the meantime', async () => {
+    renderEditor();
+    vi.spyOn(api, 'put').mockRejectedValue(
+      new ApiError('vn-0024', 400, 'vn-0024', 'vn-0024'),
+    );
+
+    await screen.findByLabelText('evaluation.conditionsNotMetCommentLabel');
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.save' }));
+
+    expect(
+      await screen.findByText('errors.evaluationChangedMeanwhile'),
+    ).toBeTruthy();
+    await waitFor(() =>
+      expect(
+        vi
+          .mocked(api.get)
+          .mock.calls.filter(([path]) => path === '/api/evaluations/5'),
+      ).toHaveLength(2),
+    );
   });
 });
