@@ -26,7 +26,7 @@ export function ControllerEvaluatorAnalyticsPage() {
     setLoading(true);
     try {
       const data = await api.get<EvaluatorAnalytics>(
-        `/api/analytics/evaluator?year=${year}&evaluatorEmployeeId=${evaluatorEmployeeId}`,
+        `/api/controller/evaluators/${evaluatorEmployeeId}/analytics?year=${year}`,
       );
       setAnalytics(data);
     } catch (e) {

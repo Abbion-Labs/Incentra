@@ -52,6 +52,7 @@ export function EvaluatorDashboard() {
     queryKey: listQueryKey,
     fetchPage: (page, pageSize) =>
       buildEvaluationsPagePath(page, pageSize, {
+        scope: 'evaluator',
         year,
         quarter,
         bucket: activeTab,
@@ -60,6 +61,7 @@ export function EvaluatorDashboard() {
   });
 
   const { counts } = useEvaluationBucketCounts(countsQueryKey, {
+    scope: 'evaluator',
     year,
     quarter,
     search,

@@ -45,7 +45,8 @@ public class EvaluationWorkflowTests
         var evaluation = new EvaluationBuilder().WithVersion(1).Build();
         var userId = 42L;
 
-        EvaluationWorkflowService.ApplyTransition(evaluation, EvaluationStatus.Draft, EvaluationStatus.Submitted, userId, null);
+        EvaluationWorkflowService.ApplyTransition(
+            evaluation, EvaluationStatus.Draft, EvaluationStatus.Submitted, userId, RoleCodes.Evaluator, null);
 
         evaluation.Status.Should().Be(EvaluationStatus.Submitted);
         evaluation.Version.Should().Be(2);
@@ -53,7 +54,8 @@ public class EvaluationWorkflowTests
         evaluation.StatusHistory.Should().ContainSingle(h =>
             h.FromStatus == nameof(EvaluationStatus.Draft) &&
             h.ToStatus == nameof(EvaluationStatus.Submitted) &&
-            h.ChangedByUserId == userId);
+            h.ChangedByUserId == userId &&
+            h.ChangedByRoleCode == RoleCodes.Evaluator);
     }
 
     [Fact]
@@ -71,6 +73,7 @@ public class EvaluationWorkflowTests
             EvaluationStatus.UnderReview,
             EvaluationStatus.Draft,
             7,
+            RoleCodes.Controller,
             "Dopuniti merila");
 
         evaluation.Status.Should().Be(EvaluationStatus.Draft);

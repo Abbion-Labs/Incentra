@@ -10,6 +10,7 @@ using VariableCompensation.Application.Auth.Commands.Login;
 using VariableCompensation.Application.Auth.Commands.Logout;
 using VariableCompensation.Application.Auth.Commands.RefreshToken;
 using VariableCompensation.Application.Auth.Commands.RegisterUser;
+using VariableCompensation.Application.Auth.Commands.SelectRole;
 using VariableCompensation.Application.Auth.Commands.UpdateNotificationPreferences;
 using VariableCompensation.Application.Auth.Models;
 using VariableCompensation.Application.Auth.Queries.GetCurrentUser;
@@ -94,6 +95,21 @@ public sealed class AuthController : ControllerBase
         await this.mediator.Send(new LogoutCommand(this.ReadRefreshToken(request)), cancellationToken);
         this.Response.Cookies.Delete(RefreshCookieName, this.CreateRefreshCookieOptions());
         return this.NoContent();
+    }
+
+    [HttpPost("select-role")]
+    [Authorize]
+    public async Task<IActionResult> SelectRole([FromBody] SelectRoleRequest request, CancellationToken cancellationToken)
+    {
+        var result = await this.mediator.Send(new SelectRoleCommand(request.RoleCode), cancellationToken);
+        if (result.IsFailure)
+        {
+            return this.BadRequest(new { error = result.Error });
+        }
+
+        // The new session comes with its own refresh token, and the old one has just been revoked.
+        this.SetRefreshCookie(result.Value);
+        return this.Ok(result.Value);
     }
 
     [HttpGet("me")]

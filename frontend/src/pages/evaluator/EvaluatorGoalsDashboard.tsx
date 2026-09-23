@@ -24,7 +24,10 @@ import { useIntl } from '../../i18n';
 
 import { type GoalsBucket } from '../../utils/goalsBuckets';
 
-import { buildEvaluationsPagePath } from '../../utils/evaluationApi';
+import {
+  buildEvaluationsPagePath,
+  roleListPath,
+} from '../../utils/evaluationApi';
 
 import { GoalsBucketTabs } from './components/GoalsBucketTabs';
 
@@ -60,6 +63,7 @@ export function EvaluatorGoalsDashboard() {
   const countsQueryKey = `${year}|${quarter}|${search}`;
 
   const { counts } = useEvaluationBucketCounts(countsQueryKey, {
+    scope: 'evaluator',
     year,
     quarter,
     search,
@@ -102,7 +106,7 @@ export function EvaluatorGoalsDashboard() {
         params.set('search', search.trim());
       }
 
-      return `/api/employees?${params}`;
+      return `${roleListPath('employees', 'evaluator')}?${params}`;
     },
   });
 
@@ -126,6 +130,7 @@ export function EvaluatorGoalsDashboard() {
 
     fetchPage: (page, pageSize) =>
       buildEvaluationsPagePath(page, pageSize, {
+        scope: 'evaluator',
         year,
 
         quarter,
@@ -161,7 +166,12 @@ export function EvaluatorGoalsDashboard() {
 
     try {
       const result = await api.get<PagedResult<EvaluationSummary>>(
-        buildEvaluationsPagePath(1, 1, { year, quarter, employeeId }),
+        buildEvaluationsPagePath(1, 1, {
+          scope: 'evaluator',
+          year,
+          quarter,
+          employeeId,
+        }),
       );
 
       const existing = result.items?.[0];

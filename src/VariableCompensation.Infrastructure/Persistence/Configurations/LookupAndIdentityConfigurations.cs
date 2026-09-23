@@ -26,6 +26,7 @@ internal sealed class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(x => x.Email).HasMaxLength(255).IsRequired();
         builder.HasIndex(x => x.Email).IsUnique();
         builder.Property(x => x.PasswordHash).HasMaxLength(255).IsRequired();
+        builder.Property(x => x.LastActiveRoleCode).HasMaxLength(50);
         builder.Property(x => x.EmailNotificationsEnabled).HasDefaultValue(false);
     }
 }
@@ -48,6 +49,7 @@ internal sealed class RefreshTokenConfiguration : IEntityTypeConfiguration<Refre
         builder.ToTable("refresh_tokens");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.TokenHash).HasMaxLength(255).IsRequired();
+        builder.Property(x => x.ActiveRoleCode).HasMaxLength(50);
         builder.HasIndex(x => x.TokenHash).IsUnique();
         builder.HasIndex(x => x.SessionId);
         builder.HasIndex(x => x.ExpiresAt);

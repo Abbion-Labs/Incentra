@@ -4,6 +4,7 @@ import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSe
 import { AppLayout } from '../../components/AppLayout';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
+import { roleListPath } from '../../utils/evaluationApi';
 import { EmployeeListTable } from './components/EmployeeListTable';
 
 export function EvaluatorHomePage() {
@@ -33,7 +34,7 @@ export function EvaluatorHomePage() {
       if (search.trim()) {
         params.set('search', search.trim());
       }
-      return `/api/employees?${params}`;
+      return `${roleListPath('employees', 'evaluator')}?${params}`;
     },
   });
 

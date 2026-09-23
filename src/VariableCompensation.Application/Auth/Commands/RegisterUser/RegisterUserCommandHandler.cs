@@ -2,7 +2,6 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
-using VariableCompensation.Application.Auth.Commands.Login;
 using VariableCompensation.Application.Auth.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Identity;
@@ -84,6 +83,6 @@ public sealed class RegisterUserCommandHandler : IRequestHandler<RegisterUserCom
         // Only an administrator creates accounts, so no tokens are issued here: they would sign the administrator
         // in as the new user. The new user signs in with the password they are given.
         var roles = reloaded.UserRoles.Select(ur => ur.Role.Code).ToList();
-        return Result.Success(LoginCommandHandler.MapProfile(reloaded, roles));
+        return Result.Success(UserProfileMapper.Map(reloaded, roles));
     }
 }

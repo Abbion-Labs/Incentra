@@ -134,6 +134,7 @@ internal static class EvaluationMappings
             FromStatus = entity.FromStatus,
             ToStatus = entity.ToStatus,
             ChangedByUserId = entity.ChangedByUserId,
+            ChangedByRoleCode = entity.ChangedByRoleCode,
             Comment = entity.Comment,
             ChangedAt = entity.ChangedAt
         };

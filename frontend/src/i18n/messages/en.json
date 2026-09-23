@@ -14,7 +14,14 @@
     "controllerEvaluators": "My evaluators",
     "employeeEvaluations": "My evaluations",
     "adminCrud": "CRUD",
-    "adminVariableCompensation": "Compensation"
+    "adminVariableCompensation": "Compensation",
+    "activeRole": "Active role"
+  },
+  "roleSwitch": {
+    "pageNeedsRole": "This page belongs to the {role} role, and you are working in another one.",
+    "action": "Switch to {role}",
+    "inProgress": "Switching role...",
+    "failed": "Could not switch the role."
   },
   "buttons": {
     "save": "Save",

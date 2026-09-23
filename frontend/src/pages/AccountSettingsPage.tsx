@@ -12,8 +12,12 @@ import { roleLabel } from '../utils/status';
 export function AccountSettingsPage() {
   const { formatMessage } = useIntl();
   const toast = useToast();
-  const { user, updateEmployeeProfile, updateNotificationPreferences } =
-    useAuth();
+  const {
+    user,
+    activeRole,
+    updateEmployeeProfile,
+    updateNotificationPreferences,
+  } = useAuth();
   const [employee, setEmployee] = useState<Employee | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -93,8 +97,6 @@ export function AccountSettingsPage() {
     }
   }
 
-  const primaryRole = user?.roles[0];
-
   return (
     <AppLayout title={formatMessage({ id: 'account.title' })}>
       <div className="account-settings">
@@ -136,9 +138,9 @@ export function AccountSettingsPage() {
           ) : (
             <div className="account-settings__no-employee">
               <p className="account-settings__name">{user?.email}</p>
-              {primaryRole && (
+              {activeRole && (
                 <span className="badge account-settings__role">
-                  {roleLabel(primaryRole, formatMessage)}
+                  {roleLabel(activeRole, formatMessage)}
                 </span>
               )}
               <p className="card__hint">

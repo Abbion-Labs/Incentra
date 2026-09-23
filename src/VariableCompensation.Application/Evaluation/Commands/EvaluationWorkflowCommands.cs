@@ -92,7 +92,8 @@ public sealed class SubmitEvaluationCommandHandler : IRequestHandler<SubmitEvalu
         this.scoringService.Recalculate(entity, ratingLevels, descriptiveRatings);
 
         var userId = this.currentUserService.UserId ?? 0;
-        EvaluationWorkflow.ApplyTransition(entity, entity.Status, next, userId, null);
+        EvaluationWorkflow.ApplyTransition(
+            entity, entity.Status, next, userId, this.currentUserService.ActiveRole, null);
         entity.ControllerViewedAt = null;
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
@@ -171,7 +172,8 @@ public sealed class StartReviewEvaluationCommandHandler : IRequestHandler<StartR
 
         var from = entity.Status;
         var userId = this.currentUserService.UserId ?? 0;
-        EvaluationWorkflow.ApplyTransition(entity, from, next, userId, comment);
+        EvaluationWorkflow.ApplyTransition(
+            entity, from, next, userId, this.currentUserService.ActiveRole, comment);
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);
@@ -233,7 +235,8 @@ public sealed class ApproveEvaluationCommandHandler : IRequestHandler<ApproveEva
         var userId = this.currentUserService.UserId ?? 0;
         entity.ControllerComment = request.ControllerComment;
         entity.ExcludedFromCompensation = !entity.ConditionsFulfilled;
-        EvaluationWorkflow.ApplyTransition(entity, from, next, userId, request.ControllerComment);
+        EvaluationWorkflow.ApplyTransition(
+            entity, from, next, userId, this.currentUserService.ActiveRole, request.ControllerComment);
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);

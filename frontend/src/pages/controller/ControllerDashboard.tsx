@@ -41,6 +41,7 @@ export function ControllerDashboard() {
     queryKey: listQueryKey,
     fetchPage: (page, pageSize) =>
       buildEvaluationsPagePath(page, pageSize, {
+        scope: 'controller',
         year,
         quarter,
         bucket,

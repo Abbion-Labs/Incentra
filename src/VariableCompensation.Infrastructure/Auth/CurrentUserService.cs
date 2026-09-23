@@ -28,6 +28,8 @@ public sealed class CurrentUserService : ICurrentUserService
             .ToList()
         ?? [];
 
+    public string? ActiveRole => this.Roles.Count == 1 ? this.Roles[0] : null;
+
     public bool IsInRole(string role) => this.Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
 
     public bool IsAdmin => this.IsInRole(RoleCodes.Admin);

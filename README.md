@@ -99,9 +99,16 @@ Endpointi:
 - `POST /api/auth/refresh` — javno; refresh token čita iz kolačića
 - `POST /api/auth/logout` — javno; odjavljuje celu sesiju i briše kolačić
 - `GET /api/auth/me` — zahteva JWT (`Authorize`)
+- `POST /api/auth/select-role` — zahteva JWT; `{ roleCode }`; zatvara tekuću sesiju i otvara novu u izabranoj ulozi
 - `POST /api/auth/register` — samo `ADMIN` role; vraća profil novog korisnika, bez tokena
 
 Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud/users`) pri kreiranju ili izmeni korisnika izaberite jednu ili više uloga (checkbox). Promena uloga odmah odjavljuje sve sesije tog korisnika, pa se mora ponovo prijaviti da bi JWT sadržao nove uloge.
+
+Sesija radi u **jednoj ulozi**: JWT nosi samo nju (`activeRole` u profilu), refresh token je pamti kroz rotaciju, a nalog pamti poslednju izabranu ulogu za sledeću prijavu. Prijava počinje u poslednjoj korišćenoj ulozi, a ako je nema, po prioritetu `EVALUATOR → CONTROLLER → EMPLOYEE → PAYROLL → ADMIN`. Ulogu menja prekidač **Aktivna uloga** u zaglavlju: `select-role` gasi tekuću sesiju i otvara novu samo za izabranu ulogu, pa stari access token prestaje da važi odmah, a ostali tabovi (dele kolačić) pređu u novu ulogu čim ih kanal obavesti. Uz promenu statusa ocene beleži se i uloga u kojoj je korisnik tada radio.
+
+> **Sesije otvorene pre ove izmene nose sve uloge u tokenu, pa nemaju aktivnu ulogu.** Korisnik sa više uloga do prvog osvežavanja tokena vidi samo svoj zapis i prazne liste; token se osvežava pri svakom učitavanju aplikacije, a najkasnije kroz sat vremena, i tada dobija ulogu po pravilu iz prethodnog pasusa.
+
+Ekrani ocenjivača i kontrolora imaju svoje liste: `GET /api/evaluator/{evaluations,employees,analytics}` i `GET /api/controller/{evaluations,employees,evaluators/{id}/analytics}`. Zajedničke liste (`/api/evaluations`, `/api/employees`) koriste admin ekrani i ekran „Moje ocene“.
 
 ### Tokeni
 

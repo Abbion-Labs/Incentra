@@ -54,6 +54,7 @@ export function ControllerWorkflowPage() {
     queryKey: listQueryKey,
     fetchPage: (page, pageSize) =>
       buildEvaluationsPagePath(page, pageSize, {
+        scope: 'controller',
         year,
         quarter,
         bucket: activeTab,
@@ -62,6 +63,7 @@ export function ControllerWorkflowPage() {
   });
 
   const { counts } = useEvaluationBucketCounts(countsQueryKey, {
+    scope: 'controller',
     year,
     quarter,
     search,

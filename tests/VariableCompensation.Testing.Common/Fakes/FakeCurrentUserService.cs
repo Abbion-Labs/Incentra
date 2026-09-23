@@ -1,4 +1,4 @@
-using VariableCompensation.Application.Abstractions.Auth;
+﻿using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Domain.Enums;
 
 namespace VariableCompensation.Testing.Common.Fakes;
@@ -12,6 +12,9 @@ public sealed class FakeCurrentUserService : ICurrentUserService
     public bool IsAuthenticated { get; set; } = true;
 
     public IReadOnlyList<string> Roles { get; set; } = [];
+
+    /// <summary>The role of the session: the single role the token carries.</summary>
+    public string? ActiveRole => this.Roles.Count == 1 ? this.Roles[0] : null;
 
     public bool IsAdmin => this.Roles.Contains(RoleCodes.Admin, StringComparer.OrdinalIgnoreCase);
 

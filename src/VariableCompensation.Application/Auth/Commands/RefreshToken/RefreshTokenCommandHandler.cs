@@ -1,4 +1,4 @@
-using CSharpFunctionalExtensions;
+﻿using CSharpFunctionalExtensions;
 using MediatR;
 using Microsoft.Extensions.Logging;
 using VariableCompensation.Application.Abstractions.Auth;
@@ -6,27 +6,26 @@ using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Auth.Commands.Login;
 using VariableCompensation.Application.Auth.Models;
 using VariableCompensation.Domain;
-using VariableCompensation.Domain.Entities.Identity;
 
 namespace VariableCompensation.Application.Auth.Commands.RefreshToken;
 
 public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCommand, Result<AuthResponse>>
 {
     private readonly IUserRepository userRepository;
-    private readonly IEmployeeRepository employeeRepository;
+    private readonly AuthSessionIssuer sessionIssuer;
     private readonly IJwtTokenService jwtTokenService;
     private readonly TimeProvider timeProvider;
     private readonly ILogger<RefreshTokenCommandHandler> logger;
 
     public RefreshTokenCommandHandler(
         IUserRepository userRepository,
-        IEmployeeRepository employeeRepository,
+        AuthSessionIssuer sessionIssuer,
         IJwtTokenService jwtTokenService,
         TimeProvider timeProvider,
         ILogger<RefreshTokenCommandHandler> logger)
     {
         this.userRepository = userRepository;
-        this.employeeRepository = employeeRepository;
+        this.sessionIssuer = sessionIssuer;
         this.jwtTokenService = jwtTokenService;
         this.timeProvider = timeProvider;
         this.logger = logger;
@@ -61,13 +60,20 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             UserId = user.Id,
             SessionId = storedToken.SessionId,
             TokenHash = LoginCommandHandler.HashToken(refreshTokenPlain),
-            ExpiresAt = this.jwtTokenService.GetRefreshTokenExpiry()
+            ExpiresAt = this.jwtTokenService.GetRefreshTokenExpiry(),
+
+            // The session carries on in its own role. A session from before the role was carried has none,
+            // and falls back the same way a new session would.
+            ActiveRoleCode = ActiveRoles.ForSession(
+                user.UserRoles.Select(ur => ur.Role.Code).ToList(),
+                storedToken.ActiveRoleCode,
+                user.LastActiveRoleCode),
         };
 
         if (storedToken.RevokedAt is null
             && await this.userRepository.TryRotateRefreshTokenAsync(storedToken, successor, now, cancellationToken))
         {
-            return await this.CreateResponseAsync(user, successor, refreshTokenPlain, cancellationToken);
+            return await this.sessionIssuer.DescribeAsync(user, successor, refreshTokenPlain, cancellationToken);
         }
 
         // The token has been exchanged before, or a concurrent refresh with it got there first a moment ago.
@@ -85,7 +91,7 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             // two tabs refreshed at once. It carries on in the same session.
             await this.userRepository.AddRefreshTokenAsync(successor, cancellationToken);
             await this.userRepository.SaveChangesAsync(cancellationToken);
-            return await this.CreateResponseAsync(user, successor, refreshTokenPlain, cancellationToken);
+            return await this.sessionIssuer.DescribeAsync(user, successor, refreshTokenPlain, cancellationToken);
         }
 
         // An exchanged token came back long after its successor took over, so a copy of it is in someone else's
@@ -98,24 +104,5 @@ public sealed class RefreshTokenCommandHandler : IRequestHandler<RefreshTokenCom
             storedToken.SessionId);
 
         return Result.Failure<AuthResponse>(ErrorCodes.RefreshTokenInvalid);
-    }
-
-    private async Task<AuthResponse> CreateResponseAsync(
-        User user,
-        Domain.Entities.Identity.RefreshToken refreshToken,
-        string refreshTokenPlain,
-        CancellationToken cancellationToken)
-    {
-        var roles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
-        var employee = await this.employeeRepository.FindByUserIdAsync(user.Id, cancellationToken);
-
-        return new AuthResponse
-        {
-            AccessToken = this.jwtTokenService.GenerateAccessToken(user, roles, refreshToken.SessionId),
-            RefreshToken = refreshTokenPlain,
-            AccessTokenExpiresAt = this.jwtTokenService.GetAccessTokenExpiry(),
-            RefreshTokenExpiresAt = refreshToken.ExpiresAt,
-            User = LoginCommandHandler.MapProfile(user, roles, employee)
-        };
     }
 }

@@ -40,7 +40,7 @@ const employee = {
 } as unknown as Employee;
 
 const previousQuarterPath =
-  '/api/evaluations?pageSize=5&year=2026&quarter=2&employeeId=7';
+  '/api/evaluator/evaluations?pageSize=5&year=2026&quarter=2&employeeId=7';
 
 describe('GoalsPlanningPage', () => {
   beforeEach(() => {

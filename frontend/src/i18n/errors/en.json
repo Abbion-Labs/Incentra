@@ -97,6 +97,7 @@
     "vn-0096": "This evaluator still has people assigned to them. Reassign them before removing the role.",
     "vn-0097": "People are assigned to this employee as their evaluator. Reassign them before deactivating.",
     "vn-0098": "The selected person is not a controller. Grant them the controller role on the Users tab.",
-    "vn-0099": "This controller still has evaluators assigned to them. Reassign them before removing the role."
+    "vn-0099": "This controller still has evaluators assigned to them. Reassign them before removing the role.",
+    "vn-0100": "This role is not assigned to you. If it was just removed, sign in again."
   }
 }

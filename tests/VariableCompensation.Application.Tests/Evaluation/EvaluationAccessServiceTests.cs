@@ -132,4 +132,33 @@ public class EvaluationAccessServiceTests
 
         employeeId.Should().Be(-1);
     }
+
+    [Theory]
+    [InlineData(RoleCodes.Employee, 7L, null, null)]
+    [InlineData(RoleCodes.Evaluator, 10L, 7L, null)]
+    [InlineData(RoleCodes.Controller, 10L, 2L, 7L)]
+    public async Task ResolveListFiltersAsync_ScopesToTheRoleOfTheSession(
+        string sessionRole,
+        long? expectedEmployeeId,
+        long? expectedEvaluatorEmployeeId,
+        long? expectedControllerEmployeeId)
+    {
+        this.userService.Roles = [sessionRole];
+        this.employeeContext.EmployeeId = 7;
+
+        var filters = await this.service.ResolveListFiltersAsync(10, 2, null, CancellationToken.None);
+
+        filters.Should().Be((expectedEmployeeId, expectedEvaluatorEmployeeId, expectedControllerEmployeeId));
+    }
+
+    [Fact]
+    public async Task ResolveListFiltersAsync_AdminSession_SeesEverything()
+    {
+        this.userService.Roles = [RoleCodes.Admin];
+        this.employeeContext.EmployeeId = 7;
+
+        var filters = await this.service.ResolveListFiltersAsync(10, 2, 3, CancellationToken.None);
+
+        filters.Should().Be(((long?)10, (long?)2, (long?)3));
+    }
 }

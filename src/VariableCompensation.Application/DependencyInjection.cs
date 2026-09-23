@@ -3,6 +3,7 @@ using MediatR;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using VariableCompensation.Application.Abstractions.Notifications;
+using VariableCompensation.Application.Auth;
 using VariableCompensation.Application.Compensation.Services;
 using VariableCompensation.Application.Evaluation.Services;
 using VariableCompensation.Application.Hr.Services;
@@ -15,6 +16,7 @@ public static class DependencyInjection
     {
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+        services.AddScoped<AuthSessionIssuer>();
         services.AddScoped<EvaluationScoringService>();
         services.AddScoped<EvaluationAccessService>();
         services.AddScoped<ControllerSupervisionService>();

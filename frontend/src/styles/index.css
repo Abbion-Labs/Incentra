@@ -264,6 +264,27 @@ textarea {
   color: var(--muted);
 }
 
+.topbar-role-switch {
+  max-width: 12rem;
+  padding: 0.4rem 0.6rem;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.topbar-role-switch:hover {
+  border-color: #cbd5e1;
+}
+
+.topbar-role-switch:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+
 .layout-body {
   display: flex;
   flex: 1;
@@ -1881,6 +1902,22 @@ textarea {
   margin-bottom: 0.35rem;
 }
 
+.role-switch-prompt {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-md);
+}
+
+.role-switch-prompt__error {
+  margin: 0;
+  color: var(--danger);
+}
+
+.evaluation-status-history__role::before {
+  content: '·';
+  margin: 0 0.35rem;
+}
+
 .evaluation-status-history__transition {
   margin: 0;
   font-weight: 500;
@@ -2832,6 +2869,16 @@ textarea {
 
   .topbar-user__name {
     display: none;
+  }
+
+  .topbar-meta {
+    gap: var(--space-sm);
+  }
+
+  .topbar-role-switch {
+    max-width: 6rem;
+    padding: 0.35rem 0.4rem;
+    font-size: var(--text-xs);
   }
 
   .form-section__header {
