@@ -34,7 +34,8 @@ import { isGoalsPlanningComplete } from '../../utils/goalsPlanning';
 import { getMeasureRatingComment } from '../../utils/measureRatingDefaults';
 import {
   fetchLatestEvaluation,
-  mergeGoalsForRatingSave,
+  isStaleEvaluationError,
+  toRatingGoalSaveItems,
   type RatingGoalSaveItem,
 } from '../../utils/evaluationSave';
 import type { MeasureDraft } from '../../components/evaluation/MeasuresEditorSection';
@@ -211,6 +212,19 @@ export function EvaluationEditorPage() {
     [markDirty],
   );
 
+  /** Ocena je izmenjena posle učitavanja: prikazuje se njeno novo stanje. */
+  const reloadAfterConflict = useCallback(
+    async (id: number) => {
+      toast.warning(formatMessage({ id: 'errors.evaluationChangedMeanwhile' }));
+      try {
+        setEvaluation(await fetchLatestEvaluation(id));
+      } catch {
+        // Stranica ostaje na starom stanju; sledeće čuvanje opet javlja konflikt.
+      }
+    },
+    [formatMessage, setEvaluation, toast],
+  );
+
   const persistEvaluation = useCallback(
     async (options?: {
       silent?: boolean;
@@ -220,8 +234,8 @@ export function EvaluationEditorPage() {
         setSaving(true);
       }
       try {
-        const server = await fetchLatestEvaluation(evaluation.id);
-
+        // Verzija sa kojom je stranica učitana: ako je ocenu u međuvremenu
+        // sačuvao neko drugi, server odbija čuvanje umesto da je pregazi.
         const payload: {
           version: number;
           conversationAt: string | null;
@@ -242,18 +256,15 @@ export function EvaluationEditorPage() {
             evaluatorComment: string | null;
           };
         } = {
-          version: server.version,
-          conversationAt: server.conversationAt,
-          evaluatorComment: server.evaluatorComment,
+          version: evaluation.version,
+          conversationAt: evaluation.conversationAt,
+          evaluatorComment: evaluation.evaluatorComment,
           conditionsNotMetComment: conditionsNotMetComment || null,
           conditionsFulfilled,
         };
 
         if (conditionsFulfilled) {
-          payload.goals = mergeGoalsForRatingSave(
-            server.goals,
-            evaluation.goals,
-          );
+          payload.goals = toRatingGoalSaveItems(evaluation.goals);
           payload.measures = measures.map((m, i) => ({
             measureTypeId: m.measureTypeId,
             ratingComment: m.ratingComment || null,
@@ -280,12 +291,11 @@ export function EvaluationEditorPage() {
         }
         return current;
       } catch (e) {
-        try {
-          const latest = await fetchLatestEvaluation(evaluation.id);
-          setEvaluation(latest);
-        } catch {
-          // ignore sync failure
+        if (isStaleEvaluationError(e)) {
+          await reloadAfterConflict(evaluation.id);
+          return null;
         }
+        // Izmene ostaju u formi, da ih korisnik ne izgubi zbog greške.
         toast.error(
           e instanceof Error
             ? e.message
@@ -305,6 +315,7 @@ export function EvaluationEditorPage() {
       formatMessage,
       measures,
       missingKnowledgeSkills,
+      reloadAfterConflict,
       selfDevelopmentSuggestions,
       setEvaluation,
       toast,
@@ -344,6 +355,11 @@ export function EvaluationEditorPage() {
       );
       setConfirmSubmit(false);
     } catch (e) {
+      if (isStaleEvaluationError(e)) {
+        setConfirmSubmit(false);
+        await reloadAfterConflict(evaluation.id);
+        return;
+      }
       toast.error(
         e instanceof Error
           ? e.message

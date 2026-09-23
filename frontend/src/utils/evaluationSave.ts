@@ -1,10 +1,25 @@
-import { api } from '../api/client';
+import { ApiError, api } from '../api/client';
 import type { EvaluationDetail, EvaluationGoal } from '../api/types';
+
+const EVALUATION_VERSION_CONFLICT = 'vn-0024';
+const CONCURRENCY_CONFLICT = 'vn-0090';
 
 export async function fetchLatestEvaluation(
   id: number,
 ): Promise<EvaluationDetail> {
   return api.get<EvaluationDetail>(`/api/evaluations/${id}`);
+}
+
+/**
+ * Server odbija čuvanje jer je ocena izmenjena posle učitavanja stranice.
+ * Stranica tada učitava novo stanje umesto da pregazi tuđu izmenu.
+ */
+export function isStaleEvaluationError(error: unknown): boolean {
+  return (
+    error instanceof ApiError &&
+    (error.code === EVALUATION_VERSION_CONFLICT ||
+      error.code === CONCURRENCY_CONFLICT)
+  );
 }
 
 export interface RatingGoalSaveItem {
@@ -15,24 +30,15 @@ export interface RatingGoalSaveItem {
   sortOrder: number;
 }
 
-/** Keep goal text from server; apply local ratings from the rating editor. */
-export function mergeGoalsForRatingSave(
-  serverGoals: EvaluationGoal[],
-  localGoals: EvaluationGoal[],
+/** Ciljevi onakvi kakve je stranica učitala, sa ocenama iz editora. */
+export function toRatingGoalSaveItems(
+  goals: EvaluationGoal[],
 ): RatingGoalSaveItem[] {
-  const localById = new Map(localGoals.map((goal) => [goal.id, goal]));
-
-  return serverGoals.map((serverGoal) => {
-    const local =
-      localById.get(serverGoal.id) ??
-      localGoals.find((goal) => goal.sortOrder === serverGoal.sortOrder);
-
-    return {
-      description: serverGoal.description,
-      ratingLevelId: local?.ratingLevelId ?? serverGoal.ratingLevelId,
-      comment: local?.comment ?? serverGoal.comment,
-      weight: local?.weight ?? serverGoal.weight,
-      sortOrder: serverGoal.sortOrder,
-    };
-  });
+  return goals.map((goal) => ({
+    description: goal.description,
+    ratingLevelId: goal.ratingLevelId,
+    comment: goal.comment,
+    weight: goal.weight,
+    sortOrder: goal.sortOrder,
+  }));
 }
