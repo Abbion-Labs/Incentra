@@ -80,14 +80,6 @@ public class EvaluatorAssignmentIntegrationTests
             {
                 employeeId = TestEmployeeIds.Employee,
                 controllerEmployeeId = TestEmployeeIds.Controller,
-                thresholdDoesNotMeet = 2m,
-                thresholdMeets = 2.5m,
-                thresholdGood = 3.5m,
-                thresholdExceeds = 4.5m,
-                percentDoesNotMeet = 0m,
-                percentMeets = 25m,
-                percentGood = 50m,
-                percentExceeds = 100m,
             });
 
         // The endpoint is gone: granting the role is the only way in.

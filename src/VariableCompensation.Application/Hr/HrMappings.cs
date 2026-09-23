@@ -74,14 +74,6 @@ internal static class HrMappings
             EmployeeId = entity.EmployeeId,
             EmployeeFullName = entity.Employee.FullName,
             ControllerEmployeeId = entity.ControllerEmployeeId,
-            ControllerFullName = entity.Controller.FullName,
-            ThresholdDoesNotMeet = entity.ThresholdDoesNotMeet,
-            ThresholdMeets = entity.ThresholdMeets,
-            ThresholdGood = entity.ThresholdGood,
-            ThresholdExceeds = entity.ThresholdExceeds,
-            PercentDoesNotMeet = entity.PercentDoesNotMeet,
-            PercentMeets = entity.PercentMeets,
-            PercentGood = entity.PercentGood,
-            PercentExceeds = entity.PercentExceeds
+            ControllerFullName = entity.Controller.FullName
         };
 }

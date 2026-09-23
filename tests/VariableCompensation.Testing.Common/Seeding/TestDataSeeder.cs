@@ -167,14 +167,6 @@ public static class TestDataSeeder
             {
                 EmployeeId = evaluator.Id,
                 ControllerEmployeeId = controller.Id,
-                ThresholdDoesNotMeet = 2.0m,
-                ThresholdMeets = 2.5m,
-                ThresholdGood = 3.5m,
-                ThresholdExceeds = 4.5m,
-                PercentDoesNotMeet = 0.05m,
-                PercentMeets = 0.10m,
-                PercentGood = 0.15m,
-                PercentExceeds = 0.20m,
             });
             await context.SaveChangesAsync();
         }

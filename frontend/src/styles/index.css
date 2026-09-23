@@ -4115,12 +4115,6 @@ textarea {
   font-size: 0.9rem;
 }
 
-.admin-settings-thresholds {
-  white-space: nowrap;
-  font-size: 0.85rem;
-  color: var(--muted);
-}
-
 .account-settings {
   display: grid;
   gap: 1.25rem;

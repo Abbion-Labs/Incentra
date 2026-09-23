@@ -275,14 +275,6 @@ internal static class RealisticOrganizationSeeder
             {
                 EmployeeId = evaluators[i].Id,
                 ControllerEmployeeId = controller.Id,
-                ThresholdDoesNotMeet = 2.00m,
-                ThresholdMeets = 2.50m,
-                ThresholdGood = 3.50m,
-                ThresholdExceeds = 4.50m,
-                PercentDoesNotMeet = 0m,
-                PercentMeets = 5m,
-                PercentGood = 10m,
-                PercentExceeds = 15m,
             });
         }
 

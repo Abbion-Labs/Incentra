@@ -70,8 +70,8 @@ export function AdminUserForm({
   const wantsEvaluator = values.roleCodes.includes('EVALUATOR');
   const missingEmployeeLink =
     wantsEvaluator && isEditing && editingUser.employeeId == null;
-  // Thresholds keep whatever the admin tuned, so only a brand new evaluator
-  // has to name a controller here.
+  // An existing evaluator keeps the controller already assigned, so only a
+  // brand new evaluator has to name one here.
   const needsController =
     wantsEvaluator &&
     isEditing &&

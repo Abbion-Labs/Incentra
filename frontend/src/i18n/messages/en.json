@@ -313,7 +313,7 @@
       "passwordOptionalPlaceholder": "Leave blank to keep current password",
       "rolesHint": "Select one or more roles. The user must have at least one role.",
       "evaluatorController": "Evaluator's controller",
-      "evaluatorControllerHint": "An evaluator reports to a controller who reviews their ratings. Thresholds start from the defaults and are changed on the Evaluators tab.",
+      "evaluatorControllerHint": "An evaluator reports to a controller who reviews their ratings. The controller can be changed later on the Evaluators tab.",
       "evaluatorNeedsLinkedEmployee": "This account is not linked to an employee. Link it on the employee form before granting the evaluator role.",
       "evaluatorNotAvailableAtCreate": "The evaluator role is granted by editing the account, since it must be linked to an employee first."
     },
@@ -336,17 +336,7 @@
     },
     "evaluatorSettings": {
       "newSettings": "New settings",
-      "thresholdExceeds": "Threshold: exceeds",
-      "percentExceeds": "% compensation: exceeds",
-      "percentDoesNotMeet": "% compensation: does not meet",
-      "percentMeets": "% compensation: meets",
-      "percentGood": "% compensation: good",
-      "compensationPercent": "% compensation",
       "noSettings": "No settings.",
-      "thresholdDoesNotMeet": "Threshold: does not meet",
-      "thresholdMeets": "Threshold: meets",
-      "thresholdGood": "Threshold: good",
-      "thresholds": "Thresholds",
       "selectToEdit": "Pick an evaluator from the table to change their settings.",
       "closeEditor": "Close editor"
     },

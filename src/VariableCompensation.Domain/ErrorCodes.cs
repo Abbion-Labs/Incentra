@@ -43,8 +43,6 @@ public static class ErrorCodes
     public const string RecommendedShareInvalid = "vn-0040";
     public const string DescriptiveRatingCodeExists = "vn-0041";
     public const string AverageRangeOverlap = "vn-0042";
-    public const string ThresholdOrderInvalid = "vn-0043";
-    public const string PercentNegative = "vn-0044";
     public const string EvaluatorSettingsExists = "vn-0045";
     public const string EvaluatorSettingsNotFound = "vn-0046";
     public const string ControllerNotFound = "vn-0047";

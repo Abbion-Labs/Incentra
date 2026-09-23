@@ -274,14 +274,6 @@ export interface EvaluatorSettings {
   employeeFullName: string;
   controllerEmployeeId: number;
   controllerFullName: string;
-  thresholdDoesNotMeet: number;
-  thresholdMeets: number;
-  thresholdGood: number;
-  thresholdExceeds: number;
-  percentDoesNotMeet: number;
-  percentMeets: number;
-  percentGood: number;
-  percentExceeds: number;
 }
 
 export interface EmployeeQuarterBenchmark {
