@@ -16,8 +16,6 @@ public sealed class CompensationParametersResponse
 
     public decimal AcceptablePerformanceRating { get; init; }
 
-    public decimal UpperLimitCoefficient { get; init; }
-
     public decimal DependencyWeight { get; init; }
 
     public decimal Exponent { get; init; }

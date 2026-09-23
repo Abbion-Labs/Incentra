@@ -16,8 +16,6 @@ public class VariableCompensationParameters
 
     public decimal AcceptablePerformanceRating { get; set; } = 2.5m;
 
-    public decimal UpperLimitCoefficient { get; set; }
-
     public decimal DependencyWeight { get; set; }
 
     public decimal Exponent { get; set; }

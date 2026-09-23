@@ -259,7 +259,6 @@ Primer kreiranja parametara:
   "organizationUnitId": 1,
   "year": 2026,
   "monetaryPool": 500000,
-  "upperLimitCoefficient": 0.25,
   "dependencyWeight": 1.0,
   "exponent": 1.5
 }
@@ -274,7 +273,7 @@ Primer kalkulacije:
 - `GET /api/compensation-results` — paginacija (`?parametersId&year&organizationUnitId&employeeId`)
 - `GET /api/compensation-results/{id}` — detalj sa povezanim ocenama
 
-Formula `v1`: bodovi iz radnog mesta (`SortOrder × 10`), procenat iz evaluator settings, Z-score normalizacija i raspodela novčane mase sa gornjim limitom po zaposlenom.
+Formula `v1`: bodovi iz radnog mesta (`SortOrder × 10`), procenat iz evaluator settings, Z-score normalizacija i raspodela novčane mase.
 
 ## Pregled baze podataka
 

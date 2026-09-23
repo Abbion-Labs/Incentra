@@ -35,7 +35,6 @@ function parameters(id: number, orgId: number): CompensationParameters {
     monetaryPool: 987654,
     currency: 'RSD',
     acceptablePerformanceRating: 3,
-    upperLimitCoefficient: 0.25,
     dependencyWeight: 1,
     exponent: 1,
     allowNegativeVariable: false,
