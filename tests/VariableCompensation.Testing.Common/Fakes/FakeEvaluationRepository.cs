@@ -199,8 +199,23 @@ public sealed class FakeEvaluationRepository : IEvaluationRepository
             EvaluationId = g.EvaluationId,
             Description = g.Description,
             RatingLevelId = g.RatingLevelId,
+            Comment = g.Comment,
             Weight = g.Weight,
             SortOrder = g.SortOrder,
+        }).ToList(),
+        Conditions = source.Conditions.Select(c => new EvaluationCondition
+        {
+            Id = c.Id,
+            EvaluationId = c.EvaluationId,
+            Description = c.Description,
+            SortOrder = c.SortOrder,
+        }).ToList(),
+        Criteria = source.Criteria.Select(c => new EvaluationCriterion
+        {
+            Id = c.Id,
+            EvaluationId = c.EvaluationId,
+            Description = c.Description,
+            SortOrder = c.SortOrder,
         }).ToList(),
         Measures = source.Measures.Select(m => new EvaluationMeasure
         {

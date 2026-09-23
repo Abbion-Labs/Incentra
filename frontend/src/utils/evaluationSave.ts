@@ -23,6 +23,8 @@ export function isStaleEvaluationError(error: unknown): boolean {
 }
 
 export interface RatingGoalSaveItem {
+  /** Postavljeni cilj koji se ocenjuje; server menja samo njegovu ocenu i komentar. */
+  id: number;
   description: string;
   ratingLevelId: number;
   comment: string | null;
@@ -35,6 +37,7 @@ export function toRatingGoalSaveItems(
   goals: EvaluationGoal[],
 ): RatingGoalSaveItem[] {
   return goals.map((goal) => ({
+    id: goal.id,
     description: goal.description,
     ratingLevelId: goal.ratingLevelId,
     comment: goal.comment,

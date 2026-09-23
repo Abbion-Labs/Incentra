@@ -24,6 +24,9 @@ public sealed class UpdateEvaluationDraftRequest
 
 public sealed class EvaluationGoalItemRequest
 {
+    /// <summary>The goal being rated. Required once the plan is set: only existing goals can be rated then.</summary>
+    public long? Id { get; init; }
+
     public string Description { get; init; } = string.Empty;
 
     public long? RatingLevelId { get; init; }

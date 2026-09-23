@@ -22,16 +22,19 @@ internal static class EvaluationDraftMutator
         entity.ConditionsFulfilled = conditionsFulfilled;
     }
 
+    /// <summary>
+    /// Sets the goals while the plan is still being made. Once goals, conditions and criteria are set the plan is
+    /// what was agreed with the employee: from then on only the rating and comment of each existing goal change.
+    /// </summary>
     public static async Task<Result> ApplyGoalsAsync(
         EvaluationEntity entity,
         IReadOnlyList<EvaluationGoalItem> goals,
         IEvaluationLookupRepository lookupRepository,
         CancellationToken cancellationToken)
     {
-        var planningLock = EvaluationPlanningRules.EnsureGoalsPlanningEditable(entity, goals);
-        if (planningLock.IsFailure)
+        if (EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
         {
-            return planningLock;
+            return await RateAgreedGoalsAsync(entity, goals, lookupRepository, cancellationToken);
         }
 
         var ratingLevels = await lookupRepository.GetRatingLevelsAsync(cancellationToken);
@@ -66,6 +69,58 @@ internal static class EvaluationDraftMutator
                 Weight = item.Weight,
                 SortOrder = item.SortOrder,
             });
+        }
+
+        return Result.Success();
+    }
+
+    /// <summary>
+    /// Rates the agreed goals. Every goal has to be sent, by its id, with its text and weight unchanged; adding,
+    /// removing or rewording a goal is refused.
+    /// </summary>
+    private static async Task<Result> RateAgreedGoalsAsync(
+        EvaluationEntity entity,
+        IReadOnlyList<EvaluationGoalItem> goals,
+        IEvaluationLookupRepository lookupRepository,
+        CancellationToken cancellationToken)
+    {
+        var agreed = entity.Goals.ToDictionary(g => g.Id);
+        var sentIds = goals.Select(g => g.Id).ToList();
+        if (goals.Count != agreed.Count
+            || sentIds.Any(id => id is null || !agreed.ContainsKey(id.Value))
+            || sentIds.Distinct().Count() != sentIds.Count)
+        {
+            return Result.Failure(ErrorCodes.GoalsPlanningLocked);
+        }
+
+        var ratingLevels = await lookupRepository.GetRatingLevelsAsync(cancellationToken);
+        var notRatedLevel = ratingLevels.FirstOrDefault(r => r.Value == RatingLevelRules.NotRatedValue);
+        if (notRatedLevel is null)
+        {
+            return Result.Failure(ErrorCodes.NotRatedLevelMissing);
+        }
+
+        foreach (var item in goals)
+        {
+            var goal = agreed[item.Id!.Value];
+            if (!string.Equals(item.Description.Trim(), goal.Description, StringComparison.Ordinal)
+                || item.Weight != goal.Weight)
+            {
+                return Result.Failure(ErrorCodes.GoalsPlanningLocked);
+            }
+
+            if (item.RatingLevelId is not null &&
+                !await lookupRepository.RatingLevelExistsAsync(item.RatingLevelId.Value, cancellationToken))
+            {
+                return Result.Failure($"{ErrorCodes.RatingLevelNotFound}?id={item.RatingLevelId}");
+            }
+        }
+
+        foreach (var item in goals)
+        {
+            var goal = agreed[item.Id!.Value];
+            goal.RatingLevelId = item.RatingLevelId ?? notRatedLevel.Id;
+            goal.Comment = item.Comment;
         }
 
         return Result.Success();
