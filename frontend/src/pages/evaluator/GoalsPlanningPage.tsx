@@ -22,7 +22,7 @@ import {
   type TextItemDraft,
 } from '../../utils/goalsPlanning';
 import { roleListPath } from '../../utils/evaluationApi';
-import { fetchLatestEvaluation } from '../../utils/evaluationSave';
+import { isStaleEvaluationError } from '../../utils/evaluationSave';
 import { previousQuarter } from '../../utils/status';
 import { CopyFromPreviousQuarterButton } from './components/CopyFromPreviousQuarterButton';
 import { GoalsConversationForm } from './components/GoalsConversationForm';
@@ -167,8 +167,6 @@ export function GoalsPlanningPage() {
 
     setSaving(true);
     try {
-      const server = await fetchLatestEvaluation(evaluation.id);
-
       const validGoals = goals.filter((g) => g.description.trim());
       const validConditions = conditions.filter((c) => c.description.trim());
       const validCriteria = criteria.filter((c) => c.description.trim());
@@ -176,13 +174,15 @@ export function GoalsPlanningPage() {
       const current = await api.put<EvaluationDetail>(
         `/api/evaluations/${evaluation.id}/planning-draft`,
         {
-          version: server.version,
+          // Verzija sa kojom je stranica učitana: tuđa izmena u međuvremenu
+          // se ne pregazi, server javlja konflikt.
+          version: evaluation.version,
           conversationAt: new Date(
             conversationAt || defaultConversationDatetime(),
           ).toISOString(),
           evaluatorComment: evaluatorComment || null,
-          conditionsNotMetComment: server.conditionsNotMetComment ?? null,
-          conditionsFulfilled: server.conditionsFulfilled !== false,
+          conditionsNotMetComment: evaluation.conditionsNotMetComment ?? null,
+          conditionsFulfilled: evaluation.conditionsFulfilled !== false,
           goals: validGoals.map((g, i) => ({
             description: g.description.trim(),
             ratingLevelId: null,
@@ -205,12 +205,14 @@ export function GoalsPlanningPage() {
       setIsDirty(false);
       return true;
     } catch (e) {
-      try {
-        const latest = await fetchLatestEvaluation(evaluation.id);
-        setEvaluation(latest);
-      } catch {
-        // ignore sync failure
+      if (isStaleEvaluationError(e)) {
+        toast.warning(
+          formatMessage({ id: 'errors.evaluationChangedMeanwhile' }),
+        );
+        await load();
+        return false;
       }
+      // Izmene ostaju u formi, da ih korisnik ne izgubi zbog greške.
       toast.error(
         e instanceof Error
           ? e.message
@@ -228,6 +230,7 @@ export function GoalsPlanningPage() {
     evaluation,
     evaluatorComment,
     formatMessage,
+    load,
     goals,
     toast,
   ]);

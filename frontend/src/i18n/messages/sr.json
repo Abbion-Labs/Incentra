@@ -456,6 +456,7 @@
     "loadFailed": "Greška pri učitavanju.",
     "saveFailed": "Čuvanje nije uspelo.",
     "recordChangedMeanwhile": "Zapis je u međuvremenu izmenio neko drugi. Prikazano je njegovo novo stanje; unesite svoje izmene ponovo.",
+    "evaluationChangedMeanwhile": "Ocenu je u međuvremenu izmenio neko drugi. Prikazano je njeno novo stanje; unesite svoje izmene ponovo.",
     "submitFailed": "Slanje nije uspelo.",
     "finalizeFailed": "Finalizacija nije uspela.",
     "exportFailed": "Izvoz nije uspeo.",
