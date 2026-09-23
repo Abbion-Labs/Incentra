@@ -67,7 +67,11 @@ public interface ICompensationRepository
 
     Task AddResultAsync(VariableCompensationResult entity, CancellationToken cancellationToken);
 
-    Task RemoveResultAsync(VariableCompensationResult entity, CancellationToken cancellationToken);
+    /// <summary>
+    /// Removes every result of <paramref name="parametersId"/> that is not final. Staged for the next save, so a
+    /// recalculation replaces the previous one as a whole.
+    /// </summary>
+    Task RemoveDraftResultsAsync(long parametersId, CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

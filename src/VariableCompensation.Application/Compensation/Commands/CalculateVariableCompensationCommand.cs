@@ -104,25 +104,12 @@ public sealed class CalculateVariableCompensationCommandHandler : IRequestHandle
 
         var outputs = this.calculationService.DistributePool(inputs, parameters);
 
+        // The whole previous calculation goes, not only the rows of employees calculated again. Someone left out
+        // this time would otherwise keep an old share of the pool next to the new distribution.
+        await this.repository.RemoveDraftResultsAsync(parameters.Id, cancellationToken);
+
         foreach (var output in outputs)
         {
-            var existing = await this.repository.FindResultForEmployeeForUpdateAsync(
-                output.Input.Employee.Id,
-                parameters.Id,
-                parameters.Year,
-                cancellationToken);
-
-            if (existing is not null)
-            {
-                if (existing.IsFinal)
-                {
-                    warnings.Add($"Skipping finalized result for {output.Input.Employee.FullName}.");
-                    continue;
-                }
-
-                await this.repository.RemoveResultAsync(existing, cancellationToken);
-            }
-
             var result = new VariableCompensationResult
             {
                 EmployeeId = output.Input.Employee.Id,
