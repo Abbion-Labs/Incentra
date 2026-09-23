@@ -62,6 +62,11 @@ public sealed class UserRepository : IUserRepository, IRoleLookup
         return await this.FindByIdWithRolesAsync(userId.Value, cancellationToken);
     }
 
+    public Task<bool> HasOtherActiveUserInRoleAsync(string roleCode, long excludeUserId, CancellationToken cancellationToken) =>
+        this.context.Users.AnyAsync(
+            u => u.Id != excludeUserId && u.IsActive && u.UserRoles.Any(ur => ur.Role.Code == roleCode),
+            cancellationToken);
+
     public Task RevokeAllRefreshTokensAsync(long userId, CancellationToken cancellationToken) =>
         this.RevokeAsync(this.context.RefreshTokens.Where(rt => rt.UserId == userId), cancellationToken);
 
