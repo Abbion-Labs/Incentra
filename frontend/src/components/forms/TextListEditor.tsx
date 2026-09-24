@@ -59,15 +59,17 @@ export function TextListEditor({
           </div>
         ))}
       </div>
-      <button
-        type="button"
-        className="btn btn-secondary btn-sm"
-        onClick={() =>
-          setItems([...items, { description: '', sortOrder: items.length }])
-        }
-      >
-        {addLabel}
-      </button>
+      <div className="form-list__footer">
+        <button
+          type="button"
+          className="btn btn-secondary btn-sm"
+          onClick={() =>
+            setItems([...items, { description: '', sortOrder: items.length }])
+          }
+        >
+          {addLabel}
+        </button>
+      </div>
     </>
   );
 }
