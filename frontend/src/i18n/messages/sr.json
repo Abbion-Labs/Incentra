@@ -17,6 +17,12 @@
     "adminVariableCompensation": "Varijabila",
     "activeRole": "Aktivna uloga"
   },
+  "pageIntro": {
+    "evaluatorEmployeesSubtitle": "Zaposleni koje ocenjujete. Otvorite profil za istoriju ocena i poređenje sa organizacionom jedinicom.",
+    "evaluatorGoalsSubtitle": "Postavite ciljeve, uslove i kriterijume za kvartal pre nego što počne ocenjivanje.",
+    "evaluatorWorkflowSubtitle": "Ocenite zaposlene i pratite status svake ocene kroz proces odobravanja.",
+    "evaluatorAnalyticsSubtitle": "Raspodela ocena vašeg tima i poređenje sa prethodnom godinom."
+  },
   "roleSwitch": {
     "pageNeedsRole": "Ova stranica pripada ulozi {role}, a vi trenutno radite u drugoj.",
     "action": "Pređi u ulogu {role}",

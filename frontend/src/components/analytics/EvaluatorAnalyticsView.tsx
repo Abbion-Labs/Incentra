@@ -1,6 +1,7 @@
-import { useMemo } from 'react';
+import { useId, useMemo } from 'react';
 import type { EvaluatorAnalytics } from '../../api/types';
 import { useIntl } from '../../i18n';
+import { PageIntro } from '../common/PageIntro';
 import { currentYear } from '../../utils/status';
 import { DescriptiveRatingPieChart } from '../../pages/evaluator/components/DescriptiveRatingPieChart';
 import { OverallStatsChart } from '../../pages/evaluator/components/OverallStatsChart';
@@ -22,6 +23,7 @@ export function EvaluatorAnalyticsView({
   hint,
 }: EvaluatorAnalyticsViewProps) {
   const { formatMessage } = useIntl();
+  const yearSelectId = useId();
   const yearOptions = useMemo(() => {
     const years = new Set<number>();
     for (let y = currentYear; y >= currentYear - 4; y -= 1) {
@@ -40,15 +42,31 @@ export function EvaluatorAnalyticsView({
         )
       : formatMessage({ id: 'analytics.title' }));
 
+  const yearFilter = (
+    <div className="analytics-toolbar">
+      <label htmlFor={yearSelectId}>
+        {formatMessage({ id: 'common.year' })}
+      </label>
+      <select
+        id={yearSelectId}
+        value={year}
+        onChange={(event) => onYearChange(Number(event.target.value))}
+      >
+        {yearOptions.map((option) => (
+          <option key={option} value={option}>
+            {option}.
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+
   return (
     <div className="analytics-page">
-      {(title || hint) && (
-        <div className="card card--flush analytics-page__intro">
-          <div className="card__header">
-            <h2 className="card__title">{displayTitle}</h2>
-            {hint && <p className="card__hint">{hint}</p>}
-          </div>
-        </div>
+      {title || hint ? (
+        <PageIntro title={displayTitle} subtitle={hint} actions={yearFilter} />
+      ) : (
+        <div className="analytics-page__toolbar-row">{yearFilter}</div>
       )}
 
       <div className="analytics-summary-grid">
@@ -93,21 +111,6 @@ export function EvaluatorAnalyticsView({
             {analytics.overallStats.selectedYear.median?.toFixed(2) ?? '—'}
           </strong>
         </div>
-        <label className="card analytics-summary-card analytics-summary-card--filter">
-          <span className="analytics-summary-card__label">
-            {formatMessage({ id: 'common.year' })}
-          </span>
-          <select
-            value={year}
-            onChange={(event) => onYearChange(Number(event.target.value))}
-          >
-            {yearOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}.
-              </option>
-            ))}
-          </select>
-        </label>
       </div>
 
       <div className="analytics-grid">

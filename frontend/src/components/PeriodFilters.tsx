@@ -1,3 +1,5 @@
+import { useId } from 'react';
+
 import { currentQuarter, currentYear } from '../utils/status';
 
 import { useIntl } from '../i18n';
@@ -43,6 +45,8 @@ export function PeriodFilters({
 }: Props) {
   const { formatMessage } = useIntl();
 
+  const fieldId = useId();
+
   const resolvedSearchLabel =
     searchLabel ?? formatMessage({ id: 'evaluation.searchEmployees' });
 
@@ -53,9 +57,10 @@ export function PeriodFilters({
     <div className="filter-bar">
       {onSearchChange !== undefined && (
         <div className="form-row filter-bar-search">
-          <label>{resolvedSearchLabel}</label>
+          <label htmlFor={`${fieldId}-search`}>{resolvedSearchLabel}</label>
 
           <input
+            id={`${fieldId}-search`}
             type="search"
 
             placeholder={resolvedSearchPlaceholder}
@@ -69,9 +74,12 @@ export function PeriodFilters({
 
       <div className="filter-bar-period">
         <div className="form-row">
-          <label>{formatMessage({ id: 'common.year' })}</label>
+          <label htmlFor={`${fieldId}-year`}>
+            {formatMessage({ id: 'common.year' })}
+          </label>
 
           <input
+            id={`${fieldId}-year`}
             type="number"
             value={year}
             onChange={(e) => onYearChange(Number(e.target.value))}
@@ -79,9 +87,12 @@ export function PeriodFilters({
         </div>
 
         <div className="form-row">
-          <label>{formatMessage({ id: 'evaluation.quarter' })}</label>
+          <label htmlFor={`${fieldId}-quarter`}>
+            {formatMessage({ id: 'evaluation.quarter' })}
+          </label>
 
           <select
+            id={`${fieldId}-quarter`}
             className={
               showAllQuartersOption
                 ? 'period-filter-quarter period-filter-quarter--wide'

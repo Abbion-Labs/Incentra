@@ -70,7 +70,7 @@ function EvaluationGoalsEditable({
   return (
     <>
       <div className="table-wrap">
-        <table className="table table--form">
+        <table className="table table--form table--stack">
           <thead>
             <tr>
               <th style={{ width: '2rem' }}>#</th>
@@ -96,14 +96,24 @@ function EvaluationGoalsEditable({
               );
               return (
                 <tr key={g.id}>
-                  <td className="cell-muted">{idx + 1}</td>
-                  <td className="cell-primary">{g.description}</td>
+                  <td className="cell-muted stack-hide">{idx + 1}</td>
+                  <td className="cell-primary stack-title">
+                    <span className="stack-index" aria-hidden>
+                      {idx + 1}.
+                    </span>
+                    {g.description}
+                  </td>
                   {showWeights && (
-                    <td className="cell-muted cell-nowrap">
+                    <td
+                      className="cell-muted cell-nowrap"
+                      data-label={formatMessage({
+                        id: 'evaluation.goalWeight',
+                      })}
+                    >
                       {formatGoalWeight(g.weight)}
                     </td>
                   )}
-                  <td>
+                  <td data-label={formatMessage({ id: 'evaluation.rating' })}>
                     {editable ? (
                       <RatingValueSelect
                         ratingLevels={ratingLevels}
@@ -136,7 +146,12 @@ function EvaluationGoalsEditable({
                       )
                     )}
                   </td>
-                  <td className="cell-muted">
+                  <td
+                    className="cell-muted"
+                    data-label={formatMessage({
+                      id: 'evaluation.descriptiveLabel',
+                    })}
+                  >
                     {formatRatingLevelLabel(formatMessage, {
                       level: selectedLevel,
                       value: g.ratingLevelValue,

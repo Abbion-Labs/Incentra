@@ -40,7 +40,7 @@ export function PlanningEmployeesTable({
 
   return (
     <div className="table-wrap">
-      <table className="table table--hover">
+      <table className="table table--hover table--stack">
         <thead>
           <tr>
             <th className="col-text">
@@ -58,11 +58,21 @@ export function PlanningEmployeesTable({
         <tbody>
           {employees.map((emp) => (
             <tr key={emp.id}>
-              <td className="cell-primary col-text">{emp.fullName}</td>
-              <td className="cell-muted col-text">
+              <td className="cell-primary col-text stack-title">
+                {emp.fullName}
+              </td>
+              <td
+                className="cell-muted col-text"
+                data-label={formatMessage({ id: 'evaluation.orgUnitShort' })}
+              >
                 {emp.organizationUnitName}
               </td>
-              <td className="cell-muted col-text">{emp.jobPositionName}</td>
+              <td
+                className="cell-muted col-text"
+                data-label={formatMessage({ id: 'evaluation.jobPosition' })}
+              >
+                {emp.jobPositionName}
+              </td>
               <td className="col-actions">
                 {onStartPlanning && (
                   <button

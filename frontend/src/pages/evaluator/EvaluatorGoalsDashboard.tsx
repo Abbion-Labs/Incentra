@@ -10,6 +10,7 @@ import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSe
 import { TableSkeleton } from '../../components/common/LoadingSkeleton';
 
 import { AppLayout } from '../../components/AppLayout';
+import { PageIntro } from '../../components/common/PageIntro';
 
 import {
   PeriodFilters,
@@ -215,6 +216,10 @@ export function EvaluatorGoalsDashboard() {
 
   return (
     <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
+      <PageIntro
+        title={formatMessage({ id: 'navigation.evaluatorGoals' })}
+        subtitle={formatMessage({ id: 'pageIntro.evaluatorGoalsSubtitle' })}
+      />
       <div className="card card--filter">
         <PeriodFilters
           year={year}

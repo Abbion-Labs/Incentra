@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import type { Employee } from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 import { AppLayout } from '../../components/AppLayout';
+import { PageIntro } from '../../components/common/PageIntro';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { roleListPath } from '../../utils/evaluationApi';
@@ -44,6 +45,10 @@ export function EvaluatorHomePage() {
 
   return (
     <AppLayout title={formatMessage({ id: 'admin.employees' })}>
+      <PageIntro
+        title={formatMessage({ id: 'navigation.evaluatorEmployees' })}
+        subtitle={formatMessage({ id: 'pageIntro.evaluatorEmployeesSubtitle' })}
+      />
       <div className="card card--filter">
         <div className="form-row filter-bar-search">
           <label htmlFor="employee-search">

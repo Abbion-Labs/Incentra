@@ -61,7 +61,7 @@ export function EmployeeListTable({
 
   return (
     <div className="table-wrap">
-      <table className="table table--hover table--clickable">
+      <table className="table table--hover table--clickable table--stack table--employees">
         <thead>
           <tr>
             <th className="col-text">
@@ -91,9 +91,16 @@ export function EmployeeListTable({
             <tr
               key={emp.id}
               onClick={() => navigate(profilePath(emp.id))}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  navigate(profilePath(emp.id));
+                }
+              }}
               tabIndex={0}
+              role="link"
             >
-              <td className="cell-primary col-text">
+              <td className="cell-primary col-text stack-title">
                 <span className="employee-list-name">
                   <EmployeeAvatar employee={emp} size="sm" />
 
@@ -101,18 +108,32 @@ export function EmployeeListTable({
                 </span>
               </td>
 
-              <td className="cell-muted col-text">
+              <td
+                className="cell-muted col-text"
+                data-label={formatMessage({ id: 'evaluation.orgUnitShort' })}
+              >
                 {emp.organizationUnitName}
               </td>
 
-              <td className="cell-muted col-text">{emp.jobPositionName}</td>
+              <td
+                className="cell-muted col-text"
+                data-label={formatMessage({ id: 'evaluation.jobPosition' })}
+              >
+                {emp.jobPositionName}
+              </td>
 
-              <td className="cell-muted col-text">
+              <td
+                className="cell-muted col-text"
+                data-label={formatMessage({ id: 'common.education' })}
+              >
                 {emp.educationLevelName ??
                   formatMessage({ id: 'common.emptyValue' })}
               </td>
 
-              <td className="col-meta">
+              <td
+                className="col-meta"
+                data-label={formatMessage({ id: 'evaluation.status' })}
+              >
                 <span
                   className={`badge ${emp.isActive ? 'badge-approved' : 'badge-draft'}`}
                 >

@@ -1,4 +1,5 @@
 import type { RatingLevel } from '../../api/types';
+import { useIntl } from '../../i18n';
 import { ratingValueOptionLabel } from '../../utils/scoring';
 
 interface RatingValueSelectProps {
@@ -12,8 +13,10 @@ export function RatingValueSelect({
   value,
   onChange,
 }: RatingValueSelectProps) {
+  const { formatMessage } = useIntl();
   return (
     <select
+      aria-label={formatMessage({ id: 'evaluation.rating' })}
       className="select-inline select-inline--rating-value"
       value={value}
       onChange={(e) => onChange(Number(e.target.value))}

@@ -132,10 +132,15 @@ export function EvaluatorEmployeePage() {
 
   return (
     <AppLayout title={employee.fullName}>
-      {backState?.backTo && (
+      {backState?.backTo ? (
         <PageBackLink
           to={backState.backTo}
           label={formatMessage({ id: backState.backLabelKey as never })}
+        />
+      ) : (
+        <PageBackLink
+          to="/evaluator"
+          label={formatMessage({ id: 'buttons.backToList' })}
         />
       )}
 

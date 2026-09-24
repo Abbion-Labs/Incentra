@@ -10,6 +10,7 @@ import {
   EvaluationSummaryTableCard,
 } from '../../components/evaluation/EvaluationSummaryTable';
 import { AppLayout } from '../../components/AppLayout';
+import { PageIntro } from '../../components/common/PageIntro';
 import { PeriodFilters, currentYear } from '../../components/PeriodFilters';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
@@ -80,6 +81,10 @@ export function EvaluatorDashboard() {
 
   return (
     <AppLayout title={formatMessage({ id: 'evaluation.ratingTitle' })}>
+      <PageIntro
+        title={formatMessage({ id: 'navigation.evaluatorWorkflow' })}
+        subtitle={formatMessage({ id: 'pageIntro.evaluatorWorkflowSubtitle' })}
+      />
       <div className="card card--filter">
         <PeriodFilters
           year={year}

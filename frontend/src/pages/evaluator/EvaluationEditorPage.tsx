@@ -4,6 +4,7 @@ import { api } from '../../api/client';
 import type { Employee, EvaluationDetail } from '../../api/types';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
+import { PageBackLink } from '../../components/common/PageBackLink';
 import { EvaluationPlanningOverview } from '../../components/evaluation/EvaluationPlanningOverview';
 import { MeasuresEditorSection } from '../../components/evaluation/MeasuresEditorSection';
 import { SubmitEvaluationPanel } from '../../components/evaluation/SubmitEvaluationPanel';
@@ -444,6 +445,10 @@ export function EvaluationEditorPage() {
     <AppLayout
       title={`${formatMessage({ id: 'evaluation.ratingTitle' })} — ${evaluation.employeeFullName}`}
     >
+      <PageBackLink
+        to="/evaluator/workflow"
+        label={formatMessage({ id: 'buttons.backToList' })}
+      />
       <div className="form-page">
         <GoalsPlanningEmployeeCard
           evaluation={evaluation}

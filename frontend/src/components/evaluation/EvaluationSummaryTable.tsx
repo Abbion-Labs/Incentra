@@ -68,7 +68,7 @@ export function EvaluationSummaryTable({
       <div className="table-panel">
         <div className="table-wrap table-wrap--infinite">
           <table
-            className={`table table--hover table--evaluations${isPendingTab ? ' table--evaluations--with-actions' : ' table--clickable'}`}
+            className={`table table--hover table--stack table--evaluations${isPendingTab ? ' table--evaluations--with-actions' : ' table--clickable'}`}
           >
             <thead>
               <tr>
@@ -107,7 +107,7 @@ export function EvaluationSummaryTable({
                   tabIndex={isPendingTab ? undefined : 0}
                   role={isPendingTab ? undefined : 'link'}
                 >
-                  <td className="cell-primary col-text">
+                  <td className="cell-primary col-text stack-title">
                     {ev.employeeFullName}
                     {showNewBadge && isNewForController(ev) && (
                       <span
@@ -119,17 +119,31 @@ export function EvaluationSummaryTable({
                     )}
                   </td>
                   {showEvaluator && (
-                    <td className="cell-muted col-text">
+                    <td
+                      className="cell-muted col-text"
+                      data-label={formatMessage({ id: 'admin.evaluators' })}
+                    >
                       {ev.evaluatorFullName}
                     </td>
                   )}
-                  <td className="cell-muted col-meta">
+                  <td
+                    className="cell-muted col-meta"
+                    data-label={formatMessage({ id: 'evaluation.period' })}
+                  >
                     Q{ev.quarter}/{ev.year}
                   </td>
-                  <td className="col-num">
+                  <td
+                    className="col-num"
+                    data-label={formatMessage({ id: 'evaluation.average' })}
+                  >
                     <AverageDisplay value={formatSummaryAverage(ev)} />
                   </td>
-                  <td className="col-meta">
+                  <td
+                    className="col-meta"
+                    data-label={formatMessage({
+                      id: 'evaluation.descriptiveLabel',
+                    })}
+                  >
                     <DescriptiveRatingBadge
                       name={summaryDescriptiveRatingName(ev)}
                     />

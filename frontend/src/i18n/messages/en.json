@@ -17,6 +17,12 @@
     "adminVariableCompensation": "Compensation",
     "activeRole": "Active role"
   },
+  "pageIntro": {
+    "evaluatorEmployeesSubtitle": "The employees you evaluate. Open a profile for their rating history and a comparison with their organizational unit.",
+    "evaluatorGoalsSubtitle": "Set the goals, conditions and criteria for the quarter before evaluation starts.",
+    "evaluatorWorkflowSubtitle": "Rate your employees and follow each evaluation through the approval process.",
+    "evaluatorAnalyticsSubtitle": "How your team's ratings are distributed and how they compare with the previous year."
+  },
   "roleSwitch": {
     "pageNeedsRole": "This page belongs to the {role} role, and you are working in another one.",
     "action": "Switch to {role}",
