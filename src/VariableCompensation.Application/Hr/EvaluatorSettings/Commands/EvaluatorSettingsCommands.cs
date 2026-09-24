@@ -76,6 +76,15 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
             var open = await this.evaluationRepository.GetUnapprovedForUpdateByEvaluatorAsync(
                 request.EmployeeId,
                 cancellationToken);
+
+            // Without a controller an evaluation is approved when it is submitted. One submitted before that would
+            // be left waiting for a review nobody can give, so the controller stays until those are decided.
+            if (request.ControllerEmployeeId is null
+                && open.Any(e => e.Status is EvaluationStatus.Submitted or EvaluationStatus.UnderReview))
+            {
+                return Result.Failure<EvaluatorSettingsResponse>(ErrorCodes.EvaluatorHasPendingReviews);
+            }
+
             foreach (var evaluation in open)
             {
                 EvaluationReassignment.Assign(evaluation, evaluation.EvaluatorEmployeeId, request.ControllerEmployeeId);

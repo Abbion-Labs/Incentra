@@ -59,6 +59,41 @@ public class EvaluationReviewRulesIntegrationTests
     }
 
     [Fact]
+    public async Task Controller_CannotBeRemoved_WhileAnEvaluationWaitsForTheirReview()
+    {
+        var seed = await this.SeedAsync();
+        var admin = await this.CreateClientAsync(TestCredentials.AdminEmail, TestCredentials.AdminPassword);
+        var evaluator = await this.CreateClientAsync(seed.EvaluatorEmail, EvaluatorPassword);
+        var controller = await this.CreateClientAsync(TestCredentials.ControllerEmail, TestCredentials.ControllerPassword);
+
+        var submitted = await PostAsync(evaluator, $"/api/evaluations/{seed.EvaluationId}/submit", new { version = 1 });
+
+        // Nobody could review it any more, and it was submitted too early to be approved without a controller.
+        var refused = await admin.PutAsJsonAsync(
+            $"/api/evaluator-settings/{seed.EvaluatorId}",
+            new { controllerEmployeeId = (long?)null, version = 0 });
+        refused.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await refused.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("error").GetString()
+            .Should().Be(ErrorCodes.EvaluatorHasPendingReviews);
+
+        var stillWaiting = await controller.GetFromJsonAsync<JsonElement>($"/api/evaluations/{seed.EvaluationId}");
+        stillWaiting.GetProperty("controllerEmployeeId").GetInt64().Should().Be(TestEmployeeIds.Controller);
+
+        var underReview = await PostAsync(
+            controller, $"/api/evaluations/{seed.EvaluationId}/start-review", new { version = Version(submitted) });
+        await PostAsync(
+            controller,
+            $"/api/evaluations/{seed.EvaluationId}/approve",
+            new { version = Version(underReview), controllerComment = (string?)null });
+
+        // Once it is decided, the controller can go.
+        var removed = await admin.PutAsJsonAsync(
+            $"/api/evaluator-settings/{seed.EvaluatorId}",
+            new { controllerEmployeeId = (long?)null, version = 0 });
+        removed.StatusCode.Should().Be(HttpStatusCode.OK, await removed.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
     public async Task ResubmittedEvaluation_DropsTheReturnComment_AndApprovalKeepsOnlyItsOwn()
     {
         var seed = await this.SeedAsync();

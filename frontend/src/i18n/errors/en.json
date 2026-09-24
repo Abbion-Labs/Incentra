@@ -106,6 +106,7 @@
     "vn-0109": "The employee already has a linked account. Unlink it first, then link another one.",
     "vn-0110": "The account has the Employee, Evaluator or Controller role, which need an employee. Remove those roles on the Users page first, then unlink it.",
     "vn-0111": "The account's evaluator role and the employee's evaluator settings do not match, so they cannot be linked.",
-    "vn-0112": "The text is too long. Shorten it and try again."
+    "vn-0112": "The text is too long. Shorten it and try again.",
+    "vn-0113": "This evaluator has evaluations waiting for the controller's review. The controller cannot be removed until they are approved or returned for revision."
   }
 }
