@@ -41,6 +41,9 @@ public sealed class GlobalExceptionHandler : IExceptionHandler
             DbUpdateConcurrencyException => (StatusCodes.Status409Conflict, ErrorCodes.ConcurrencyConflict),
             DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.UniqueViolation } } =>
                 (StatusCodes.Status409Conflict, ErrorCodes.DuplicateValue),
+            // A text longer than its column allows: the forms cap every such field, so this only catches the rest.
+            DbUpdateException { InnerException: PostgresException { SqlState: PostgresErrorCodes.StringDataRightTruncation } } =>
+                (StatusCodes.Status400BadRequest, ErrorCodes.TextTooLong),
             _ => (StatusCodes.Status500InternalServerError, ErrorCodes.UnexpectedError),
         };
 

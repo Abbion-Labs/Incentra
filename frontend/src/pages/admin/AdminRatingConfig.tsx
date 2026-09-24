@@ -6,6 +6,7 @@ import { formatDescriptiveRatingLabel } from '../../utils/descriptiveRating';
 import { useToast } from '../../hooks';
 import { isEditConflict } from '../../utils/editConflict';
 import { AdminPageHeader } from './components/AdminPageHeader';
+import { TEXT_LIMITS } from '../../utils/textLimits';
 
 interface RatingFormValues {
   code: string;
@@ -190,6 +191,7 @@ export function AdminRatingConfig() {
             <input
               id="rating-code"
               value={form.code}
+              maxLength={TEXT_LIMITS.code}
               onChange={(e) => setField('code', e.target.value.toUpperCase())}
               required
               disabled={!!editingId}
