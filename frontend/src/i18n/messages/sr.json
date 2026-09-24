@@ -358,7 +358,7 @@
     "salaries": {
       "loadingEmployees": "Učitavanje zaposlenih...",
       "allEmployeesHaveSalary": "Svi zaposleni već imaju unetu platu.",
-      "validFromAfterCurrentPeriod": "Važi od (mora biti posle trenutnog perioda)",
+      "validFromAfterCurrentPeriod": "Važi od: isti datum ispravlja važeću platu, kasniji dodaje novu",
       "loadingHistory": "Učitavanje istorije...",
       "noSalaries": "Nema unetih plata. Dodajte platu zaposlenom pre kalkulacije varijable.",
       "points": "Bodovi",
@@ -505,6 +505,9 @@
     "settingsUpdated": "Podešavanja ažurirana.",
     "settingsCreated": "Podešavanja kreirana.",
     "salarySavedWithHistory": "Bodovi i zarada po bodu su sačuvani. Prethodna vrednost ostaje u istoriji.",
+    "salaryCorrected": "Važeća plata je ispravljena.",
+    "salaryCorrectionRecalculate": "Obračun varijabile za {years}. urađen je sa starom platom. Pokrenite ga ponovo.",
+    "salaryCorrectionFinalized": "Obračun varijabile za {years}. je već konačan i ispravka ga ne menja.",
     "parametersSaved": "Parametri su sačuvani.",
     "parametersCreated": "Parametri su kreirani.",
     "calculationCompleted": "Kalkulacija završena. Izračunato za {count} zaposlenih.",

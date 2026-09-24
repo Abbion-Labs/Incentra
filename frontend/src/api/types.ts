@@ -371,6 +371,10 @@ export interface EmployeeSalary {
   effectiveTo: string | null;
   isCurrent: boolean;
   updatedAt: string;
+  /** Posle ispravke: godine čiji obračun varijabile treba ponoviti. */
+  compensationYearsToRecalculate?: number[];
+  /** Posle ispravke: godine čiji je obračun već konačan. */
+  finalizedCompensationYears?: number[];
 }
 
 export interface EmployeeSalaryOption {

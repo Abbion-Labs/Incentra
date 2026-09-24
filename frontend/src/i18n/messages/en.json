@@ -358,7 +358,7 @@
     "salaries": {
       "loadingEmployees": "Loading employees...",
       "allEmployeesHaveSalary": "All employees already have salary entered.",
-      "validFromAfterCurrentPeriod": "Valid from (must be after current period)",
+      "validFromAfterCurrentPeriod": "Valid from: the same date corrects the salary in force, a later one adds a new salary",
       "loadingHistory": "Loading history...",
       "noSalaries": "No salaries entered. Add a salary before compensation calculation.",
       "points": "Points",
@@ -505,6 +505,9 @@
     "settingsUpdated": "Settings updated.",
     "settingsCreated": "Settings created.",
     "salarySavedWithHistory": "Points and salary per point are saved. Previous value remains in history.",
+    "salaryCorrected": "The salary in force has been corrected.",
+    "salaryCorrectionRecalculate": "The variable compensation for {years} was calculated with the old salary. Run the calculation again.",
+    "salaryCorrectionFinalized": "The variable compensation for {years} is already final and the correction does not change it.",
     "parametersSaved": "Parameters saved.",
     "parametersCreated": "Parameters created.",
     "calculationCompleted": "Calculation completed for {count} employees.",

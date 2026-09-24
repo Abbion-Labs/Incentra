@@ -26,19 +26,22 @@ public sealed class UpsertEmployeeSalaryCommandHandler : IRequestHandler<UpsertE
     private readonly ISensitiveDataEncryptionService encryptionService;
     private readonly IAuditLogWriter auditLogWriter;
     private readonly ICurrentUserService currentUserService;
+    private readonly ICompensationRepository compensationRepository;
 
     public UpsertEmployeeSalaryCommandHandler(
         IEmployeeRepository employeeRepository,
         IEmployeeSalaryRepository salaryRepository,
         ISensitiveDataEncryptionService encryptionService,
         IAuditLogWriter auditLogWriter,
-        ICurrentUserService currentUserService)
+        ICurrentUserService currentUserService,
+        ICompensationRepository compensationRepository)
     {
         this.employeeRepository = employeeRepository;
         this.salaryRepository = salaryRepository;
         this.encryptionService = encryptionService;
         this.auditLogWriter = auditLogWriter;
         this.currentUserService = currentUserService;
+        this.compensationRepository = compensationRepository;
     }
 
     public async Task<Result<EmployeeSalaryResponse>> Handle(UpsertEmployeeSalaryCommand request, CancellationToken cancellationToken)
@@ -84,6 +87,7 @@ public sealed class UpsertEmployeeSalaryCommandHandler : IRequestHandler<UpsertE
         }
 
         EmployeeSalary saved;
+        IReadOnlyList<(short Year, bool IsFinal)> affectedResultYears = [];
 
         if (current is null)
         {
@@ -117,9 +121,33 @@ public sealed class UpsertEmployeeSalaryCommandHandler : IRequestHandler<UpsertE
             {
                 saved = current;
             }
+            else if (request.EffectiveFrom == current.EffectiveFrom)
+            {
+                // The same date corrects the salary in force, a typo say, rather than starting a new one: a new
+                // record would leave the wrong value in the history as if it had applied for a day.
+                current.Points = request.Points;
+                current.EncryptedSalaryPerPoint = encryptedSalaryPerPoint;
+                current.Currency = currency;
+                current.UpdatedAt = DateTime.UtcNow;
+                current.UpdatedByUserId = this.currentUserService.UserId;
+                saved = current;
+                await this.auditLogWriter.WriteAsync(
+                    "EmployeeSalary",
+                    request.EmployeeId,
+                    "Correct",
+                    null,
+                    "{\"salaryChanged\":true}",
+                    cancellationToken);
+
+                // Compensation uses the salary in force at the end of the year, which this one is from its year on.
+                affectedResultYears = await this.compensationRepository.GetResultYearsForEmployeeAsync(
+                    request.EmployeeId,
+                    (short)current.EffectiveFrom.Year,
+                    cancellationToken);
+            }
             else
             {
-                if (request.EffectiveFrom <= current.EffectiveFrom)
+                if (request.EffectiveFrom < current.EffectiveFrom)
                 {
                     return Result.Failure<EmployeeSalaryResponse>(ErrorCodes.EffectiveDateMustBeAfterCurrent);
                 }
@@ -166,6 +194,8 @@ public sealed class UpsertEmployeeSalaryCommandHandler : IRequestHandler<UpsertE
             EffectiveTo = saved.EffectiveTo,
             IsCurrent = saved.EffectiveTo is null,
             UpdatedAt = saved.UpdatedAt,
+            CompensationYearsToRecalculate = affectedResultYears.Where(x => !x.IsFinal).Select(x => x.Year).ToList(),
+            FinalizedCompensationYears = affectedResultYears.Where(x => x.IsFinal).Select(x => x.Year).ToList(),
         });
     }
 }
