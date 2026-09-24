@@ -4,6 +4,7 @@ import { IntlProvider } from 'react-intl';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Employee, EvaluationDetail } from '../../api/types';
+import { api } from '../../api/client';
 import { ToastProvider } from '../../components/common/Toast';
 import { stubMatchMedia } from '../../test/browserStubs';
 import { mockApiGetDeferred } from '../../test/deferredApi';
@@ -97,5 +98,58 @@ describe('GoalsPlanningPage', () => {
     await waitFor(() => expect(pending.has(previousQuarterPath)).toBe(true));
 
     expect(save).toHaveProperty('disabled', true);
+  });
+
+  it('saves the plan only when the goal weights make 100%, and sends them', async () => {
+    mockApiGetDeferred((path) => {
+      if (path === '/api/evaluations/5') return evaluation;
+      if (path === '/api/employees/7') return employee;
+      if (path.startsWith('/api/lookups/')) return [];
+      if (path.endsWith('/status-history')) return [];
+      return undefined;
+    });
+    const put = vi
+      .spyOn(api, 'put')
+      .mockResolvedValue({ ...evaluation, version: 2 } as never);
+    const router = createMemoryRouter(
+      [
+        {
+          path: '/evaluator/goals/evaluations/:id',
+          element: <GoalsPlanningPage />,
+        },
+        { path: '/evaluator/goals', element: <div /> },
+      ],
+      { initialEntries: ['/evaluator/goals/evaluations/5'] },
+    );
+    render(
+      <IntlProvider locale="sr" messages={{}} onError={() => undefined}>
+        <ToastProvider>
+          <RouterProvider router={router} />
+        </ToastProvider>
+      </IntlProvider>,
+    );
+
+    const save = await screen.findByRole('button', {
+      name: 'evaluation.setGoals',
+    });
+    const weight = screen.getByRole('spinbutton', {
+      name: 'evaluation.goalWeightLabel',
+    });
+    expect(weight).toHaveProperty('value', '100');
+
+    fireEvent.change(weight, { target: { value: '60' } });
+    expect(save).toHaveProperty('disabled', true);
+
+    fireEvent.change(weight, { target: { value: '100' } });
+    await waitFor(() => expect(save).toHaveProperty('disabled', false));
+    fireEvent.click(save);
+
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    const body = put.mock.calls[0][1] as {
+      goals: { description: string; weight: number | null }[];
+    };
+    expect(body.goals).toEqual([
+      expect.objectContaining({ description: 'Cilj', weight: 100 }),
+    ]);
   });
 });

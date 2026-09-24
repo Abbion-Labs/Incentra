@@ -107,6 +107,9 @@
     "vn-0110": "The account has the Employee, Evaluator or Controller role, which need an employee. Remove those roles on the Users page first, then unlink it.",
     "vn-0111": "The account's evaluator role and the employee's evaluator settings do not match, so they cannot be linked.",
     "vn-0112": "The text is too long. Shorten it and try again.",
-    "vn-0113": "This evaluator has evaluations waiting for the controller's review. The controller cannot be removed until they are approved or returned for revision."
+    "vn-0113": "This evaluator has evaluations waiting for the controller's review. The controller cannot be removed until they are approved or returned for revision.",
+    "vn-0114": "Set a weight for every goal or for none.",
+    "vn-0115": "A goal weight must be a whole percentage from {min}% to 100%.",
+    "vn-0116": "The goal weights add up to {total}%, but must make exactly 100%."
   }
 }

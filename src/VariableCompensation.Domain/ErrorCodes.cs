@@ -109,4 +109,7 @@ public static class ErrorCodes
     public const string EvaluatorRoleSettingsMismatch = "vn-0111";
     public const string TextTooLong = "vn-0112";
     public const string EvaluatorHasPendingReviews = "vn-0113";
+    public const string GoalWeightsIncomplete = "vn-0114";
+    public const string GoalWeightInvalid = "vn-0115";
+    public const string GoalWeightsSumInvalid = "vn-0116";
 }

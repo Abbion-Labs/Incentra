@@ -9,6 +9,9 @@ namespace VariableCompensation.Application.Evaluation.Commands;
 
 internal static class EvaluationDraftMutator
 {
+    /// <summary>A goal worth less than this would not move the average.</summary>
+    public const int MinGoalWeightPercent = 5;
+
     public static void ApplyHeader(
         EvaluationEntity entity,
         DateTime? conversationAt,
@@ -58,6 +61,12 @@ internal static class EvaluationDraftMutator
             }
         }
 
+        var weights = ValidateWeights(goals);
+        if (weights.IsFailure)
+        {
+            return weights;
+        }
+
         entity.Goals.Clear();
         foreach (var item in goals.OrderBy(g => g.SortOrder))
         {
@@ -72,6 +81,35 @@ internal static class EvaluationDraftMutator
         }
 
         return Result.Success();
+    }
+
+    /// <summary>
+    /// The weight of a goal is the share of the goals average it carries, in whole percent. Either every goal has
+    /// one and together they make 100, or none has, and the goals count equally.
+    /// </summary>
+    private static Result ValidateWeights(IReadOnlyList<EvaluationGoalItem> goals)
+    {
+        if (goals.All(g => g.Weight is null))
+        {
+            return Result.Success();
+        }
+
+        if (goals.Any(g => g.Weight is null))
+        {
+            return Result.Failure(ErrorCodes.GoalWeightsIncomplete);
+        }
+
+        if (goals.Any(g => g.Weight!.Value % 1 != 0
+            || g.Weight.Value < MinGoalWeightPercent
+            || g.Weight.Value > 100))
+        {
+            return Result.Failure($"{ErrorCodes.GoalWeightInvalid}?min={MinGoalWeightPercent}");
+        }
+
+        var total = goals.Sum(g => g.Weight!.Value);
+        return total == 100
+            ? Result.Success()
+            : Result.Failure($"{ErrorCodes.GoalWeightsSumInvalid}?total={total:0}");
     }
 
     /// <summary>

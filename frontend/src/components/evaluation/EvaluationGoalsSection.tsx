@@ -4,6 +4,7 @@ import type {
   EvaluationGoal,
 } from '../../api/types';
 import { useIntl } from '../../i18n';
+import { formatGoalWeight } from '../../utils/goalsPlanning';
 import { formatLocalizedRatingDisplay } from '../../utils/ratingLevelLabels';
 
 interface EvaluationTextListSectionProps {
@@ -114,6 +115,11 @@ export function EvaluationGoalsList({
         {goals.map((g) => (
           <li key={g.id}>
             {g.description}
+            {g.weight != null && (
+              <span className="goal-weight-tag">
+                {formatGoalWeight(g.weight)}
+              </span>
+            )}
             {showRatings && g.ratingLevelLabel && (
               <span style={{ color: 'var(--muted)' }}>
                 {' '}
