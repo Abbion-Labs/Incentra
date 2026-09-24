@@ -100,9 +100,11 @@ Endpointi:
 - `POST /api/auth/logout` — javno; odjavljuje celu sesiju i briše kolačić
 - `GET /api/auth/me` — zahteva JWT (`Authorize`)
 - `POST /api/auth/select-role` — zahteva JWT; `{ roleCode }`; zatvara tekuću sesiju i otvara novu u izabranoj ulozi
-- `POST /api/auth/register` — samo `ADMIN` role; vraća profil novog korisnika, bez tokena
+- `POST /api/auth/register` — samo `ADMIN` role; `{ email, password, roleCodes, employeeId, controllerEmployeeId }`; vraća profil novog korisnika, bez tokena
 
 Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud/users`) pri kreiranju ili izmeni korisnika izaberite jednu ili više uloga (checkbox). Promena uloga odmah odjavljuje sve sesije tog korisnika, pa se mora ponovo prijaviti da bi JWT sadržao nove uloge.
+
+Uloge `EMPLOYEE`, `EVALUATOR` i `CONTROLLER` rade kao određeni zaposleni, pa nalog sa njima uvek ima povezanog zaposlenog. Pri kreiranju naloga zaposleni se bira u istoj formi (`employeeId`: aktivan zaposleni koji još nema nalog), a za ocenjivača i kontrolor (`controllerEmployeeId`, ili bez kontrolora). Nalogu bez zaposlenog te uloge se ne mogu dodati. Nalozi sa samo `ADMIN` i/ili `PAYROLL` ulogom ne moraju imati zaposlenog.
 
 Sesija radi u **jednoj ulozi**: JWT nosi samo nju (`activeRole` u profilu), refresh token je pamti kroz rotaciju, a nalog pamti poslednju izabranu ulogu za sledeću prijavu. Prijava počinje u poslednjoj korišćenoj ulozi, a ako je nema, po prioritetu `EVALUATOR → CONTROLLER → EMPLOYEE → PAYROLL → ADMIN`. Ulogu menja prekidač **Aktivna uloga** u zaglavlju: `select-role` gasi tekuću sesiju i otvara novu samo za izabranu ulogu, pa stari access token prestaje da važi odmah, a ostali tabovi (dele kolačić) pređu u novu ulogu čim ih kanal obavesti. Uz promenu statusa ocene beleži se i uloga u kojoj je korisnik tada radio.
 
@@ -239,7 +241,9 @@ Podešavanja nastaju dodelom uloge `EVALUATOR` i nose samo kontrolora ocenjivač
 - `PUT /api/evaluator-settings/{employeeId}` — ADMIN — body: `{ "controllerEmployeeId": 5 }` ili `{ "controllerEmployeeId": null }` (bez kontrolora)
 
 ### Povezivanje korisnika sa zaposlenim
-- `PUT /api/employees/{id}/user` — ADMIN — body: `{ "userId": 2 }` ili `{ "userId": null }`
+- `PUT /api/employees/{id}/user` — ADMIN — body: `{ "userId": 2, "version": 0 }` ili `{ "userId": null, "version": 0 }`
+
+Nalog se ne predaje drugom zaposlenom. Zaposlenom bez naloga može se povezati slobodan nalog (uloga ocenjivača na nalogu i podešavanja ocenjivača na zaposlenom moraju se poklapati). Povezani nalog se može samo odvezati, radi ispravke greške, i to tek kada nema uloge `EMPLOYEE`, `EVALUATOR` ni `CONTROLLER`; zamena jednog naloga drugim se odbija.
 
 `/api/auth/me` sada vraća `employeeId` i `employeeFullName` kada je korisnik povezan sa zaposlenim.
 

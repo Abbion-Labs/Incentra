@@ -294,6 +294,10 @@ export function AdminEmployees() {
         evaluators={formEvaluators}
         users={users}
         linkedUserId={linkedUserId}
+        savedUserId={
+          employees.find((employee) => employee.id === editingId)?.userId ??
+          null
+        }
         editingId={editingId}
         saving={saving}
         onChange={setFormValues}

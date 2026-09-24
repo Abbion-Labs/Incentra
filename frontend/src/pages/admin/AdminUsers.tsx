@@ -68,6 +68,12 @@ export function AdminUsers() {
     );
   }, [employees, users, editingUser]);
 
+  // Novi nalog se vezuje za aktivnog zaposlenog koji još nema nalog.
+  const employeeOptions = useMemo(
+    () => employees.filter((e) => e.userId == null),
+    [employees],
+  );
+
   const alreadyConfiguredEvaluator =
     editingUser?.employeeId != null &&
     configuredEvaluatorIds.has(editingUser.employeeId);
@@ -132,10 +138,17 @@ export function AdminUsers() {
         );
         startCreate();
       } else {
+        const linksEmployee = ['EMPLOYEE', 'EVALUATOR', 'CONTROLLER'].some(
+          (code) => formValues.roleCodes.includes(code),
+        );
         await api.post('/api/auth/register', {
           email: formValues.email.trim(),
           password: formValues.password,
           roleCodes: formValues.roleCodes,
+          employeeId: linksEmployee ? Number(formValues.employeeId) : null,
+          controllerEmployeeId: controllerIdFromForm(
+            formValues.controllerEmployeeId,
+          ),
         });
         toast.success(
           formatMessage(
@@ -185,6 +198,7 @@ export function AdminUsers() {
         editingUser={editingUser}
         saving={saving}
         controllerOptions={controllerOptions}
+        employeeOptions={employeeOptions}
         alreadyConfiguredEvaluator={alreadyConfiguredEvaluator}
         onChange={setFormValues}
         onSubmit={handleSubmit}

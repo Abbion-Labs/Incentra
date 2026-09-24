@@ -74,7 +74,7 @@ public class RefreshCookieIntegrationTests
             {
                 email = $"cookie-test-{Guid.NewGuid():N}@local.dev",
                 password = "Register123!",
-                roleCodes = new[] { "EMPLOYEE" },
+                roleCodes = new[] { "PAYROLL" },
             }),
         };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);

@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import type { AdminUser, Employee } from '../../../api/types';
 import { useIntl } from '../../../i18n';
 import { roleLabel } from '../../../utils/status';
@@ -13,12 +14,21 @@ const ROLE_ORDER = [
 
 export { ROLE_ORDER };
 
+/** Uloge koje rade kao određeni zaposleni, pa nalogu sa njima treba zaposleni. */
+const EMPLOYEE_LINKED_ROLES = ['EMPLOYEE', 'EVALUATOR', 'CONTROLLER'];
+
+function needsEmployee(roleCodes: string[]): boolean {
+  return roleCodes.some((code) => EMPLOYEE_LINKED_ROLES.includes(code));
+}
+
 export interface UserFormValues {
   email: string;
   password: string;
   roleCodes: string[];
   isActive: boolean;
   controllerEmployeeId: string;
+  /** Zaposleni kome novi nalog pripada; bira se samo pri pravljenju naloga. */
+  employeeId: string;
 }
 
 export const emptyUserForm = (): UserFormValues => ({
@@ -29,6 +39,7 @@ export const emptyUserForm = (): UserFormValues => ({
   roleCodes: ['EMPLOYEE'],
   isActive: true,
   controllerEmployeeId: '',
+  employeeId: '',
 });
 
 export function userToForm(user: AdminUser): UserFormValues {
@@ -41,6 +52,7 @@ export function userToForm(user: AdminUser): UserFormValues {
         : ['EMPLOYEE'],
     isActive: user.isActive,
     controllerEmployeeId: '',
+    employeeId: '',
   };
 }
 
@@ -49,6 +61,8 @@ interface AdminUserFormProps {
   editingUser: AdminUser | null;
   saving: boolean;
   controllerOptions: Employee[];
+  /** Aktivni zaposleni koji još nemaju nalog. */
+  employeeOptions: Employee[];
   alreadyConfiguredEvaluator: boolean;
   onChange: (values: UserFormValues) => void;
   onSubmit: () => void;
@@ -60,6 +74,7 @@ export function AdminUserForm({
   editingUser,
   saving,
   controllerOptions,
+  employeeOptions,
   alreadyConfiguredEvaluator,
   onChange,
   onSubmit,
@@ -68,17 +83,35 @@ export function AdminUserForm({
   const { formatMessage } = useIntl();
   const isEditing = editingUser != null;
 
+  const [employeeSearch, setEmployeeSearch] = useState('');
+
   const wantsEvaluator = values.roleCodes.includes('EVALUATOR');
+  // Nov nalog sa ulogom zaposlenog, ocenjivača ili kontrolora odmah dobija
+  // zaposlenog. Postojećem nepovezanom nalogu se te uloge ne mogu dodati;
+  // uloge koje već ima (od ranije) ostaju.
+  const pickEmployee = !isEditing && needsEmployee(values.roleCodes);
   const missingEmployeeLink =
-    wantsEvaluator && isEditing && editingUser.employeeId == null;
-  // An existing evaluator keeps the controller already assigned, so only a
-  // brand new evaluator has to name one here.
-  const needsController =
-    wantsEvaluator &&
     isEditing &&
-    !missingEmployeeLink &&
-    !alreadyConfiguredEvaluator;
-  const blocked = missingEmployeeLink || (wantsEvaluator && !isEditing);
+    editingUser.employeeId == null &&
+    needsEmployee(
+      values.roleCodes.filter((code) => !editingUser.roles.includes(code)),
+    );
+  // Postojeći ocenjivač zadržava dodeljenog kontrolora, pa ga bira samo novi.
+  const needsController =
+    wantsEvaluator && !missingEmployeeLink && !alreadyConfiguredEvaluator;
+  const blocked = missingEmployeeLink || (pickEmployee && !values.employeeId);
+
+  const filteredEmployees = useMemo(() => {
+    const term = employeeSearch.trim().toLowerCase();
+    return term
+      ? employeeOptions.filter((e) => e.fullName.toLowerCase().includes(term))
+      : employeeOptions;
+  }, [employeeOptions, employeeSearch]);
+
+  // Ocenjivač ne može biti sam sebi kontrolor.
+  const availableControllers = controllerOptions.filter(
+    (e) => String(e.id) !== values.employeeId,
+  );
 
   function setField<K extends keyof UserFormValues>(
     key: K,
@@ -192,15 +225,46 @@ export function AdminUserForm({
         </ul>
       </div>
 
-      {wantsEvaluator && !isEditing && (
-        <p className="alert alert-info">
-          {formatMessage({ id: 'admin.users.evaluatorNotAvailableAtCreate' })}
-        </p>
+      {pickEmployee && (
+        <div className="form-row">
+          <label htmlFor="user-employee">
+            {formatMessage({ id: 'admin.users.employee' })}
+          </label>
+          <input
+            type="search"
+            value={employeeSearch}
+            onChange={(e) => setEmployeeSearch(e.target.value)}
+            placeholder={formatMessage({
+              id: 'admin.users.employeeSearchPlaceholder',
+            })}
+            aria-label={formatMessage({
+              id: 'admin.users.employeeSearchPlaceholder',
+            })}
+          />
+          <select
+            id="user-employee"
+            value={values.employeeId}
+            onChange={(e) => setField('employeeId', e.target.value)}
+            required
+          >
+            <option value="">--</option>
+            {filteredEmployees.map((employee) => (
+              <option key={employee.id} value={employee.id}>
+                {employee.fullName} · {employee.organizationUnitName}
+              </option>
+            ))}
+          </select>
+          <p className="form-hint">
+            {employeeOptions.length === 0
+              ? formatMessage({ id: 'admin.users.noEmployeesWithoutAccount' })
+              : formatMessage({ id: 'admin.users.employeeHint' })}
+          </p>
+        </div>
       )}
 
       {missingEmployeeLink && (
         <p className="alert alert-warning">
-          {formatMessage({ id: 'admin.users.evaluatorNeedsLinkedEmployee' })}
+          {formatMessage({ id: 'admin.users.rolesNeedLinkedEmployee' })}
         </p>
       )}
 
@@ -219,7 +283,7 @@ export function AdminUserForm({
             <option value={NO_CONTROLLER}>
               {formatMessage({ id: 'admin.evaluatorSettings.noController' })}
             </option>
-            {controllerOptions.map((employee) => (
+            {availableControllers.map((employee) => (
               <option key={employee.id} value={employee.id}>
                 {employee.fullName}
               </option>

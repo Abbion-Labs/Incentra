@@ -2,10 +2,12 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Auth;
 using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Evaluation.Services;
 using VariableCompensation.Application.Hr.Models;
 using EvaluatorSettingsEntity = VariableCompensation.Domain.Entities.Hr.EvaluatorSettings;
+using VariableCompensation.Domain.Enums;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Hr;
 
@@ -96,15 +98,18 @@ public sealed class LinkEmployeeUserCommandHandler : IRequestHandler<LinkEmploye
 {
     private readonly IEmployeeRepository employeeRepository;
     private readonly IUserRepository userRepository;
+    private readonly IEvaluatorSettingsRepository evaluatorSettingsRepository;
     private readonly ICurrentUserService currentUserService;
 
     public LinkEmployeeUserCommandHandler(
         IEmployeeRepository employeeRepository,
         IUserRepository userRepository,
+        IEvaluatorSettingsRepository evaluatorSettingsRepository,
         ICurrentUserService currentUserService)
     {
         this.employeeRepository = employeeRepository;
         this.userRepository = userRepository;
+        this.evaluatorSettingsRepository = evaluatorSettingsRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -122,18 +127,14 @@ public sealed class LinkEmployeeUserCommandHandler : IRequestHandler<LinkEmploye
             return Result.Failure<EmployeeResponse>(version.Error);
         }
 
-        if (request.UserId is not null)
+        var linkCheck = request.UserId == entity.UserId
+            ? Result.Success()
+            : entity.UserId is not null
+                ? await this.EnsureCanUnlinkAsync(entity.UserId.Value, request.UserId, cancellationToken)
+                : await this.EnsureCanLinkAsync(entity, request.UserId!.Value, cancellationToken);
+        if (linkCheck.IsFailure)
         {
-            var user = await this.userRepository.FindByIdWithRolesAsync(request.UserId.Value, cancellationToken);
-            if (user is null || !user.IsActive)
-            {
-                return Result.Failure<EmployeeResponse>(ErrorCodes.UserNotFound);
-            }
-
-            if (await this.employeeRepository.IsUserLinkedToAnotherEmployeeAsync(request.UserId.Value, request.EmployeeId, cancellationToken))
-            {
-                return Result.Failure<EmployeeResponse>(ErrorCodes.UserAlreadyLinked);
-            }
+            return Result.Failure<EmployeeResponse>(linkCheck.Error);
         }
 
         entity.UserId = request.UserId;
@@ -144,5 +145,50 @@ public sealed class LinkEmployeeUserCommandHandler : IRequestHandler<LinkEmploye
 
         var updated = await this.employeeRepository.FindByIdAsync(request.EmployeeId, cancellationToken);
         return Result.Success(HrMappings.ToResponse(updated!));
+    }
+
+    /// <summary>
+    /// An account is one person's sign-in, so it is never handed over to someone else: the link is only undone,
+    /// to correct a mistake. And only for an account without the roles that act as an employee; the rules for
+    /// removing those roles already see to it that nobody is left without an evaluator or a controller.
+    /// </summary>
+    private async Task<Result> EnsureCanUnlinkAsync(long currentUserId, long? replacementUserId, CancellationToken cancellationToken)
+    {
+        if (replacementUserId is not null)
+        {
+            return Result.Failure(ErrorCodes.EmployeeAccountChangeRequiresUnlink);
+        }
+
+        var current = await this.userRepository.FindByIdWithRolesAsync(currentUserId, cancellationToken);
+        var roles = current?.UserRoles.Select(ur => ur.Role.Code).ToList() ?? [];
+        return EmployeeLinkedRoles.AnyIn(roles)
+            ? Result.Failure(ErrorCodes.AccountRolesRequireEmployee)
+            : Result.Success();
+    }
+
+    private async Task<Result> EnsureCanLinkAsync(Employee employee, long userId, CancellationToken cancellationToken)
+    {
+        if (!employee.IsActive)
+        {
+            return Result.Failure(ErrorCodes.EmployeeInactive);
+        }
+
+        var user = await this.userRepository.FindByIdWithRolesAsync(userId, cancellationToken);
+        if (user is null || !user.IsActive)
+        {
+            return Result.Failure(ErrorCodes.UserNotFound);
+        }
+
+        if (await this.employeeRepository.IsUserLinkedToAnotherEmployeeAsync(userId, employee.Id, cancellationToken))
+        {
+            return Result.Failure(ErrorCodes.UserAlreadyLinked);
+        }
+
+        // The evaluator role and the evaluator settings come and go together.
+        var isEvaluator = user.UserRoles.Any(ur => ur.Role.Code == RoleCodes.Evaluator);
+        var hasSettings = await this.evaluatorSettingsRepository.ExistsAsync(employee.Id, cancellationToken);
+        return isEvaluator == hasSettings
+            ? Result.Success()
+            : Result.Failure(ErrorCodes.EvaluatorRoleSettingsMismatch);
     }
 }

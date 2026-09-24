@@ -123,7 +123,7 @@ public class EditVersionIntegrationTests
         {
             email,
             password = "Korisnik123!",
-            roleCodes = new[] { "EMPLOYEE" },
+            roleCodes = new[] { "PAYROLL" },
         });
         var users = await admin.GetFromJsonAsync<JsonElement>("/api/users");
         var user = users.EnumerateArray().Single(u => u.GetProperty("id").GetInt64() == Id(created));
@@ -132,7 +132,7 @@ public class EditVersionIntegrationTests
         {
             email,
             isActive = true,
-            roleCodes = new[] { "EMPLOYEE" },
+            roleCodes = new[] { "PAYROLL" },
             version,
         });
     }

@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Domain.Entities.Hr;
 using VariableCompensation.Domain;
 using EvaluatorSettingsEntity = VariableCompensation.Domain.Entities.Hr.EvaluatorSettings;
 
@@ -23,7 +24,29 @@ public static class EvaluatorRoleSync
         CancellationToken cancellationToken)
     {
         var employee = await employeeRepository.FindByUserIdAsync(userId, cancellationToken);
+        return await ApplyToEmployeeAsync(
+            employee,
+            hasEvaluatorRole,
+            controllerEmployeeId,
+            employeeRepository,
+            evaluatorSettingsRepository,
+            userRepository,
+            cancellationToken);
+    }
 
+    /// <summary>
+    /// The same for the employee the account is (or is about to be) linked to, so a new account can become an
+    /// evaluator in the step that creates and links it.
+    /// </summary>
+    public static async Task<Result> ApplyToEmployeeAsync(
+        Employee? employee,
+        bool hasEvaluatorRole,
+        long? controllerEmployeeId,
+        IEmployeeRepository employeeRepository,
+        IEvaluatorSettingsRepository evaluatorSettingsRepository,
+        IUserRepository userRepository,
+        CancellationToken cancellationToken)
+    {
         if (!hasEvaluatorRole)
         {
             return employee is null
