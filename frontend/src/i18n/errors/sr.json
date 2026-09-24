@@ -106,6 +106,7 @@
     "vn-0109": "Zaposleni već ima povezan nalog. Prvo ga odvežite, pa povežite drugi.",
     "vn-0110": "Nalog ima uloge Zaposleni, Ocenjivač ili Kontrolor, kojima je potreban zaposleni. Prvo mu uklonite te uloge na stranici Korisnici, pa ga odvežite.",
     "vn-0111": "Uloga ocenjivača na nalogu i podešavanja ocenjivača na zaposlenom se ne poklapaju, pa se ne mogu povezati.",
-    "vn-0112": "Tekst je predugačak. Skratite unos i pokušajte ponovo."
+    "vn-0112": "Tekst je predugačak. Skratite unos i pokušajte ponovo.",
+    "vn-0113": "Ocenjivač ima ocene koje čekaju pregled kontrolora. Kontrolor ne može da se ukloni dok ih ne odobri ili vrati na doradu."
   }
 }

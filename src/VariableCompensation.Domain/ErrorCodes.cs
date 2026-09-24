@@ -108,4 +108,5 @@ public static class ErrorCodes
     public const string AccountRolesRequireEmployee = "vn-0110";
     public const string EvaluatorRoleSettingsMismatch = "vn-0111";
     public const string TextTooLong = "vn-0112";
+    public const string EvaluatorHasPendingReviews = "vn-0113";
 }
