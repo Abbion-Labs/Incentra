@@ -114,7 +114,7 @@ public sealed class GetEvaluatorAnalyticsQueryHandler
 
         var ratedThisYear = thisYearCounts.Sum(x => x.Count);
         var recommendedShareByCode = await this.descriptiveRatingRepository.GetRecommendedShareByCodeAsync(cancellationToken);
-        var recommendedCounts = BuildRecommendedCounts(subordinateCount, thisYearCounts, recommendedShareByCode);
+        var recommendedCounts = BuildRecommendedCounts(ratedThisYear, thisYearCounts, recommendedShareByCode);
 
         var distribution = thisYearCounts
             .Select(row => new DescriptiveRatingDistributionItem
@@ -179,12 +179,19 @@ public sealed class GetEvaluatorAnalyticsQueryHandler
             Variance = Variance(values),
         };
 
-    private static Dictionary<long, int> BuildRecommendedCounts(
-        int subordinateCount,
+    /// <summary>
+    /// How the evaluations rated this year would split over the descriptive ratings if they followed the
+    /// recommended shares, so the chart sets like against like: evaluations against evaluations, whatever the number
+    /// of quarters behind. The shares are scaled to add up to 100%, as an administrator may leave them off while
+    /// adjusting them one by one.
+    /// </summary>
+    internal static Dictionary<long, int> BuildRecommendedCounts(
+        int ratedCount,
         IReadOnlyList<DescriptiveRatingCountRow> ratings,
         IReadOnlyDictionary<string, decimal> recommendedShareByCode)
     {
-        if (subordinateCount <= 0 || ratings.Count == 0)
+        var shareTotal = ratings.Sum(r => recommendedShareByCode.GetValueOrDefault(r.Code, 0m));
+        if (ratedCount <= 0 || ratings.Count == 0 || shareTotal <= 0m)
         {
             return ratings.ToDictionary(r => r.DescriptiveRatingId, _ => 0);
         }
@@ -193,7 +200,7 @@ public sealed class GetEvaluatorAnalyticsQueryHandler
             .Select(r => new
             {
                 r.DescriptiveRatingId,
-                Raw = subordinateCount * recommendedShareByCode.GetValueOrDefault(r.Code, 0m),
+                Raw = ratedCount * recommendedShareByCode.GetValueOrDefault(r.Code, 0m) / shareTotal,
             })
             .ToList();
 
@@ -201,7 +208,7 @@ public sealed class GetEvaluatorAnalyticsQueryHandler
             .Select(x => new { x.DescriptiveRatingId, Count = (int)Math.Floor(x.Raw) })
             .ToList();
 
-        var remainder = subordinateCount - floored.Sum(x => x.Count);
+        var remainder = ratedCount - floored.Sum(x => x.Count);
         var ranked = raw
             .Select((x, index) => new
             {

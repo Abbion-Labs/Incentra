@@ -530,7 +530,7 @@
     "averageAndVarianceTitle": "Prosečna ocena i varijansa",
     "statsComparisonHint": "Prosek, medijana i varijansa za {year}. godinu u odnosu na sve godine.",
     "ratingComparisonTitle": "Poređenje brojeva ocena",
-    "ratingComparisonHint": "Broj zaposlenih po opisnoj oceni: {previousYear}. vs {year}. godina i preporučena raspodela.",
+    "ratingComparisonHint": "Broj ocena po opisnoj oceni: {previousYear}. vs {year}. godina, i koliko bi ocena iz {year}. bilo po preporučenoj raspodeli.",
     "chartLegendAria": "Legenda grafikona",
     "ratingCountComparisonAria": "Poređenje broja opisnih ocena",
     "benchmarkAggregateAria": "Ukupni proseci ocena",

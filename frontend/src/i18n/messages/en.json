@@ -530,7 +530,7 @@
     "averageAndVarianceTitle": "Average rating and variance",
     "statsComparisonHint": "Average, median, and variance for {year} compared to all years.",
     "ratingComparisonTitle": "Rating count comparison",
-    "ratingComparisonHint": "Employee count by descriptive rating: {previousYear}. vs {year} and recommended distribution.",
+    "ratingComparisonHint": "Evaluations by descriptive rating: {previousYear} vs {year}, and how the {year} evaluations would split under the recommended distribution.",
     "chartLegendAria": "Chart legend",
     "ratingCountComparisonAria": "Descriptive rating count comparison",
     "benchmarkAggregateAria": "Overall rating averages",
