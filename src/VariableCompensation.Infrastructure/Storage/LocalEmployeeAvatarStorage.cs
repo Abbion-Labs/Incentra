@@ -39,18 +39,21 @@ public sealed class LocalEmployeeAvatarStorage : IEmployeeAvatarStorage
             _ => ".jpg",
         };
 
-        foreach (var existing in Directory.EnumerateFiles(this.avatarDirectory, $"{employeeId}.*"))
+        // A new name for every picture: the current one stays until the new one is in place.
+        var fileName = $"{employeeId}-{Guid.NewGuid():N}{extension}";
+        var fullPath = Path.Combine(this.avatarDirectory, fileName);
+        try
         {
-            File.Delete(existing);
+            await using var fileStream = File.Create(fullPath);
+            await content.CopyToAsync(fileStream, cancellationToken);
+        }
+        catch
+        {
+            File.Delete(fullPath);
+            throw;
         }
 
-        var fileName = $"{employeeId}{extension}";
-        var fullPath = Path.Combine(this.avatarDirectory, fileName);
-        await using var fileStream = File.Create(fullPath);
-        await content.CopyToAsync(fileStream, cancellationToken);
-
-        var version = File.GetLastWriteTimeUtc(fullPath).Ticks;
-        return $"{this.avatarRequestPath}/{fileName}?v={version}";
+        return $"{this.avatarRequestPath}/{fileName}";
     }
 
     public Task DeleteIfExistsAsync(string? avatarUrl, CancellationToken cancellationToken)
