@@ -8,6 +8,7 @@ import type {
 import { useToast } from '../../../hooks';
 import { useIntl } from '../../../i18n';
 import { isEditConflict } from '../../../utils/editConflict';
+import { TEXT_LIMITS } from '../../../utils/textLimits';
 
 type LookupKind = 'org' | 'position' | 'education';
 type LookupItem = OrganizationUnit | JobPosition | EducationLevel;
@@ -24,14 +25,17 @@ const CONFIG = {
   org: {
     titleKey: 'admin.lookups.orgUnits',
     endpoint: '/api/organization-units',
+    maxNameLength: TEXT_LIMITS.organizationUnitName,
   },
   position: {
     titleKey: 'admin.lookups.jobPositions',
     endpoint: '/api/job-positions',
+    maxNameLength: TEXT_LIMITS.lookupName,
   },
   education: {
     titleKey: 'admin.lookups.educationLevels',
     endpoint: '/api/education-levels',
+    maxNameLength: TEXT_LIMITS.lookupName,
   },
 } as const;
 
@@ -148,6 +152,7 @@ export function LookupCrudPanel({
           <input
             id={`${kind}-name`}
             value={name}
+            maxLength={config.maxNameLength}
             onChange={(e) => setName(e.target.value)}
             required
           />

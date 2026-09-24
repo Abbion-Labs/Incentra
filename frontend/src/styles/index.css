@@ -840,6 +840,19 @@ textarea {
   min-height: 2.75rem;
 }
 
+.form-list__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.form-list__count {
+  align-self: flex-end;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
 .form-list__footer {
   margin-top: var(--space-sm);
 }

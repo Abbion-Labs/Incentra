@@ -5,6 +5,7 @@ import type {
   OrganizationUnit,
 } from '../../../api/types';
 import { useIntl } from '../../../i18n';
+import { TEXT_LIMITS } from '../../../utils/textLimits';
 
 export interface EmployeeFormValues {
   firstName: string;
@@ -109,6 +110,7 @@ export function AdminEmployeeForm({
           <input
             id="emp-first-name"
             value={values.firstName}
+            maxLength={TEXT_LIMITS.personName}
             onChange={(e) => setField('firstName', e.target.value)}
             required
           />
@@ -120,6 +122,7 @@ export function AdminEmployeeForm({
           <input
             id="emp-last-name"
             value={values.lastName}
+            maxLength={TEXT_LIMITS.personName}
             onChange={(e) => setField('lastName', e.target.value)}
             required
           />

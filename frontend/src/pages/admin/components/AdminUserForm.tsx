@@ -3,6 +3,7 @@ import type { AdminUser, Employee } from '../../../api/types';
 import { useIntl } from '../../../i18n';
 import { roleLabel } from '../../../utils/status';
 import { NO_CONTROLLER } from '../evaluatorController';
+import { TEXT_LIMITS } from '../../../utils/textLimits';
 
 const ROLE_ORDER = [
   'EMPLOYEE',
@@ -150,6 +151,7 @@ export function AdminUserForm({
             id="user-email"
             type="email"
             value={values.email}
+            maxLength={TEXT_LIMITS.email}
             onChange={(e) => setField('email', e.target.value)}
             required
           />
