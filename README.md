@@ -370,13 +370,18 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 
 ### Test nalozi
 
-- Admin: `admin@local.dev` / `Admin123!`
-- Ocenjivač: `evaluator@local.dev` / `Eval123!` (povezan sa zaposlenim Jovan)
-- Kontrolor: `controller@local.dev` / `Control123!` (povezan sa zaposlenim Milan)
-- Zaposleni: `marko@local.dev` / `Marko123!` (Marko Marković)
-- Plate/varijabila: korisnik sa `PAYROLL` ulogom (kreirati u administraciji ako nije u seed-u)
+Demo seed pravi 6 organizacionih jedinica sa 120 zaposlenih: u svakoj rukovodioca koji ocenjuje ostale, dva menadžera koji kontrolišu rukovodioce, i ocene za 2024, 2025 i 2026. Za Q3 2026 otprilike svaki četvrti zaposleni kod svakog ocenjivača ima već poslatu ocenu, pa svaki kontrolor ima šta da pregleda; ostali imaju nacrt za planiranje.
 
-Demo seed pri pokretanju API-ja kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
+| Nalog | Lozinka | Uloge |
+|---|---|---|
+| `admin@local.dev` | `Admin123!` | Administrator |
+| `payroll@local.dev` | `Payroll123!` | Plate i varijabila |
+| `evaluator@local.dev` | `Eval123!` | Zaposleni, Ocenjivač i Kontrolor: rukovodilac prve jedinice, koji kontroliše i rukovodioca četvrte (`evaluator4@`) |
+| `evaluator2@` … `evaluator6@local.dev` | `Eval123!` | Zaposleni i Ocenjivač: rukovodioci ostalih jedinica |
+| `controller@local.dev`, `controller2@local.dev` | `Control123!` | Zaposleni i Kontrolor: menadžeri |
+| `zaposleni@local.dev` … `zaposleni6@local.dev` | `Zaposleni123!` | Zaposleni: po jedan zaposleni u svakoj jedinici |
+
+Pri svakom pokretanju seed proverava demo naloge i vraća im uloge i vezu sa zaposlenim ako su promenjene.
 
 ## Skladištenje avatara
 

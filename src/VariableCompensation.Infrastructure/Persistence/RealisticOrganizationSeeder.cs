@@ -34,11 +34,22 @@ internal static class RealisticOrganizationSeeder
     private static string ControllerEmail(int index) =>
         index == 0 ? "controller@local.dev" : $"controller{index + 1}@local.dev";
 
+    private static string EmployeeEmail(int index) =>
+        index == 0 ? "zaposleni@local.dev" : $"zaposleni{index + 1}@local.dev";
+
+    /// <summary>
+    /// The evaluator the first evaluator also reviews, so that one demo account works in all three of employee,
+    /// evaluator and controller. It is a head of another unit: nobody reviews themselves, and it does not rate
+    /// the first evaluator.
+    /// </summary>
+    private const int EvaluatorReviewedByFirstEvaluator = 3;
+
     private static IReadOnlyCollection<string> DemoUserEmails() =>
     [
         .. FixedDemoUserEmails,
         .. Enumerable.Range(0, OrgUnitDefinitions.Length).Select(EvaluatorEmail),
         .. Enumerable.Range(0, OrgUnitDefinitions.Length).Select(ControllerEmail),
+        .. Enumerable.Range(0, OrgUnitDefinitions.Length).Select(EmployeeEmail),
     ];
 
     private static readonly (string Code, string Name, decimal Pool2024, decimal Pool2025)[] OrgUnitDefinitions =
@@ -314,10 +325,15 @@ internal static class RealisticOrganizationSeeder
         return names;
     }
 
+    /// <summary>
+    /// Makes sure the demo accounts exist, hold the roles they are meant to, and belong to the right employee.
+    /// Runs on every start, so demo accounts that drifted (a role taken away, an account unlinked) are put right.
+    /// Evaluators, controllers and plain employees all get the Employee role too: they are employees as well.
+    /// </summary>
     private static async Task SeedUsersAsync(AppDbContext context)
     {
-        await EnsureUserAsync(context, "admin@local.dev", "Admin123!", RoleCodes.Admin);
-        await EnsureUserAsync(context, "payroll@local.dev", "Payroll123!", RoleCodes.Payroll);
+        await EnsureUserAsync(context, "admin@local.dev", "Admin123!", [RoleCodes.Admin]);
+        await EnsureUserAsync(context, "payroll@local.dev", "Payroll123!", [RoleCodes.Payroll]);
 
         var settings = await context.EvaluatorSettings
             .Include(s => s.Employee)
@@ -325,21 +341,25 @@ internal static class RealisticOrganizationSeeder
             .ThenBy(s => s.EmployeeId)
             .ToListAsync();
 
-        // Everyone acting as an evaluator or a controller gets an account with
-        // the matching role. Without it they cannot sign in, and the role is
-        // what makes them an evaluator or a controller in the first place.
-        for (var i = 0; i < settings.Count; i++)
+        if (settings.Count > EvaluatorReviewedByFirstEvaluator)
         {
-            await EnsureUserAsync(
-                context,
-                EvaluatorEmail(i),
-                "Eval123!",
-                RoleCodes.Evaluator,
-                settings[i].EmployeeId);
+            await EnsureReviewedByAsync(context, settings[EvaluatorReviewedByFirstEvaluator], settings[0].EmployeeId);
         }
 
+        // Everyone acting as an evaluator or a controller gets an account with the matching role. Without it they
+        // cannot sign in, and the role is what makes them an evaluator or a controller in the first place.
+        for (var i = 0; i < settings.Count; i++)
+        {
+            string[] roles = i == 0
+                ? [RoleCodes.Employee, RoleCodes.Evaluator, RoleCodes.Controller]
+                : [RoleCodes.Employee, RoleCodes.Evaluator];
+            await EnsureUserAsync(context, EvaluatorEmail(i), "Eval123!", roles, settings[i].EmployeeId);
+        }
+
+        // The controllers that are not evaluators themselves; the first evaluator reviews under their own account.
+        var evaluatorEmployeeIds = settings.Select(s => s.EmployeeId).ToHashSet();
         var controllerEmployeeIds = settings
-            .Where(s => s.ControllerEmployeeId is not null)
+            .Where(s => s.ControllerEmployeeId is not null && !evaluatorEmployeeIds.Contains(s.ControllerEmployeeId.Value))
             .Select(s => s.ControllerEmployeeId!.Value)
             .Distinct()
             .ToList();
@@ -350,55 +370,89 @@ internal static class RealisticOrganizationSeeder
                 context,
                 ControllerEmail(i),
                 "Control123!",
-                RoleCodes.Controller,
+                [RoleCodes.Employee, RoleCodes.Controller],
                 controllerEmployeeIds[i]);
         }
+
+        // One plain employee per evaluator, so "My evaluations" can be tried out.
+        for (var i = 0; i < settings.Count; i++)
+        {
+            var evaluatorId = settings[i].EmployeeId;
+            var employeeId = await context.Employees
+                .Where(e => e.IsActive && e.EvaluatorEmployeeId == evaluatorId)
+                .OrderBy(e => e.Id)
+                .Select(e => (long?)e.Id)
+                .FirstOrDefaultAsync();
+            if (employeeId is not null)
+            {
+                await EnsureUserAsync(context, EmployeeEmail(i), "Zaposleni123!", [RoleCodes.Employee], employeeId);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Puts <paramref name="evaluator"/> under <paramref name="controllerEmployeeId"/>, and with them every
+    /// evaluation of theirs that is not approved yet, as changing the controller in the app does.
+    /// </summary>
+    private static async Task EnsureReviewedByAsync(AppDbContext context, EvaluatorSettings evaluator, long controllerEmployeeId)
+    {
+        if (evaluator.ControllerEmployeeId == controllerEmployeeId)
+        {
+            return;
+        }
+
+        evaluator.ControllerEmployeeId = controllerEmployeeId;
+        evaluator.UpdatedAt = DateTime.UtcNow;
+
+        var open = await context.Evaluations
+            .Where(e => e.EvaluatorEmployeeId == evaluator.EmployeeId && e.Status != EvaluationStatus.Approved)
+            .ToListAsync();
+        foreach (var evaluation in open)
+        {
+            evaluation.ControllerEmployeeId = controllerEmployeeId;
+            evaluation.ControllerViewedAt = null;
+            evaluation.UpdatedAt = DateTime.UtcNow;
+            evaluation.Version++;
+        }
+
+        await context.SaveChangesAsync();
     }
 
     private static async Task EnsureUserAsync(
         AppDbContext context,
         string email,
         string password,
-        string roleCode,
+        IReadOnlyList<string> roleCodes,
         long? employeeId = null)
     {
-        var user = await context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        var roleIds = await context.Roles
+            .Where(r => roleCodes.Contains(r.Code))
+            .Select(r => r.Id)
+            .ToListAsync();
+
+        var user = await context.Users.Include(u => u.UserRoles).FirstOrDefaultAsync(u => u.Email == email);
         if (user is null)
         {
-            var role = await context.Roles.FirstAsync(r => r.Code == roleCode);
             user = new Domain.Entities.Identity.User
             {
                 Email = email,
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12),
                 IsActive = true,
                 EmailVerifiedAt = DateTime.UtcNow,
-                UserRoles =
-                {
-                    new Domain.Entities.Identity.UserRole
-                    {
-                        RoleId = role.Id,
-                        AssignedAt = DateTime.UtcNow,
-                    },
-                },
             };
             context.Users.Add(user);
-            await context.SaveChangesAsync();
         }
-        else
+
+        foreach (var roleId in roleIds.Where(id => user.UserRoles.All(ur => ur.RoleId != id)))
         {
-            var role = await context.Roles.FirstAsync(r => r.Code == roleCode);
-            var hasRole = await context.UserRoles.AnyAsync(ur => ur.UserId == user.Id && ur.RoleId == role.Id);
-            if (!hasRole)
+            user.UserRoles.Add(new Domain.Entities.Identity.UserRole
             {
-                context.UserRoles.Add(new Domain.Entities.Identity.UserRole
-                {
-                    UserId = user.Id,
-                    RoleId = role.Id,
-                    AssignedAt = DateTime.UtcNow,
-                });
-                await context.SaveChangesAsync();
-            }
+                RoleId = roleId,
+                AssignedAt = DateTime.UtcNow,
+            });
         }
+
+        await context.SaveChangesAsync();
 
         if (employeeId is null)
         {
@@ -406,11 +460,21 @@ internal static class RealisticOrganizationSeeder
         }
 
         var employee = await context.Employees.FirstOrDefaultAsync(e => e.Id == employeeId.Value);
-        if (employee is not null && employee.UserId != user.Id)
+        if (employee is null || employee.UserId == user.Id)
         {
-            employee.UserId = user.Id;
+            return;
+        }
+
+        // An account belongs to one employee: a stale link elsewhere goes first.
+        var previous = await context.Employees.FirstOrDefaultAsync(e => e.UserId == user.Id);
+        if (previous is not null)
+        {
+            previous.UserId = null;
             await context.SaveChangesAsync();
         }
+
+        employee.UserId = user.Id;
+        await context.SaveChangesAsync();
     }
 
     private static async Task SeedSalariesAsync(AppDbContext context, ISensitiveDataEncryptionService encryption)
@@ -497,9 +561,11 @@ internal static class RealisticOrganizationSeeder
 
         var evaluatees = await context.Employees
             .Where(e => e.IsActive && e.EvaluatorEmployeeId != null)
+            .OrderBy(e => e.Id)
             .ToListAsync();
 
         var evaluations = new List<Domain.Entities.Evaluation.Evaluation>();
+        var positionUnderEvaluator = new Dictionary<long, int>();
 
         foreach (var employee in evaluatees)
         {
@@ -511,7 +577,13 @@ internal static class RealisticOrganizationSeeder
             var evaluatorId = settings.EmployeeId;
             var controllerId = settings.ControllerEmployeeId;
 
-            foreach (var (year, quarter, status, includeMeasures) in BuildEvaluationSchedule())
+            // Every fourth person of each evaluator has the current quarter already submitted, so every controller
+            // has evaluations waiting for review. Without a controller a submitted evaluation is approved at once.
+            var position = positionUnderEvaluator.GetValueOrDefault(evaluatorId);
+            positionUnderEvaluator[evaluatorId] = position + 1;
+            var currentQuarterSubmitted = controllerId is not null && position % SubmittedEveryNth == 1;
+
+            foreach (var (year, quarter, status, includeMeasures) in BuildEvaluationSchedule(currentQuarterSubmitted))
             {
                 int[] goalRatings;
                 int[] measureRatings;
@@ -552,7 +624,10 @@ internal static class RealisticOrganizationSeeder
         await context.SaveChangesAsync();
     }
 
-    private static IEnumerable<(short Year, byte Quarter, EvaluationStatus Status, bool IncludeMeasures)> BuildEvaluationSchedule()
+    private const int SubmittedEveryNth = 4;
+
+    private static IEnumerable<(short Year, byte Quarter, EvaluationStatus Status, bool IncludeMeasures)> BuildEvaluationSchedule(
+        bool currentQuarterSubmitted)
     {
         for (byte quarter = 1; quarter <= 4; quarter++)
         {
@@ -566,7 +641,14 @@ internal static class RealisticOrganizationSeeder
 
         yield return (2026, 1, EvaluationStatus.Approved, true);
         yield return (2026, 2, EvaluationStatus.Approved, true);
-        yield return (2026, 3, EvaluationStatus.Draft, false);
+        if (currentQuarterSubmitted)
+        {
+            yield return (2026, 3, EvaluationStatus.Submitted, true);
+        }
+        else
+        {
+            yield return (2026, 3, EvaluationStatus.Draft, false);
+        }
     }
 
     private static int[] GenerateGoalRatings(long employeeId, short year, byte quarter)

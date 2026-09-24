@@ -113,8 +113,9 @@
     "demoAccounts": "Demo accounts",
     "placeholderEmail": "name@company.com",
     "admin": "Admin",
-    "evaluator": "Evaluator",
+    "evaluator": "Evaluator and controller",
     "controller": "Controller",
+    "employee": "Employee",
     "payroll": "Payroll",
     "noRoleAssigned": "This account has no role assigned for system access. Contact your administrator."
   },
