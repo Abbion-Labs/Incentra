@@ -85,4 +85,42 @@ public class GetEvaluatorAnalyticsQueryHandlerTests
 
         result.Error.Should().Be(ErrorCodes.EvaluatorNotFound);
     }
+
+    [Fact]
+    public void RecommendedCounts_SplitTheRatedEvaluations()
+    {
+        // Twenty people rated in all four quarters: 80 evaluations, so 45% of them is 36, not 45% of 20 people.
+        var counts = GetEvaluatorAnalyticsQueryHandler.BuildRecommendedCounts(
+            80,
+            Ratings("MEETS", "GOOD", "EXCEEDS"),
+            new Dictionary<string, decimal> { ["MEETS"] = 0.25m, ["GOOD"] = 0.45m, ["EXCEEDS"] = 0.30m });
+
+        counts.Should().Equal(new Dictionary<long, int> { [1] = 20, [2] = 36, [3] = 24 });
+    }
+
+    [Fact]
+    public void RecommendedCounts_ScaleSharesThatDoNotAddUpToAHundredPercent()
+    {
+        // 60% + 60%: read as half and half.
+        var counts = GetEvaluatorAnalyticsQueryHandler.BuildRecommendedCounts(
+            10,
+            Ratings("GOOD", "EXCEEDS"),
+            new Dictionary<string, decimal> { ["GOOD"] = 0.60m, ["EXCEEDS"] = 0.60m });
+
+        counts.Should().Equal(new Dictionary<long, int> { [1] = 5, [2] = 5 });
+    }
+
+    [Fact]
+    public void RecommendedCounts_AreZeroWithoutRatedEvaluations()
+    {
+        var counts = GetEvaluatorAnalyticsQueryHandler.BuildRecommendedCounts(
+            0,
+            Ratings("GOOD"),
+            new Dictionary<string, decimal> { ["GOOD"] = 1m });
+
+        counts.Should().Equal(new Dictionary<long, int> { [1] = 0 });
+    }
+
+    private static IReadOnlyList<DescriptiveRatingCountRow> Ratings(params string[] codes) =>
+        codes.Select((code, i) => new DescriptiveRatingCountRow(i + 1, code, code, i + 1, 0)).ToList();
 }
