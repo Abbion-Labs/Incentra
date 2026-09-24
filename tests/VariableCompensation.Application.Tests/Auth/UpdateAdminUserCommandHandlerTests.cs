@@ -148,11 +148,47 @@ public class UpdateAdminUserCommandHandlerTests
         userRepository.Users[2] = Administrator(2, "second@local.dev", isActive: true);
 
         var result = await CreateHandler(userRepository).Handle(
-            new UpdateAdminUserCommand(1, "admin@local.dev", true, ["EMPLOYEE"], ControllerEmployeeId: null, Version: 0),
+            new UpdateAdminUserCommand(1, "admin@local.dev", true, ["PAYROLL"], ControllerEmployeeId: null, Version: 0),
             CancellationToken.None);
 
         result.IsSuccess.Should().BeTrue();
-        admin.UserRoles.Select(ur => ur.RoleId).Should().Equal(5);
+        admin.UserRoles.Select(ur => ur.RoleId).Should().Equal(2);
+    }
+
+    [Fact]
+    public async Task Handle_AddingARoleThatActsAsAnEmployee_ToAnUnlinkedAccount_IsRefused()
+    {
+        var userRepository = new FakeUserRepository();
+        var user = Administrator(1, "admin@local.dev", isActive: true);
+        userRepository.Users[1] = user;
+        userRepository.Users[2] = Administrator(2, "second@local.dev", isActive: true);
+
+        var result = await CreateHandler(userRepository).Handle(
+            new UpdateAdminUserCommand(1, "admin@local.dev", true, ["ADMIN", "CONTROLLER"], ControllerEmployeeId: null, Version: 0),
+            CancellationToken.None);
+
+        result.Error.Should().Be(ErrorCodes.EmployeeRequiredForRoles);
+        user.UserRoles.Select(ur => ur.Role.Code).Should().Equal("ADMIN");
+    }
+
+    [Fact]
+    public async Task Handle_UnlinkedAccountThatAlreadyHadTheRole_CanStillBeEdited()
+    {
+        var userRepository = new FakeUserRepository();
+        userRepository.Users[1] = new User
+        {
+            Id = 1,
+            Email = "old@local.dev",
+            IsActive = true,
+            UserRoles = { new UserRole { UserId = 1, RoleId = 5, Role = new Role { Id = 5, Code = "EMPLOYEE", Name = "Zaposleni" } } },
+        };
+
+        var result = await CreateHandler(userRepository).Handle(
+            new UpdateAdminUserCommand(1, "renamed@local.dev", true, ["EMPLOYEE"], ControllerEmployeeId: null, Version: 0),
+            CancellationToken.None);
+
+        result.IsSuccess.Should().BeTrue();
+        result.Value.Email.Should().Be("renamed@local.dev");
     }
 
     private static UpdateAdminUserCommandHandler CreateHandler(FakeUserRepository userRepository) =>

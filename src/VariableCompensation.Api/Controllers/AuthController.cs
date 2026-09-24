@@ -61,7 +61,12 @@ public sealed class AuthController : ControllerBase
                 : [request.RoleCode];
 
         var result = await this.mediator.Send(
-            new RegisterUserCommand(request.Email, request.Password, roleCodes),
+            new RegisterUserCommand(
+                request.Email,
+                request.Password,
+                roleCodes,
+                request.EmployeeId,
+                request.ControllerEmployeeId),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

@@ -317,14 +317,21 @@
       "rolesHint": "Select one or more roles. The user must have at least one role.",
       "evaluatorController": "Evaluator's controller",
       "evaluatorControllerHint": "An evaluator reports to a controller who reviews their ratings. For an evaluator at the top of the organization choose \"No controller\": their evaluations are approved as soon as they submit them. The controller can be changed later on the Evaluators tab.",
-      "evaluatorNeedsLinkedEmployee": "This account is not linked to an employee. Link it on the employee form before granting the evaluator role.",
-      "evaluatorNotAvailableAtCreate": "The evaluator role is granted by editing the account, since it must be linked to an employee first."
+      "employee": "Employee",
+      "employeeSearchPlaceholder": "Search employees by name…",
+      "employeeHint": "The account belongs to this employee. Required for the Employee, Evaluator and Controller roles; the list holds active employees without an account.",
+      "noEmployeesWithoutAccount": "There are no active employees without an account. Add the employee on the Employees page first.",
+      "rolesNeedLinkedEmployee": "This account is not linked to an employee, so the Employee, Evaluator and Controller roles cannot be added. Link it on the employee form."
     },
     "employeeForm": {
       "newEmployee": "New employee",
       "addEmployee": "Add employee",
       "educationLevel": "Education level",
-      "reassignConfirm": "The employee gets a new evaluator.\n\nDraft evaluations moving to the new evaluator: {drafts}\nSubmitted evaluations staying with the current evaluator until the controller returns them for revision: {submitted}\n\nDo you want to continue?"
+      "reassignConfirm": "The employee gets a new evaluator.\n\nDraft evaluations moving to the new evaluator: {drafts}\nSubmitted evaluations staying with the current evaluator until the controller returns them for revision: {submitted}\n\nDo you want to continue?",
+      "unlinkAccount": "Unlink account",
+      "unlinkHint": "An account is unlinked only to correct a mistake, and only once it has none of the Employee, Evaluator and Controller roles.",
+      "unlinkOnSave": "The account will be unlinked when you save.",
+      "linkHint": "An account is usually linked when it is created, on the Users page. A free account can be linked here."
     },
     "ratingConfig": {
       "newDescriptiveRating": "New descriptive rating",

@@ -83,6 +83,18 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
             return Result.Failure<AdminUserListItemResponse>(ErrorCodes.LastActiveAdministrator);
         }
 
+        // A role that acts as an employee is only given to an account linked to one. Roles it already holds from
+        // before this rule are left alone.
+        var heldRoles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
+        var addedRoles = request.RoleCodes
+            .Where(code => !heldRoles.Contains(code.Trim(), StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        if (EmployeeLinkedRoles.AnyIn(addedRoles)
+            && await this.employeeRepository.FindByUserIdAsync(user.Id, cancellationToken) is null)
+        {
+            return Result.Failure<AdminUserListItemResponse>(ErrorCodes.EmployeeRequiredForRoles);
+        }
+
         var controllerRoleId = await this.roleLookup.FindRoleIdByCodeAsync(RoleCodes.Controller, cancellationToken);
         var hadControllerRole = controllerRoleId is not null
             && user.UserRoles.Any(ur => ur.RoleId == controllerRoleId.Value);

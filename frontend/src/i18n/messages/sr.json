@@ -317,14 +317,21 @@
       "rolesHint": "Izaberite jednu ili više uloga. Korisnik mora imati bar jednu ulogu.",
       "evaluatorController": "Kontrolor ocenjivača",
       "evaluatorControllerHint": "Ocenjivač se dodeljuje kontroloru koji pregleda njegove ocene. Ocenjivaču na vrhu organizacije izaberite „Bez kontrolora“: njegove ocene su odobrene čim ih pošalje. Kontrolor se kasnije može promeniti na kartici Ocenjivači.",
-      "evaluatorNeedsLinkedEmployee": "Ovaj nalog nije povezan ni sa jednim zaposlenim. Povežite ga u formi zaposlenog pre nego što mu dodelite ulogu ocenjivača.",
-      "evaluatorNotAvailableAtCreate": "Ulogu ocenjivača dodeljujete izmenom naloga, pošto prvo mora da bude povezan sa zaposlenim."
+      "employee": "Zaposleni",
+      "employeeSearchPlaceholder": "Pretraži zaposlene po imenu…",
+      "employeeHint": "Nalog pripada ovom zaposlenom. Obavezno za uloge Zaposleni, Ocenjivač i Kontrolor; lista sadrži aktivne zaposlene koji još nemaju nalog.",
+      "noEmployeesWithoutAccount": "Nema aktivnih zaposlenih bez naloga. Prvo dodajte zaposlenog na stranici Zaposleni.",
+      "rolesNeedLinkedEmployee": "Ovaj nalog nije povezan ni sa jednim zaposlenim, pa mu se uloge Zaposleni, Ocenjivač i Kontrolor ne mogu dodati. Povežite ga u formi zaposlenog."
     },
     "employeeForm": {
       "newEmployee": "Novi zaposleni",
       "addEmployee": "Dodaj zaposlenog",
       "educationLevel": "Stručna sprema",
-      "reassignConfirm": "Zaposleni dobija novog ocenjivača.\n\nNacrti ocena koji prelaze na novog ocenjivača: {drafts}\nPoslate ocene koje ostaju kod dosadašnjeg ocenjivača dok ih kontrolor ne vrati na doradu: {submitted}\n\nDa li želite da nastavite?"
+      "reassignConfirm": "Zaposleni dobija novog ocenjivača.\n\nNacrti ocena koji prelaze na novog ocenjivača: {drafts}\nPoslate ocene koje ostaju kod dosadašnjeg ocenjivača dok ih kontrolor ne vrati na doradu: {submitted}\n\nDa li želite da nastavite?",
+      "unlinkAccount": "Odveži nalog",
+      "unlinkHint": "Nalog se odvezuje samo radi ispravke greške, i to tek kada nema uloge Zaposleni, Ocenjivač ni Kontrolor.",
+      "unlinkOnSave": "Nalog će biti odvezan kada sačuvate izmene.",
+      "linkHint": "Nalog se obično povezuje već pri pravljenju, na stranici Korisnici. Ovde se može povezati slobodan nalog."
     },
     "ratingConfig": {
       "newDescriptiveRating": "Nova opisna ocena",

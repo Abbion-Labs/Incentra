@@ -17,7 +17,7 @@ public sealed class FakeEmployeeRepository : IEmployeeRepository
         Task.FromResult<Employee?>(null);
 
     public Task<Employee?> FindByIdForUpdateAsync(long id, CancellationToken cancellationToken) =>
-        Task.FromResult<Employee?>(null);
+        Task.FromResult(this.EmployeesById.GetValueOrDefault(id));
 
     public Task<(IReadOnlyList<Employee> Items, int TotalCount)> GetPagedAsync(
         int page,

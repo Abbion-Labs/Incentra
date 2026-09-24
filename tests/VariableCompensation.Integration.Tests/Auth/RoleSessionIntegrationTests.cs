@@ -77,14 +77,36 @@ public class RoleSessionIntegrationTests
         var email = $"role-session-{Guid.NewGuid():N}@local.dev";
         const string password = "Several123!";
 
+        // The employee role belongs to an employee, given in the same step.
+        var employeeId = await this.CreateEmployeeAsync(admin.AccessToken);
         var response = await this.SendAsync(
             HttpMethod.Post,
             "/api/auth/register",
             admin.AccessToken,
-            new { email, password, roleCodes = new[] { RoleCodes.Employee, RoleCodes.Payroll } });
+            new { email, password, roleCodes = new[] { RoleCodes.Employee, RoleCodes.Payroll }, employeeId });
 
         response.StatusCode.Should().Be(HttpStatusCode.OK);
         return (email, password);
+    }
+
+    private async Task<long> CreateEmployeeAsync(string accessToken)
+    {
+        async Task<long> FirstIdAsync(string path)
+        {
+            var list = await (await this.SendAsync(HttpMethod.Get, path, accessToken)).Content.ReadFromJsonAsync<JsonElement>();
+            return list[0].GetProperty("id").GetInt64();
+        }
+
+        var created = await this.SendAsync(HttpMethod.Post, "/api/employees", accessToken, new
+        {
+            firstName = "Uloga",
+            lastName = Guid.NewGuid().ToString("N")[..8],
+            organizationUnitId = await FirstIdAsync("/api/organization-units"),
+            jobPositionId = await FirstIdAsync("/api/job-positions"),
+            educationLevelId = await FirstIdAsync("/api/education-levels"),
+        });
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        return (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
     }
 
     private async Task<(string AccessToken, string RefreshToken, string? ActiveRole)> SignInAsync(

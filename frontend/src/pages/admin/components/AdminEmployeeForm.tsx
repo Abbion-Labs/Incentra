@@ -53,6 +53,8 @@ interface AdminEmployeeFormProps {
   evaluators: Employee[];
   users: { id: number; email: string; employeeId: number | null }[];
   linkedUserId: string;
+  /** Nalog koji je zaposleni imao kad je forma otvorena. */
+  savedUserId: number | null;
   editingId: number | null;
   saving: boolean;
   onChange: (values: EmployeeFormValues) => void;
@@ -69,6 +71,7 @@ export function AdminEmployeeForm({
   evaluators,
   users,
   linkedUserId,
+  savedUserId,
   editingId,
   saving,
   onChange,
@@ -84,9 +87,11 @@ export function AdminEmployeeForm({
     onChange({ ...values, [key]: value });
   }
 
-  const availableUsers = users.filter(
-    (user) => !user.employeeId || user.employeeId === editingId,
-  );
+  // Nalog se ne predaje drugom zaposlenom: postojeći se može samo odvezati
+  // (radi ispravke greške), a zaposlenom bez naloga može se povezati slobodan.
+  const availableUsers = users.filter((user) => !user.employeeId);
+  const savedUser = users.find((user) => user.id === savedUserId);
+  const unlinking = savedUserId != null && linkedUserId === '';
 
   return (
     <form
@@ -237,18 +242,53 @@ export function AdminEmployeeForm({
             <label htmlFor="emp-user">
               {formatMessage({ id: 'common.linkedAccount' })}
             </label>
-            <select
-              id="emp-user"
-              value={linkedUserId}
-              onChange={(e) => onLinkedUserChange(e.target.value)}
-            >
-              <option value="">—</option>
-              {availableUsers.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.email}
-                </option>
-              ))}
-            </select>
+            {savedUserId != null ? (
+              <div className="admin-form__linked-account">
+                <p className="admin-form__static-value" id="emp-user">
+                  {unlinking ? (
+                    <s>{savedUser?.email ?? '—'}</s>
+                  ) : (
+                    (savedUser?.email ?? '—')
+                  )}
+                </p>
+                <button
+                  type="button"
+                  className="btn btn-secondary btn-sm"
+                  onClick={() =>
+                    onLinkedUserChange(unlinking ? String(savedUserId) : '')
+                  }
+                >
+                  {unlinking
+                    ? formatMessage({ id: 'buttons.cancel' })
+                    : formatMessage({ id: 'admin.employeeForm.unlinkAccount' })}
+                </button>
+                <p className="form-hint">
+                  {formatMessage({
+                    id: unlinking
+                      ? 'admin.employeeForm.unlinkOnSave'
+                      : 'admin.employeeForm.unlinkHint',
+                  })}
+                </p>
+              </div>
+            ) : (
+              <>
+                <select
+                  id="emp-user"
+                  value={linkedUserId}
+                  onChange={(e) => onLinkedUserChange(e.target.value)}
+                >
+                  <option value="">—</option>
+                  {availableUsers.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.email}
+                    </option>
+                  ))}
+                </select>
+                <p className="form-hint">
+                  {formatMessage({ id: 'admin.employeeForm.linkHint' })}
+                </p>
+              </>
+            )}
           </div>
         )}
       </div>

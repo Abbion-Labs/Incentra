@@ -100,6 +100,11 @@
     "vn-0103": "A controller cannot review the evaluator who rates them, as they would be reviewing their own evaluation.",
     "vn-0104": "You cannot approve or return your own evaluation. An administrator needs to change the controller.",
     "vn-0105": "This is the only active administrator. Give the administrator role to another active user before removing it here or deactivating this account.",
-    "vn-0106": "The change was sent without the record version. Refresh the page and try again."
+    "vn-0106": "The change was sent without the record version. Refresh the page and try again.",
+    "vn-0107": "The Employee, Evaluator and Controller roles need a linked employee. Choose the employee the account belongs to.",
+    "vn-0108": "This employee already has an account.",
+    "vn-0109": "The employee already has a linked account. Unlink it first, then link another one.",
+    "vn-0110": "The account has the Employee, Evaluator or Controller role, which need an employee. Remove those roles on the Users page first, then unlink it.",
+    "vn-0111": "The account's evaluator role and the employee's evaluator settings do not match, so they cannot be linked."
   }
 }

@@ -102,4 +102,9 @@ public static class ErrorCodes
     public const string ControllerOwnEvaluation = "vn-0104";
     public const string LastActiveAdministrator = "vn-0105";
     public const string VersionRequired = "vn-0106";
+    public const string EmployeeRequiredForRoles = "vn-0107";
+    public const string EmployeeAlreadyHasAccount = "vn-0108";
+    public const string EmployeeAccountChangeRequiresUnlink = "vn-0109";
+    public const string AccountRolesRequireEmployee = "vn-0110";
+    public const string EvaluatorRoleSettingsMismatch = "vn-0111";
 }

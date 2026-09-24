@@ -60,7 +60,7 @@ public class SessionIntegrationTests
             $"/api/users/{user.Id}",
             admin.AccessToken,
             // A new account has not been edited yet.
-            new { email = user.Email, isActive = false, roleCodes = new[] { "EMPLOYEE" }, version = 0 });
+            new { email = user.Email, isActive = false, roleCodes = new[] { "PAYROLL" }, version = 0 });
 
         deactivate.StatusCode.Should().Be(HttpStatusCode.OK);
         (await this.GetMeAsync(session.AccessToken)).StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -168,7 +168,7 @@ public class SessionIntegrationTests
             HttpMethod.Post,
             "/api/auth/register",
             admin.AccessToken,
-            new { email, password, roleCodes = new[] { "EMPLOYEE" } });
+            new { email, password, roleCodes = new[] { "PAYROLL" } });
         response.StatusCode.Should().Be(HttpStatusCode.OK);
 
         var profile = await response.Content.ReadFromJsonAsync<JsonElement>();

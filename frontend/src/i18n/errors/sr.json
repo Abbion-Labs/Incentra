@@ -100,6 +100,11 @@
     "vn-0103": "Kontrolor ne može kontrolisati ocenjivača koji ocenjuje njega, jer bi tako kontrolisao sopstvenu ocenu.",
     "vn-0104": "Ne možete odobriti niti vratiti sopstvenu ocenu. Administrator treba da promeni kontrolora.",
     "vn-0105": "Ovo je jedini aktivni administrator. Pre nego što mu uklonite ulogu administratora ili deaktivirate nalog, dodelite tu ulogu nekom drugom aktivnom korisniku.",
-    "vn-0106": "Izmena nije poslata sa verzijom zapisa. Osvežite stranicu i pokušajte ponovo."
+    "vn-0106": "Izmena nije poslata sa verzijom zapisa. Osvežite stranicu i pokušajte ponovo.",
+    "vn-0107": "Uloge Zaposleni, Ocenjivač i Kontrolor traže povezanog zaposlenog. Izaberite zaposlenog kome nalog pripada.",
+    "vn-0108": "Ovaj zaposleni već ima nalog.",
+    "vn-0109": "Zaposleni već ima povezan nalog. Prvo ga odvežite, pa povežite drugi.",
+    "vn-0110": "Nalog ima uloge Zaposleni, Ocenjivač ili Kontrolor, kojima je potreban zaposleni. Prvo mu uklonite te uloge na stranici Korisnici, pa ga odvežite.",
+    "vn-0111": "Uloga ocenjivača na nalogu i podešavanja ocenjivača na zaposlenom se ne poklapaju, pa se ne mogu povezati."
   }
 }
