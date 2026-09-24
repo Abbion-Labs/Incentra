@@ -366,7 +366,7 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 
 ### Test nalozi
 
-Demo seed pravi 6 organizacionih jedinica sa 120 zaposlenih: u svakoj rukovodioca koji ocenjuje ostale, dva menadžera koji kontrolišu rukovodioce, i ocene za 2024, 2025 i 2026.
+Demo seed pravi 6 organizacionih jedinica sa 120 zaposlenih: u svakoj rukovodioca koji ocenjuje ostale, dva menadžera koji kontrolišu rukovodioce, i ocene za 2024, 2025 i 2026. Za Q3 2026 otprilike svaki četvrti zaposleni kod svakog ocenjivača ima već poslatu ocenu, pa svaki kontrolor ima šta da pregleda; ostali imaju nacrt za planiranje.
 
 | Nalog | Lozinka | Uloge |
 |---|---|---|

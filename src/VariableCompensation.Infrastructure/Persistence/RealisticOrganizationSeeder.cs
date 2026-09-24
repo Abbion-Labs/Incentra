@@ -561,9 +561,11 @@ internal static class RealisticOrganizationSeeder
 
         var evaluatees = await context.Employees
             .Where(e => e.IsActive && e.EvaluatorEmployeeId != null)
+            .OrderBy(e => e.Id)
             .ToListAsync();
 
         var evaluations = new List<Domain.Entities.Evaluation.Evaluation>();
+        var positionUnderEvaluator = new Dictionary<long, int>();
 
         foreach (var employee in evaluatees)
         {
@@ -575,7 +577,13 @@ internal static class RealisticOrganizationSeeder
             var evaluatorId = settings.EmployeeId;
             var controllerId = settings.ControllerEmployeeId;
 
-            foreach (var (year, quarter, status, includeMeasures) in BuildEvaluationSchedule())
+            // Every fourth person of each evaluator has the current quarter already submitted, so every controller
+            // has evaluations waiting for review. Without a controller a submitted evaluation is approved at once.
+            var position = positionUnderEvaluator.GetValueOrDefault(evaluatorId);
+            positionUnderEvaluator[evaluatorId] = position + 1;
+            var currentQuarterSubmitted = controllerId is not null && position % SubmittedEveryNth == 1;
+
+            foreach (var (year, quarter, status, includeMeasures) in BuildEvaluationSchedule(currentQuarterSubmitted))
             {
                 int[] goalRatings;
                 int[] measureRatings;
@@ -616,7 +624,10 @@ internal static class RealisticOrganizationSeeder
         await context.SaveChangesAsync();
     }
 
-    private static IEnumerable<(short Year, byte Quarter, EvaluationStatus Status, bool IncludeMeasures)> BuildEvaluationSchedule()
+    private const int SubmittedEveryNth = 4;
+
+    private static IEnumerable<(short Year, byte Quarter, EvaluationStatus Status, bool IncludeMeasures)> BuildEvaluationSchedule(
+        bool currentQuarterSubmitted)
     {
         for (byte quarter = 1; quarter <= 4; quarter++)
         {
@@ -630,7 +641,14 @@ internal static class RealisticOrganizationSeeder
 
         yield return (2026, 1, EvaluationStatus.Approved, true);
         yield return (2026, 2, EvaluationStatus.Approved, true);
-        yield return (2026, 3, EvaluationStatus.Draft, false);
+        if (currentQuarterSubmitted)
+        {
+            yield return (2026, 3, EvaluationStatus.Submitted, true);
+        }
+        else
+        {
+            yield return (2026, 3, EvaluationStatus.Draft, false);
+        }
     }
 
     private static int[] GenerateGoalRatings(long employeeId, short year, byte quarter)
