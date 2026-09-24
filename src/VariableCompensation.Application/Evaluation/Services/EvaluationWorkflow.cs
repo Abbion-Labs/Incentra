@@ -58,6 +58,9 @@ internal static class EvaluationWorkflow
         {
             case EvaluationStatus.Submitted:
                 evaluation.SubmittedAt = DateTime.UtcNow;
+                // The comment of a return for revision has been dealt with once the evaluation is sent again; it
+                // stays in RejectionReason and in the history, but must not pass for the controller's final word.
+                evaluation.ControllerComment = null;
                 break;
             case EvaluationStatus.UnderReview:
                 evaluation.ReviewedAt = DateTime.UtcNow;

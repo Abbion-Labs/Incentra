@@ -41,10 +41,9 @@ export function ControllerReviewPage() {
 
   const { activeRole } = useAuth();
   // Odlučuje samo kontrolor; admin ocenu samo gleda.
-  const canReview =
-    activeRole === 'CONTROLLER' &&
-    (evaluation?.status === 'Submitted' ||
-      evaluation?.status === 'UnderReview');
+  const isAwaitingReview =
+    evaluation?.status === 'Submitted' || evaluation?.status === 'UnderReview';
+  const canReview = activeRole === 'CONTROLLER' && isAwaitingReview;
   const incompleteRatings = evaluation
     ? detailHasIncompleteRatings(evaluation)
     : false;
@@ -109,11 +108,11 @@ export function ControllerReviewPage() {
     formatMessage,
   ]);
 
+  // Komentar odluke uvek počinje prazan: raniji komentar vraćanja na doradu se prikazuje posebno
+  // i ne sme da se greškom sačuva kao komentar odobrenja.
   useEffect(() => {
-    if (evaluation?.controllerComment) {
-      setControllerComment(evaluation.controllerComment);
-    }
-  }, [evaluation?.id, evaluation?.controllerComment]);
+    setControllerComment('');
+  }, [evaluation?.id]);
 
   async function startReviewIfNeeded() {
     if (!evaluation || evaluation.status !== 'Submitted') return evaluation;
@@ -224,7 +223,16 @@ export function ControllerReviewPage() {
             />
           }
           footer={
-            evaluation.controllerComment && !canReview ? (
+            isAwaitingReview && evaluation.rejectionReason ? (
+              <div className="alert alert-info goals-employee-card__controller-comment">
+                <strong>
+                  {formatMessage({
+                    id: 'evaluation.previousRevisionReasonLabel',
+                  })}
+                </strong>{' '}
+                {evaluation.rejectionReason}
+              </div>
+            ) : evaluation.controllerComment && !canReview ? (
               <div className="alert alert-info goals-employee-card__controller-comment">
                 <strong>
                   {formatMessage({ id: 'evaluation.controllerCommentLabel' })}

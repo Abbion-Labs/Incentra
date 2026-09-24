@@ -59,6 +59,37 @@ public class EvaluationReviewRulesIntegrationTests
     }
 
     [Fact]
+    public async Task ResubmittedEvaluation_DropsTheReturnComment_AndApprovalKeepsOnlyItsOwn()
+    {
+        var seed = await this.SeedAsync();
+        var evaluator = await this.CreateClientAsync(seed.EvaluatorEmail, EvaluatorPassword);
+        var controller = await this.CreateClientAsync(TestCredentials.ControllerEmail, TestCredentials.ControllerPassword);
+
+        var submitted = await PostAsync(evaluator, $"/api/evaluations/{seed.EvaluationId}/submit", new { version = 1 });
+        var returned = await PostAsync(
+            controller,
+            $"/api/evaluations/{seed.EvaluationId}/return-for-revision",
+            new { version = Version(submitted), revisionComment = "Dopuniti ciljeve." });
+        returned.GetProperty("controllerComment").GetString().Should().Be("Dopuniti ciljeve.");
+
+        var resubmitted = await PostAsync(
+            evaluator, $"/api/evaluations/{seed.EvaluationId}/submit", new { version = Version(returned) });
+        resubmitted.GetProperty("controllerComment").ValueKind.Should().Be(JsonValueKind.Null);
+        resubmitted.GetProperty("rejectionReason").GetString().Should().Be("Dopuniti ciljeve.");
+
+        var underReview = await PostAsync(
+            controller, $"/api/evaluations/{seed.EvaluationId}/start-review", new { version = Version(resubmitted) });
+        var approved = await PostAsync(
+            controller,
+            $"/api/evaluations/{seed.EvaluationId}/approve",
+            new { version = Version(underReview), controllerComment = (string?)null });
+        approved.GetProperty("status").GetString().Should().Be(nameof(EvaluationStatus.Approved));
+        approved.GetProperty("controllerComment").ValueKind.Should().Be(JsonValueKind.Null);
+
+        await this.DetachFromTestControllerAsync(seed.EvaluatorId);
+    }
+
+    [Fact]
     public async Task Administrator_CannotReviewEvaluations()
     {
         var admin = await this.CreateClientAsync(TestCredentials.AdminEmail, TestCredentials.AdminPassword);
@@ -135,6 +166,25 @@ public class EvaluationReviewRulesIntegrationTests
 
         return new Seed(evaluator.Id, email, evaluation.Id);
     }
+
+    /// <summary>Other tests expect the test controller to review only the test evaluator.</summary>
+    private async Task DetachFromTestControllerAsync(long evaluatorId)
+    {
+        using var scope = this.fixture.Factory.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var settings = await context.EvaluatorSettings.SingleAsync(s => s.EmployeeId == evaluatorId);
+        settings.ControllerEmployeeId = null;
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task<JsonElement> PostAsync(HttpClient client, string url, object body)
+    {
+        var response = await client.PostAsJsonAsync(url, body);
+        response.StatusCode.Should().Be(HttpStatusCode.OK, await response.Content.ReadAsStringAsync());
+        return await response.Content.ReadFromJsonAsync<JsonElement>();
+    }
+
+    private static int Version(JsonElement evaluation) => evaluation.GetProperty("version").GetInt32();
 
     private async Task<HttpClient> CreateClientAsync(string email, string password)
     {
