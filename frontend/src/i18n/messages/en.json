@@ -177,6 +177,7 @@
     "noItemsForCategory": "There are no evaluations in this category for selected period.",
     "evaluatorPrefix": "Evaluator: {name}",
     "controllerCommentLabel": "Controller comment:",
+    "previousRevisionReasonLabel": "Returned for revision earlier:",
     "evaluatorNoteLabel": "Evaluator note:",
     "title": "Evaluation",
     "ratingTitle": "Rating",

@@ -177,6 +177,7 @@
     "noItemsForCategory": "Nema ocena u ovoj kategoriji za izabrani period.",
     "evaluatorPrefix": "Ocenjivač: {name}",
     "controllerCommentLabel": "Komentar kontrolora:",
+    "previousRevisionReasonLabel": "Ranije vraćeno na doradu:",
     "evaluatorNoteLabel": "Napomena ocenjivača:",
     "title": "Ocena",
     "ratingTitle": "Ocenjivanje",
