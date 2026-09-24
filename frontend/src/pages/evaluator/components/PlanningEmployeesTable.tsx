@@ -1,5 +1,6 @@
 import type { Employee } from '../../../api/types';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { PersonName } from '../../../components/employee/PersonName';
 import { useIntl } from '../../../i18n';
 
 interface PlanningEmployeesTableProps {
@@ -59,7 +60,7 @@ export function PlanningEmployeesTable({
           {employees.map((emp) => (
             <tr key={emp.id}>
               <td className="cell-primary col-text stack-title">
-                {emp.fullName}
+                <PersonName fullName={emp.fullName} avatarUrl={emp.avatarUrl} />
               </td>
               <td
                 className="cell-muted col-text"

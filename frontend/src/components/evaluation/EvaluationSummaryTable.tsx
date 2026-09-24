@@ -12,6 +12,7 @@ import {
   summaryDescriptiveRatingName,
 } from '../../utils/scoring';
 import { isNewForController } from '../../utils/controllerBuckets';
+import { PersonName } from '../employee/PersonName';
 import { AverageDisplay } from './AverageDisplay';
 import { DescriptiveRatingBadge } from './DescriptiveRatingBadge';
 
@@ -108,7 +109,7 @@ export function EvaluationSummaryTable({
                   role={isPendingTab ? undefined : 'link'}
                 >
                   <td className="cell-primary col-text stack-title">
-                    {ev.employeeFullName}
+                    <PersonName fullName={ev.employeeFullName} />
                     {showNewBadge && isNewForController(ev) && (
                       <span
                         className="badge badge-new"

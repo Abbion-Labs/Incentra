@@ -2,6 +2,7 @@ import type { KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { EvaluationSummary } from '../../../api/types';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { PersonName } from '../../../components/employee/PersonName';
 import { useIntl } from '../../../i18n';
 import {
   evaluationDisplayClass,
@@ -78,7 +79,7 @@ export function SetGoalsTable({ evaluations, search }: SetGoalsTableProps) {
               role="link"
             >
               <td className="cell-primary col-text stack-title">
-                {ev.employeeFullName}
+                <PersonName fullName={ev.employeeFullName} />
               </td>
               <td
                 className="cell-muted col-meta"
