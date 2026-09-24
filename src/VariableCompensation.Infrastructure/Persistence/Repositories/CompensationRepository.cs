@@ -223,6 +223,22 @@ public sealed class CompensationRepository : ICompensationRepository
                 r => r.EmployeeId == employeeId && r.ParametersId == parametersId && r.Year == year,
                 cancellationToken);
 
+    public async Task<IReadOnlyList<(short Year, bool IsFinal)>> GetResultYearsForEmployeeAsync(
+        long employeeId,
+        short fromYear,
+        CancellationToken cancellationToken)
+    {
+        var rows = await this.context.VariableCompensationResults
+            .AsNoTracking()
+            .Where(r => r.EmployeeId == employeeId && r.Year >= fromYear)
+            .GroupBy(r => r.Year)
+            .Select(g => new { Year = g.Key, IsFinal = g.Any(r => r.IsFinal) })
+            .OrderBy(x => x.Year)
+            .ToListAsync(cancellationToken);
+
+        return rows.Select(x => (x.Year, x.IsFinal)).ToList();
+    }
+
     public Task<bool> HasFinalResultsAsync(long parametersId, CancellationToken cancellationToken) =>
         this.context.VariableCompensationResults.AnyAsync(r => r.ParametersId == parametersId && r.IsFinal, cancellationToken);
 

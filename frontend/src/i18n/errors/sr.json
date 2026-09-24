@@ -70,7 +70,7 @@
     "vn-0071": "ID ocenjivača je obavezan.",
     "vn-0072": "Nemate nadležnost nad izabranim ocenjivačem.",
     "vn-0073": "Nemate pristup analitici ocenjivača.",
-    "vn-0074": "Datum početka važenja mora biti nakon trenutnog perioda.",
+    "vn-0074": "Datum početka važenja ne može biti pre datuma važeće plate. Isti datum ispravlja važeću platu, kasniji dodaje novu.",
     "vn-0075": "Korisnik nije uspešno kreiran.",
     "vn-0076": "Svi ciljevi i merila moraju biti ocenjeni pre slanja.",
     "vn-0077": "Nivo ocene sa ID {id} nije pronađen.",

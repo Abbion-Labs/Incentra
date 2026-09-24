@@ -70,7 +70,7 @@
     "vn-0071": "Evaluator id is required.",
     "vn-0072": "You do not supervise this evaluator.",
     "vn-0073": "You do not have access to evaluator analytics.",
-    "vn-0074": "New effective date must be after current period.",
+    "vn-0074": "The effective date cannot be before the date of the salary in force. The same date corrects it, a later one adds a new salary.",
     "vn-0075": "User could not be created.",
     "vn-0076": "All goals and measures must be rated before submission.",
     "vn-0077": "Rating level with id {id} not found.",

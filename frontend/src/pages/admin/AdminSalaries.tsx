@@ -84,6 +84,8 @@ export function AdminSalaries() {
   const [editSalaryPerPoint, setEditSalaryPerPoint] = useState('');
 
   const [editEffectiveFrom, setEditEffectiveFrom] = useState('');
+  // Datum važeće plate koja se menja: isti datum je ispravka, kasniji nova plata.
+  const [editCurrentFrom, setEditCurrentFrom] = useState('');
 
   const [historyEmployeeId, setHistoryEmployeeId] = useState<number | null>(
     null,
@@ -236,19 +238,31 @@ export function AdminSalaries() {
     setSaving(true);
 
     try {
-      await api.put(`/api/employee-salaries/${employeeId}`, {
-        points,
+      const saved = await api.put<EmployeeSalary>(
+        `/api/employee-salaries/${employeeId}`,
+        {
+          points,
 
-        salaryPerPoint,
+          salaryPerPoint,
 
-        effectiveFrom,
+          effectiveFrom,
 
-        currency: 'RSD',
+          currency: 'RSD',
 
-        version,
-      });
+          version,
+        },
+      );
 
-      toast.success(formatMessage({ id: 'alerts.salarySavedWithHistory' }));
+      const isCorrection =
+        version !== null && effectiveFrom === editCurrentFrom;
+      toast.success(
+        formatMessage({
+          id: isCorrection
+            ? 'alerts.salaryCorrected'
+            : 'alerts.salarySavedWithHistory',
+        }),
+      );
+      warnAboutCompensation(saved);
 
       setShowAdd(false);
 
@@ -287,10 +301,34 @@ export function AdminSalaries() {
     }
   }
 
+  /** Ispravka plate koja je već ušla u obračun varijabile traži ponovni obračun. */
+  function warnAboutCompensation(saved: EmployeeSalary) {
+    const toRecalculate = saved.compensationYearsToRecalculate ?? [];
+    const finalized = saved.finalizedCompensationYears ?? [];
+    if (toRecalculate.length > 0) {
+      toast.warning(
+        formatMessage(
+          { id: 'alerts.salaryCorrectionRecalculate' },
+          { years: toRecalculate.join(', ') },
+        ),
+      );
+    }
+    if (finalized.length > 0) {
+      toast.warning(
+        formatMessage(
+          { id: 'alerts.salaryCorrectionFinalized' },
+          { years: finalized.join(', ') },
+        ),
+      );
+    }
+  }
+
   function startEdit(row: EmployeeSalary) {
     setEditingId(row.employeeId);
 
     setEditingVersion(row.version);
+
+    setEditCurrentFrom(row.effectiveFrom);
 
     setEditPoints(String(row.points));
 
@@ -305,6 +343,8 @@ export function AdminSalaries() {
     setEditingId(null);
 
     setEditingVersion(null);
+
+    setEditCurrentFrom('');
 
     setEditPoints('');
 

@@ -26,4 +26,13 @@ public sealed class EmployeeSalaryResponse
     public bool IsCurrent { get; init; }
 
     public DateTime UpdatedAt { get; init; }
+
+    /// <summary>
+    /// After a correction: the years whose variable compensation was calculated with the corrected salary and has to
+    /// be calculated again.
+    /// </summary>
+    public IReadOnlyList<short> CompensationYearsToRecalculate { get; init; } = [];
+
+    /// <summary>After a correction: the years whose compensation used the corrected salary but is already final.</summary>
+    public IReadOnlyList<short> FinalizedCompensationYears { get; init; } = [];
 }
