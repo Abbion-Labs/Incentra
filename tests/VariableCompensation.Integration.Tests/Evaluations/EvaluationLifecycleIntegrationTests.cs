@@ -45,7 +45,7 @@ public class EvaluationLifecycleIntegrationTests
             version,
             goals = new[]
             {
-                new { description = "Povećati produktivnost", ratingLevelId = ratedLevelId, weight = 1m, sortOrder = 1 },
+                new { description = "Povećati produktivnost", ratingLevelId = ratedLevelId, weight = 100m, sortOrder = 1 },
             },
         });
         goalsResponse.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -106,7 +106,7 @@ public class EvaluationLifecycleIntegrationTests
         await evaluatorClient.PutAsJsonAsync($"/api/evaluations/{evaluationId}/goals", new
         {
             version,
-            goals = new[] { new { description = "Cilj", ratingLevelId = ratedLevelId, weight = 1m, sortOrder = 1 } },
+            goals = new[] { new { description = "Cilj", ratingLevelId = ratedLevelId, weight = 100m, sortOrder = 1 } },
         });
         version++;
 

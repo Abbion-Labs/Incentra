@@ -18,6 +18,7 @@ import {
   formatLocalizedRatingDisplay,
   formatRatingLevelLabel,
 } from '../../utils/ratingLevelLabels';
+import { formatGoalWeight } from '../../utils/goalsPlanning';
 
 interface EvaluationGoalsEditableProps {
   evaluation: EvaluationDetail;
@@ -59,6 +60,7 @@ function EvaluationGoalsEditable({
     })),
     ratingLevels,
   );
+  const showWeights = evaluation.goals.some((goal) => goal.weight != null);
   const averageText = formatComponentAverage(
     goalsIncomplete(evaluation.goals, ratingLevels),
     goalsAverage,
@@ -73,6 +75,11 @@ function EvaluationGoalsEditable({
             <tr>
               <th style={{ width: '2rem' }}>#</th>
               <th>{formatMessage({ id: 'evaluation.goalDescription' })}</th>
+              {showWeights && (
+                <th style={{ width: '5rem' }}>
+                  {formatMessage({ id: 'evaluation.goalWeight' })}
+                </th>
+              )}
               <th style={{ width: '5.5rem' }}>
                 {formatMessage({ id: 'evaluation.rating' })}
               </th>
@@ -91,6 +98,11 @@ function EvaluationGoalsEditable({
                 <tr key={g.id}>
                   <td className="cell-muted">{idx + 1}</td>
                   <td className="cell-primary">{g.description}</td>
+                  {showWeights && (
+                    <td className="cell-muted cell-nowrap">
+                      {formatGoalWeight(g.weight)}
+                    </td>
+                  )}
                   <td>
                     {editable ? (
                       <RatingValueSelect

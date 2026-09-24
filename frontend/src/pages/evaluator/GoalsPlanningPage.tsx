@@ -9,16 +9,20 @@ import type {
 } from '../../api/types';
 import { LoadingEmpty } from '../../components/common/LoadingEmpty';
 import { FormSection } from '../../components/forms/FormSection';
+import { GoalListEditor } from '../../components/forms/GoalListEditor';
 import { TextListEditor } from '../../components/forms/TextListEditor';
 import { AppLayout } from '../../components/AppLayout';
 import { useAuth } from '../../auth/AuthContext';
 import { useLookups, useToast, useUnsavedChangesGuard } from '../../hooks';
 import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import {
+  checkGoalWeights,
   defaultConversationDatetime,
   hasValidPlanningDraft,
   isGoalsPlanningComplete,
+  toGoalDrafts,
   toTextDrafts,
+  type GoalDraft,
   type TextItemDraft,
 } from '../../utils/goalsPlanning';
 import { roleListPath } from '../../utils/evaluationApi';
@@ -43,7 +47,7 @@ export function GoalsPlanningPage() {
   const [saving, setSaving] = useState(false);
   const [copying, setCopying] = useState(false);
 
-  const [goals, setGoals] = useState<TextItemDraft[]>([]);
+  const [goals, setGoals] = useState<GoalDraft[]>([]);
   const [conditions, setConditions] = useState<TextItemDraft[]>([]);
   const [criteria, setCriteria] = useState<TextItemDraft[]>([]);
   const [conversationAt, setConversationAt] = useState('');
@@ -82,14 +86,7 @@ export function GoalsPlanningPage() {
           : defaultConversationDatetime(),
       );
       setEvaluatorComment(data.evaluatorComment ?? '');
-      setGoals(
-        data.goals.length > 0
-          ? data.goals.map((g) => ({
-              description: g.description,
-              sortOrder: g.sortOrder,
-            }))
-          : [{ description: '', sortOrder: 0 }],
-      );
+      setGoals(toGoalDrafts(data.goals));
       setConditions(
         data.conditions.length > 0
           ? data.conditions.map((c) => ({
@@ -123,7 +120,7 @@ export function GoalsPlanningPage() {
   }, [load]);
 
   const handleGoalsChange = useCallback(
-    (items: TextItemDraft[]) => {
+    (items: GoalDraft[]) => {
       setGoals(items);
       markDirty();
     },
@@ -187,7 +184,7 @@ export function GoalsPlanningPage() {
             description: g.description.trim(),
             ratingLevelId: null,
             comment: null,
-            weight: null,
+            weight: g.weight,
             sortOrder: g.sortOrder ?? i,
           })),
           conditions: validConditions.map((c, i) => ({
@@ -240,6 +237,11 @@ export function GoalsPlanningPage() {
 
     if (!hasValidPlanningDraft(goals, conditions, criteria)) {
       toast.warning(formatMessage({ id: 'errors.goalsPlanningIncomplete' }));
+      return false;
+    }
+
+    if (!checkGoalWeights(goals).valid) {
+      toast.warning(formatMessage({ id: 'errors.goalWeightsInvalid' }));
       return false;
     }
 
@@ -304,7 +306,7 @@ export function GoalsPlanningPage() {
         return;
       }
 
-      setGoals(toTextDrafts(detail.goals));
+      setGoals(toGoalDrafts(detail.goals));
       setConditions(toTextDrafts(detail.conditions));
       setCriteria(toTextDrafts(detail.criteria));
       markDirty();
@@ -392,12 +394,11 @@ export function GoalsPlanningPage() {
         <div className="form-page">
           <FormSection
             title={formatMessage({ id: 'evaluation.goalsTitle' })}
-            hint={formatMessage({ id: 'evaluation.goalsPlanningHint' })}
             actions={copyButton}
           >
-            <TextListEditor
-              items={goals}
-              setItems={handleGoalsChange}
+            <GoalListEditor
+              goals={goals}
+              setGoals={handleGoalsChange}
               placeholder={formatMessage({
                 id: 'evaluation.goalDescriptionPlaceholder',
               })}
@@ -408,7 +409,6 @@ export function GoalsPlanningPage() {
           <div className="form-section-grid">
             <FormSection
               title={formatMessage({ id: 'evaluation.conditionsTitle' })}
-              hint={formatMessage({ id: 'evaluation.conditionsHint' })}
               variant="secondary"
             >
               <TextListEditor
@@ -423,7 +423,6 @@ export function GoalsPlanningPage() {
 
             <FormSection
               title={formatMessage({ id: 'evaluation.criteriaTitle' })}
-              hint={formatMessage({ id: 'evaluation.criteriaHint' })}
               variant="secondary"
             >
               <TextListEditor
@@ -443,7 +442,10 @@ export function GoalsPlanningPage() {
             saving={saving}
             copying={copying}
             lookupsLoading={lookupsLoading}
-            canSubmit={hasValidPlanningDraft(goals, conditions, criteria)}
+            canSubmit={
+              hasValidPlanningDraft(goals, conditions, criteria) &&
+              checkGoalWeights(goals).valid
+            }
             onConversationAtChange={handleConversationAtChange}
             onEvaluatorCommentChange={handleEvaluatorCommentChange}
             onSave={handleSave}
