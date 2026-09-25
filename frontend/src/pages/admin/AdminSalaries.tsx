@@ -14,6 +14,8 @@ import { fetchAllPages } from '../../api/paged';
 import type { EmployeeSalary, EmployeeSalaryOption } from '../../api/types';
 
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
+import { ToolbarSearch } from '../../components/common/ToolbarSearch';
+import { TableIconButton } from '../../components/common/TableIconButton';
 
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 
@@ -414,13 +416,12 @@ export function AdminSalaries() {
   }
 
   return (
-    <div className="card">
+    <>
       {showAdd && (
-        <form
-          className="admin-form card card--nested"
-          onSubmit={handleAdd}
-          style={{ marginBottom: '1rem' }}
-        >
+        <form className="card admin-form salary-add-form" onSubmit={handleAdd}>
+          <h2 className="salary-add-form__title">
+            {formatMessage({ id: 'admin.salaries.addSalary' })}
+          </h2>
           {loadingWithoutSalary ? (
             <div className="empty">
               {formatMessage({ id: 'admin.salaries.loadingEmployees' })}
@@ -550,358 +551,380 @@ export function AdminSalaries() {
         </form>
       )}
 
-      {!loading && (totalCount > 0 || !showAdd) && (
-        <div
-          className="filter-bar filter-bar--compact admin-filters"
-          style={{ marginBottom: '1rem' }}
-        >
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
           {totalCount > 0 ? (
-            <div className="form-row filter-bar-search">
-              <label htmlFor="salary-search" className="sr-only">
-                {formatMessage({ id: 'common.search' })}
-              </label>
-              <input
-                id="salary-search"
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder={formatMessage({
-                  id: 'admin.salaries.searchPlaceholder',
-                })}
-              />
-            </div>
-          ) : null}
-          {!showAdd ? (
-            <div className="filter-bar__actions">
-              <button
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={() => {
-                  setShowAdd(true);
-                  cancelEdit();
-                }}
-              >
-                {formatMessage({ id: 'admin.salaries.addSalary' })}
-              </button>
-            </div>
-          ) : null}
+            <ToolbarSearch
+              id="salary-search"
+              label={formatMessage({ id: 'common.search' })}
+              placeholder={formatMessage({
+                id: 'admin.salaries.searchPlaceholder',
+              })}
+              value={search}
+              onChange={setSearch}
+            />
+          ) : (
+            <span />
+          )}
+          {!showAdd && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={() => {
+                setShowAdd(true);
+                cancelEdit();
+              }}
+            >
+              {formatMessage({ id: 'admin.salaries.addSalary' })}
+            </button>
+          )}
         </div>
-      )}
 
-      {loading ? (
-        <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
-      ) : totalCount === 0 ? (
-        <div className="empty">
-          {formatMessage({ id: 'admin.salaries.noSalaries' })}
-        </div>
-      ) : (
-        <>
-          <div className="salaries-table">
-            <div className="salaries-table__meta">
-              <span className="table-currency-badge">{displayCurrency}</span>
-            </div>
+        {loading ? (
+          <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
+        ) : totalCount === 0 ? (
+          <div className="empty">
+            {formatMessage({ id: 'admin.salaries.noSalaries' })}
+          </div>
+        ) : (
+          <>
+            <div className="salaries-table">
+              <div className="table-wrap">
+                <table className="table table--salaries table--stack">
+                  <thead>
+                    <tr>
+                      <th className="table-col table-col--text">
+                        {formatMessage({ id: 'admin.employees' })}
+                      </th>
 
-            <div className="table-wrap">
-              <table className="table table--salaries">
-                <thead>
-                  <tr>
-                    <th className="table-col table-col--text">
-                      {formatMessage({ id: 'admin.employees' })}
-                    </th>
+                      <th className="table-col table-col--text">
+                        {formatMessage({ id: 'evaluation.orgUnitShort' })}
+                      </th>
 
-                    <th className="table-col table-col--text">
-                      {formatMessage({ id: 'evaluation.orgUnitShort' })}
-                    </th>
+                      <th className="table-col table-col--num">
+                        {formatMessage({ id: 'admin.salaries.points' })}
+                      </th>
 
-                    <th className="table-col table-col--num">
-                      {formatMessage({ id: 'admin.salaries.points' })}
-                    </th>
+                      <th className="table-col table-col--amount">
+                        {formatMessage({
+                          id: 'admin.salaries.earningsPerPoint',
+                        })}{' '}
+                        ({displayCurrency})
+                      </th>
 
-                    <th className="table-col table-col--amount">
-                      {formatMessage({ id: 'admin.salaries.earningsPerPoint' })}
-                    </th>
+                      <th className="table-col table-col--amount">
+                        {formatMessage({ id: 'common.salary' })} (
+                        {displayCurrency})
+                      </th>
 
-                    <th className="table-col table-col--amount">
-                      {formatMessage({ id: 'common.salary' })}
-                    </th>
+                      <th className="table-col table-col--period">
+                        {formatMessage({ id: 'evaluation.period' })}
+                      </th>
 
-                    <th className="table-col table-col--period">
-                      {formatMessage({ id: 'evaluation.period' })}
-                    </th>
+                      <th
+                        className="table-col col-actions"
+                        aria-label={formatMessage({ id: 'admin.actions' })}
+                      />
+                    </tr>
+                  </thead>
 
-                    <th className="table-col col-actions">
-                      {formatMessage({ id: 'admin.actions' })}
-                    </th>
-                  </tr>
-                </thead>
+                  <tbody>
+                    {salaries.map((row) => (
+                      <Fragment key={row.employeeId}>
+                        <tr>
+                          {editingId === row.employeeId ? (
+                            <>
+                              <td className="table-col table-col--text stack-title">
+                                {row.employeeFullName}
+                              </td>
 
-                <tbody>
-                  {salaries.map((row) => (
-                    <Fragment key={row.employeeId}>
-                      <tr>
-                        {editingId === row.employeeId ? (
-                          <>
-                            <td className="table-col table-col--text">
-                              {row.employeeFullName}
-                            </td>
+                              <td className="table-col table-col--text stack-hide">
+                                {row.organizationUnitName}
+                              </td>
 
-                            <td className="table-col table-col--text">
-                              {row.organizationUnitName}
-                            </td>
-
-                            <td
-                              className="table-col table-col--edit"
-                              colSpan={4}
-                            >
-                              <form
-                                className="inline-form"
-                                onSubmit={(e) =>
-                                  handleEditSubmit(e, row.employeeId)
-                                }
+                              <td
+                                className="table-col table-col--edit stack-wide"
+                                colSpan={4}
                               >
-                                <input
-                                  type="number"
-
-                                  min="1"
-
-                                  max="1000"
-
-                                  step="1"
-
-                                  value={editPoints}
-
-                                  onChange={(e) =>
-                                    setEditPoints(e.target.value)
+                                <form
+                                  className="inline-form"
+                                  onSubmit={(e) =>
+                                    handleEditSubmit(e, row.employeeId)
                                   }
-
-                                  required
-
-                                  style={{ maxWidth: '6rem' }}
-
-                                  title={formatMessage({
-                                    id: 'admin.salaries.points',
-                                  })}
-                                />
-
-                                <input
-                                  type="number"
-
-                                  min="1"
-
-                                  step="1"
-
-                                  value={editSalaryPerPoint}
-
-                                  onChange={(e) =>
-                                    setEditSalaryPerPoint(e.target.value)
-                                  }
-
-                                  required
-
-                                  style={{ maxWidth: '8rem' }}
-
-                                  title={formatMessage({
-                                    id: 'admin.salaries.earningsPerPoint',
-                                  })}
-                                />
-
-                                <input
-                                  type="date"
-
-                                  value={editEffectiveFrom}
-
-                                  onChange={(e) =>
-                                    setEditEffectiveFrom(e.target.value)
-                                  }
-
-                                  required
-
-                                  title={formatMessage({
-                                    id: 'admin.salaries.validFromAfterCurrentPeriod',
-                                  })}
-                                />
-
-                                <button
-                                  type="submit"
-                                  className="btn btn-primary btn-sm"
-                                  disabled={saving}
                                 >
-                                  {formatMessage({ id: 'buttons.save' })}
-                                </button>
+                                  <input
+                                    type="number"
 
-                                <button
-                                  type="button"
-                                  className="btn btn-secondary btn-sm"
-                                  onClick={cancelEdit}
-                                  disabled={saving}
-                                >
-                                  {formatMessage({ id: 'buttons.cancel' })}
-                                </button>
-                              </form>
-                            </td>
+                                    min="1"
 
-                            <td className="table-col col-actions" />
-                          </>
-                        ) : (
-                          <>
-                            <td className="table-col table-col--text">
-                              {row.employeeFullName}
-                            </td>
+                                    max="1000"
 
-                            <td className="table-col table-col--text">
-                              {row.organizationUnitName}
-                            </td>
+                                    step="1"
 
-                            <td className="table-col table-col--num">
-                              {row.points}
-                            </td>
+                                    value={editPoints}
 
-                            <td className="table-col table-col--amount">
-                              {formatTableAmount(row.salaryPerPoint)}
-                            </td>
+                                    onChange={(e) =>
+                                      setEditPoints(e.target.value)
+                                    }
 
-                            <td className="table-col table-col--amount">
-                              {formatTableAmount(
-                                monthlySalary(row.points, row.salaryPerPoint),
+                                    required
+
+                                    style={{ maxWidth: '6rem' }}
+
+                                    title={formatMessage({
+                                      id: 'admin.salaries.points',
+                                    })}
+                                  />
+
+                                  <input
+                                    type="number"
+
+                                    min="1"
+
+                                    step="1"
+
+                                    value={editSalaryPerPoint}
+
+                                    onChange={(e) =>
+                                      setEditSalaryPerPoint(e.target.value)
+                                    }
+
+                                    required
+
+                                    style={{ maxWidth: '8rem' }}
+
+                                    title={formatMessage({
+                                      id: 'admin.salaries.earningsPerPoint',
+                                    })}
+                                  />
+
+                                  <input
+                                    type="date"
+
+                                    value={editEffectiveFrom}
+
+                                    onChange={(e) =>
+                                      setEditEffectiveFrom(e.target.value)
+                                    }
+
+                                    required
+
+                                    title={formatMessage({
+                                      id: 'admin.salaries.validFromAfterCurrentPeriod',
+                                    })}
+                                  />
+
+                                  <button
+                                    type="submit"
+                                    className="btn btn-primary btn-sm"
+                                    disabled={saving}
+                                  >
+                                    {formatMessage({ id: 'buttons.save' })}
+                                  </button>
+
+                                  <button
+                                    type="button"
+                                    className="btn btn-secondary btn-sm"
+                                    onClick={cancelEdit}
+                                    disabled={saving}
+                                  >
+                                    {formatMessage({ id: 'buttons.cancel' })}
+                                  </button>
+                                </form>
+                              </td>
+
+                              <td className="table-col col-actions stack-hide" />
+                            </>
+                          ) : (
+                            <>
+                              <td className="table-col table-col--text stack-title">
+                                {row.employeeFullName}
+                              </td>
+
+                              <td
+                                className="table-col table-col--text"
+                                data-label={formatMessage({
+                                  id: 'evaluation.orgUnitShort',
+                                })}
+                              >
+                                {row.organizationUnitName}
+                              </td>
+
+                              <td
+                                className="table-col table-col--num"
+                                data-label={formatMessage({
+                                  id: 'admin.salaries.points',
+                                })}
+                              >
+                                {row.points}
+                              </td>
+
+                              <td
+                                className="table-col table-col--amount"
+                                data-label={`${formatMessage({ id: 'admin.salaries.earningsPerPoint' })} (${displayCurrency})`}
+                              >
+                                {formatTableAmount(row.salaryPerPoint)}
+                              </td>
+
+                              <td
+                                className="table-col table-col--amount"
+                                data-label={`${formatMessage({ id: 'common.salary' })} (${displayCurrency})`}
+                              >
+                                {formatTableAmount(
+                                  monthlySalary(row.points, row.salaryPerPoint),
+                                )}
+                              </td>
+
+                              <td
+                                className="table-col table-col--period"
+                                data-label={formatMessage({
+                                  id: 'evaluation.period',
+                                })}
+                              >
+                                {formatPeriod(
+                                  row.effectiveFrom,
+                                  row.effectiveTo,
+                                )}
+                              </td>
+
+                              <td className="table-col col-actions">
+                                <div className="col-actions__group">
+                                  <TableIconButton
+                                    icon="edit"
+                                    label={formatMessage({
+                                      id: 'admin.salaries.newEntry',
+                                    })}
+                                    onClick={() => startEdit(row)}
+                                  />
+                                  <TableIconButton
+                                    icon="history"
+                                    label={formatMessage({
+                                      id:
+                                        historyEmployeeId === row.employeeId
+                                          ? 'admin.salaries.hideHistory'
+                                          : 'admin.salaries.history',
+                                    })}
+                                    active={
+                                      historyEmployeeId === row.employeeId
+                                    }
+                                    onClick={() => loadHistory(row.employeeId)}
+                                  />
+                                </div>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+
+                        {historyEmployeeId === row.employeeId && (
+                          <tr key={`${row.employeeId}-history`}>
+                            <td colSpan={7} className="stack-wide">
+                              {historyLoading ? (
+                                <div className="empty">
+                                  {formatMessage({
+                                    id: 'admin.salaries.loadingHistory',
+                                  })}
+                                </div>
+                              ) : (
+                                <div className="table-wrap">
+                                  <table className="table table--nested">
+                                    <thead>
+                                      <tr>
+                                        <th className="table-col table-col--num">
+                                          {formatMessage({
+                                            id: 'admin.salaries.points',
+                                          })}
+                                        </th>
+
+                                        <th className="table-col table-col--amount">
+                                          {formatMessage({
+                                            id: 'admin.salaries.earningsPerPoint',
+                                          })}
+                                        </th>
+
+                                        <th className="table-col table-col--amount">
+                                          {formatMessage({
+                                            id: 'common.salary',
+                                          })}
+                                        </th>
+
+                                        <th className="table-col table-col--period">
+                                          {formatMessage({
+                                            id: 'evaluation.period',
+                                          })}
+                                        </th>
+
+                                        <th className="table-col table-col--status">
+                                          {formatMessage({
+                                            id: 'evaluation.status',
+                                          })}
+                                        </th>
+                                      </tr>
+                                    </thead>
+
+                                    <tbody>
+                                      {history.map((h) => (
+                                        <tr key={h.id}>
+                                          <td className="table-col table-col--num">
+                                            {h.points}
+                                          </td>
+
+                                          <td className="table-col table-col--amount">
+                                            {formatTableAmount(
+                                              h.salaryPerPoint,
+                                            )}
+                                          </td>
+
+                                          <td className="table-col table-col--amount">
+                                            {formatTableAmount(
+                                              monthlySalary(
+                                                h.points,
+                                                h.salaryPerPoint,
+                                              ),
+                                            )}
+                                          </td>
+
+                                          <td className="table-col table-col--period">
+                                            {formatPeriod(
+                                              h.effectiveFrom,
+                                              h.effectiveTo,
+                                            )}
+                                          </td>
+
+                                          <td className="table-col table-col--status">
+                                            {h.isCurrent
+                                              ? formatMessage({
+                                                  id: 'admin.salaries.historyCurrent',
+                                                })
+                                              : formatMessage({
+                                                  id: 'admin.salaries.historyArchive',
+                                                })}
+                                          </td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
                               )}
                             </td>
-
-                            <td className="table-col table-col--period">
-                              {formatPeriod(row.effectiveFrom, row.effectiveTo)}
-                            </td>
-
-                            <td className="table-col col-actions">
-                              <div className="col-actions__group">
-                                <button
-                                  type="button"
-                                  className="btn btn-secondary btn-sm"
-                                  onClick={() => startEdit(row)}
-                                >
-                                  Novi unos
-                                </button>
-
-                                <button
-                                  type="button"
-
-                                  className="btn btn-secondary btn-sm"
-
-                                  onClick={() => loadHistory(row.employeeId)}
-                                >
-                                  {historyEmployeeId === row.employeeId
-                                    ? 'Sakrij'
-                                    : 'Istorija'}
-                                </button>
-                              </div>
-                            </td>
-                          </>
+                          </tr>
                         )}
-                      </tr>
+                      </Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
-                      {historyEmployeeId === row.employeeId && (
-                        <tr key={`${row.employeeId}-history`}>
-                          <td colSpan={7}>
-                            {historyLoading ? (
-                              <div className="empty">
-                                {formatMessage({
-                                  id: 'admin.salaries.loadingHistory',
-                                })}
-                              </div>
-                            ) : (
-                              <div className="table-wrap">
-                                <table className="table table--nested">
-                                  <thead>
-                                    <tr>
-                                      <th className="table-col table-col--num">
-                                        {formatMessage({
-                                          id: 'admin.salaries.points',
-                                        })}
-                                      </th>
+              <InfiniteScrollSentinel
+                hasMore={hasMore}
 
-                                      <th className="table-col table-col--amount">
-                                        {formatMessage({
-                                          id: 'admin.salaries.earningsPerPoint',
-                                        })}
-                                      </th>
+                isLoading={loadingMore}
 
-                                      <th className="table-col table-col--amount">
-                                        {formatMessage({ id: 'common.salary' })}
-                                      </th>
-
-                                      <th className="table-col table-col--period">
-                                        {formatMessage({
-                                          id: 'evaluation.period',
-                                        })}
-                                      </th>
-
-                                      <th className="table-col table-col--status">
-                                        {formatMessage({
-                                          id: 'evaluation.status',
-                                        })}
-                                      </th>
-                                    </tr>
-                                  </thead>
-
-                                  <tbody>
-                                    {history.map((h) => (
-                                      <tr key={h.id}>
-                                        <td className="table-col table-col--num">
-                                          {h.points}
-                                        </td>
-
-                                        <td className="table-col table-col--amount">
-                                          {formatTableAmount(h.salaryPerPoint)}
-                                        </td>
-
-                                        <td className="table-col table-col--amount">
-                                          {formatTableAmount(
-                                            monthlySalary(
-                                              h.points,
-                                              h.salaryPerPoint,
-                                            ),
-                                          )}
-                                        </td>
-
-                                        <td className="table-col table-col--period">
-                                          {formatPeriod(
-                                            h.effectiveFrom,
-                                            h.effectiveTo,
-                                          )}
-                                        </td>
-
-                                        <td className="table-col table-col--status">
-                                          {h.isCurrent
-                                            ? formatMessage({
-                                                id: 'admin.salaries.historyCurrent',
-                                              })
-                                            : formatMessage({
-                                                id: 'admin.salaries.historyArchive',
-                                              })}
-                                        </td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
-                              </div>
-                            )}
-                          </td>
-                        </tr>
-                      )}
-                    </Fragment>
-                  ))}
-                </tbody>
-              </table>
+                onLoadMore={loadMore}
+              />
             </div>
-
-            <InfiniteScrollSentinel
-              hasMore={hasMore}
-
-              isLoading={loadingMore}
-
-              onLoadMore={loadMore}
-            />
-          </div>
-        </>
-      )}
-    </div>
+          </>
+        )}
+      </div>
+    </>
   );
 }

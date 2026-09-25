@@ -1300,6 +1300,11 @@ a.btn-secondary:hover {
   flex-shrink: 0;
 }
 
+/* Filteri u zaglavlju kartice: bez razmaka trake iznad tabele, u visini naslova. */
+.form-section__actions .filter-bar {
+  padding: 0;
+}
+
 .form-section__footer {
   display: flex;
   justify-content: flex-end;
@@ -2031,10 +2036,6 @@ input[type='search']::-webkit-search-cancel-button {
   overflow: hidden;
 }
 
-.varijabila-page:has(.table-wrap--infinite) .varijabila-page__tabs {
-  flex-shrink: 0;
-}
-
 .varijabila-page:has(.table-wrap--infinite) > .card--table-fill {
   flex: 1;
   min-height: 0;
@@ -2049,8 +2050,6 @@ input[type='search']::-webkit-search-cancel-button {
   overflow: hidden;
 }
 
-.card--table-fill > .admin-page-header,
-.card--table-fill > .compensation-results-toolbar,
 .card--table-fill > .compensation-params__status,
 .card--table-fill > .card__header,
 .card--table-fill > .empty {
@@ -4434,7 +4433,6 @@ input[type='search']::-webkit-search-cancel-button {
   max-width: 100%;
   min-width: 0;
   margin-bottom: 0;
-  padding: 1rem 1.25rem;
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -4442,51 +4440,24 @@ input[type='search']::-webkit-search-cancel-button {
   overflow: hidden;
 }
 
-.compensation-analytics__top {
-  flex-shrink: 0;
-}
-
-.compensation-analytics > .alert,
-.compensation-analytics__top > .alert {
-  margin-bottom: 0.75rem;
-}
-
-.compensation-analytics__filters {
-  margin-bottom: 0;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.65rem;
-}
-
-.compensation-analytics__filters .form-row label {
-  margin-bottom: 0.25rem;
-  font-size: 0.8rem;
-}
-
-.compensation-analytics__filters .form-row input,
-.compensation-analytics__filters .form-row select {
-  padding: 0.45rem 0.6rem;
-}
-
 .compensation-analytics__body {
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
-  margin-top: 0.85rem;
+  padding: 1rem 1.25rem 1.25rem;
 }
 
 .compensation-analytics__body > .empty {
   flex: 1;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .compensation-analytics__chart {
   margin: 0;
-  padding: 0.85rem 1rem 1rem;
-  box-shadow: none;
-  border: 1px solid var(--border);
-  background: #fafbfc;
   width: 100%;
   min-width: 0;
   flex: 1;
@@ -4530,10 +4501,6 @@ input[type='search']::-webkit-search-cancel-button {
 
   .compensation-analytics {
     flex: none;
-  }
-
-  .compensation-analytics__filters {
-    grid-template-columns: 1fr;
   }
 
   .analytics-chart__canvas-wrap--fill {
@@ -4650,18 +4617,6 @@ input[type='search']::-webkit-search-cancel-button {
   display: flex;
   flex-direction: column;
   gap: 1rem;
-}
-
-.admin-page-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.admin-page-header__title {
-  margin: 0 0 0.25rem;
 }
 
 .admin-form {
@@ -4813,29 +4768,11 @@ input[type='search']::-webkit-search-cancel-button {
   min-width: 0;
 }
 
-.varijabila-page__tabs {
-  margin-bottom: 1rem;
-}
-
-.varijabila-page__tabs .tab {
-  text-decoration: none;
-}
-
 .compensation-params {
   width: 100%;
   max-width: 100%;
   min-width: 0;
   margin-bottom: 0;
-}
-
-.compensation-params > .admin-page-header {
-  margin: 0 0 0.75rem;
-  width: 100%;
-  flex-shrink: 0;
-}
-
-.compensation-params > .admin-page-header .alert {
-  flex: 1 1 100%;
 }
 
 .compensation-params__layout {
@@ -4852,7 +4789,6 @@ input[type='search']::-webkit-search-cancel-button {
     flex-direction: column;
     max-height: calc(100dvh - 10rem);
     min-height: 0;
-    padding: 1rem 1.25rem;
   }
 
   .compensation-params__layout {
@@ -4898,6 +4834,12 @@ input[type='search']::-webkit-search-cancel-button {
 .compensation-params__form {
   width: 100%;
   min-width: 0;
+  margin: 0;
+}
+
+/* Zaglavlja dve susedne kartice iste visine, da su linije ispod naslova u ravni. */
+.compensation-params__layout .form-section__header {
+  min-height: 2.875rem;
 }
 
 .compensation-params__grid {
@@ -4923,10 +4865,6 @@ input[type='search']::-webkit-search-cancel-button {
 
 .compensation-params__chart {
   margin: 0;
-  padding: 0.85rem 1rem 1rem;
-  box-shadow: none;
-  border: 1px solid var(--border);
-  background: #fafbfc;
   min-width: 0;
   width: 100%;
 }
@@ -5034,6 +4972,14 @@ input[type='search']::-webkit-search-cancel-button {
   margin-bottom: 1rem;
 }
 
+/* U kartici sa tabelom: tanka traka statusa kalkulacije ispod filtera. */
+.data-panel > .compensation-params__status {
+  margin: 0;
+  padding: 0.6rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-muted);
+}
+
 .compensation-params__status-main {
   display: flex;
   flex-wrap: wrap;
@@ -5113,10 +5059,6 @@ input[type='search']::-webkit-search-cancel-button {
 
 .compensation-preview-settings {
   margin-bottom: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  border: 1px dashed var(--border);
-  border-radius: 8px;
-  background: #fff;
   flex-shrink: 0;
 }
 
@@ -5130,22 +5072,6 @@ input[type='search']::-webkit-search-cancel-button {
   .compensation-preview-settings__grid {
     grid-template-columns: 1fr;
   }
-}
-
-.compensation-results-toolbar {
-  margin-bottom: 1.25rem;
-}
-
-.compensation-results-toolbar .compensation-results-filters {
-  flex: 1 1 auto;
-  min-width: 0;
-  margin-bottom: 0;
-}
-
-.compensation-results-toolbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 .compensation-results-table {
@@ -5177,18 +5103,6 @@ input[type='search']::-webkit-search-cancel-button {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-}
-
-.table-currency-badge {
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  padding: 0.25rem 0.65rem;
-  border-radius: 999px;
-  background: var(--primary-soft);
-  color: var(--primary);
-  border: 1px solid color-mix(in srgb, var(--primary) 18%, transparent);
 }
 
 .compensation-results-table__grid {
@@ -5301,19 +5215,134 @@ input[type='search']::-webkit-search-cancel-button {
 }
 
 .table--salaries .col-actions {
-  min-width: 13.5rem;
+  width: 1%;
   white-space: nowrap;
 }
 
-.salaries-table__meta {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.65rem;
+.table--salaries {
+  width: 100%;
 }
 
-.table--salaries {
-  width: max-content;
-  min-width: 100%;
+/* Akcija u redu tabele kao ikonica (npr. novi unos, istorija). */
+.table-icon-button {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--transition),
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.table-icon-button:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.table-icon-button.is-active {
+  border-color: var(--primary);
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.table-icon-button:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+/* Zbir preporučenih udela opisnih ocena: zeleno kad je 100%, crveno kad nije. */
+.share-total {
+  padding: 0.25rem 0.7rem;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.share-total.is-complete {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.share-total.is-invalid {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Tabovi stranice (npr. administracija): podvučen aktivni tab sa ikonicom. */
+.page-tabs {
+  display: flex;
+  gap: 1.5rem;
+  margin: 0 0 1rem;
+  padding: 0 0.25rem;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.page-tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.page-tabs__tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  margin-bottom: -1px;
+  padding: 0.7rem 0.1rem;
+  border-bottom: 2px solid transparent;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    color var(--transition),
+    border-color var(--transition);
+}
+
+.page-tabs__tab:hover {
+  color: var(--text);
+  border-bottom-color: var(--border-strong);
+}
+
+.page-tabs__tab.is-active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--primary);
+}
+
+.page-tabs__tab:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+  border-radius: var(--radius-sm);
+}
+
+.page-tabs__icon {
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+}
+
+.page-tabs__tab.is-active .page-tabs__icon {
+  color: var(--primary);
+}
+
+.salary-add-form {
+  margin-bottom: 1rem;
+}
+
+.salary-add-form__title {
+  margin: 0 0 0.85rem;
+  font-size: 1.05rem;
+  font-weight: 700;
 }
 
 .table--salaries th,
@@ -5322,6 +5351,19 @@ input[type='search']::-webkit-search-cancel-button {
   word-break: normal;
   vertical-align: middle;
   padding: 0.65rem 0.85rem;
+}
+
+/* Organizaciona jedinica se lomi u dva reda da tabela stane; ime, brojevi i
+   datumi ostaju u jednom. Iznosi su poravnati desno. */
+.table--salaries td.table-col--text + td.table-col--text {
+  white-space: normal;
+  min-width: 9rem;
+}
+
+.table--salaries .table-col--num,
+.table--salaries .table-col--amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 
 .table--salaries .table-col--num {
@@ -5336,17 +5378,24 @@ input[type='search']::-webkit-search-cancel-button {
   justify-content: flex-end;
 }
 
+.table--salaries > thead th {
+  white-space: normal;
+}
+
+.table--salaries td.table-col--edit {
+  white-space: normal;
+}
+
 .table--salaries .inline-form {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   gap: 0.5rem;
 }
 
 .table--salaries .table--nested {
-  width: max-content;
-  min-width: 100%;
+  width: 100%;
 }
 
 .table--salaries .table--nested th,
@@ -5366,23 +5415,6 @@ input[type='search']::-webkit-search-cancel-button {
 .table-col--compact {
   width: 5.5rem;
   white-space: nowrap;
-}
-
-.admin-rating-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.admin-rating-summary h3 {
-  margin: 0;
-}
-
-.text-warning {
-  color: #d97706;
 }
 
 .table--compact th,
@@ -5842,6 +5874,47 @@ input[type='search']::-webkit-search-cancel-button {
   outline: none;
 }
 
+/* Tip grafikona ima duge nazive: ceo naziv se vidi (na telefonu se skraćuje). */
+.compensation-analytics .filter-chip select#analytics-chart {
+  max-width: none;
+}
+
+/* Telefon: čip nije širi od kartice, dug naziv se skraćuje. */
+@container main (max-width: 640px) {
+  .filter-chip {
+    max-width: 100%;
+    min-width: 0;
+  }
+
+  .filter-chip select {
+    flex: 1;
+    min-width: 0;
+    text-overflow: ellipsis;
+  }
+
+  /* Dugi nazivi (organizaciona jedinica, tip grafikona) dobijaju ceo red. */
+  .filter-chip:has(#comp-org, #results-org, #analytics-org, #analytics-chart) {
+    flex: 1 1 100%;
+  }
+
+  /* Dug tekst bez razmaka (npr. šifra) lomi se unutar svoje kolone. */
+  .table.table--stack tbody td {
+    overflow-wrap: break-word;
+  }
+
+  /* Šifra (npr. DOES_NOT_MEET) nije reč: sme da se prelomi bilo gde. */
+  .table.table--stack tbody td.cell-code {
+    overflow-wrap: anywhere;
+  }
+
+  .table.table--salaries.table--stack tbody td {
+    min-width: 0;
+    white-space: normal;
+    overflow-wrap: break-word;
+    text-align: left;
+  }
+}
+
 /* Poništi filtere: tekstualno dugme, vidi se samo kada su filteri promenjeni */
 .filter-reset {
   display: inline-grid;
@@ -5972,6 +6045,8 @@ input[type='search']::-webkit-search-cancel-button {
 .filter-chip select {
   max-width: 14rem;
   text-overflow: ellipsis;
+  /* Širina prati izabranu vrednost, ne najduži izbor: strelica je uz tekst. */
+  field-sizing: content;
 }
 
 .filter-chip.is-disabled {

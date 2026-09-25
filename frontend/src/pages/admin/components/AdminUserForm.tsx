@@ -142,6 +142,11 @@ export function AdminUserForm({
         onSubmit();
       }}
     >
+      <h2 className="admin-form__title">
+        {formatMessage({
+          id: isEditing ? 'admin.users.editUser' : 'admin.users.newUser',
+        })}
+      </h2>
       <div className="form-grid admin-form__grid admin-form__grid--three-cols">
         <div className="form-row">
           <label htmlFor="user-email">
@@ -314,15 +319,9 @@ export function AdminUserForm({
               ? formatMessage({ id: 'buttons.saveChanges' })
               : formatMessage({ id: 'admin.users.createUser' })}
         </button>
-        {isEditing && (
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onCancel}
-          >
-            {formatMessage({ id: 'buttons.cancel' })}
-          </button>
-        )}
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          {formatMessage({ id: 'buttons.cancel' })}
+        </button>
       </div>
     </form>
   );

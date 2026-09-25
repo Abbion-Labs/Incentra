@@ -17,6 +17,8 @@ import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { isEditConflict } from '../../utils/editConflict';
 import { FormLabelWithHint } from './components/FormLabelWithHint';
+import { FilterChip } from '../../components/common/ToolbarSearch';
+import { FormSection } from '../../components/forms/FormSection';
 
 interface CompensationParamsForm {
   monetaryPool: string;
@@ -305,211 +307,217 @@ export function AdminCompensation() {
     return [base - 1, base, base + 1];
   }, []);
 
+  // Za koju jedinicu i godinu se parametri uređuju: filteri u zaglavlju kartice.
+  const selector = (
+    <div className="filter-bar filter-bar--compact">
+      <FilterChip
+        id="comp-org"
+        label={formatMessage({ id: 'evaluation.orgUnitShort' })}
+        value={organizationUnitId}
+        onChange={setOrganizationUnitId}
+        disabled={selectionLocked}
+      >
+        {orgUnits.map((unit) => (
+          <option key={unit.id} value={unit.id}>
+            {unit.name}
+          </option>
+        ))}
+      </FilterChip>
+      <FilterChip
+        id="comp-year"
+        label={formatMessage({ id: 'common.year' })}
+        value={year}
+        onChange={setYear}
+        disabled={selectionLocked}
+      >
+        {yearOptions.map((y) => (
+          <option key={y} value={y}>
+            {y}
+          </option>
+        ))}
+      </FilterChip>
+    </div>
+  );
+
   return (
-    <div className="card compensation-params">
+    <div className="compensation-params">
       <div className="compensation-params__layout">
-        <form
-          className="admin-form compensation-params__form"
-          onSubmit={handleSave}
+        <FormSection
+          title={formatMessage({ id: 'admin.parameters' })}
+          actions={selector}
+          className="compensation-params__form"
         >
-          <div className="form-grid admin-form__grid compensation-params__grid">
-            <div className="form-row">
-              <label htmlFor="comp-org">
-                {formatMessage({ id: 'common.organizationUnit' })}
-              </label>
-              <select
-                id="comp-org"
-                value={organizationUnitId}
-                onChange={(e) => setOrganizationUnitId(e.target.value)}
-                disabled={selectionLocked}
-                required
-              >
-                {orgUnits.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-row">
-              <label htmlFor="comp-year">
-                {formatMessage({ id: 'common.year' })}
-              </label>
-              <select
-                id="comp-year"
-                value={year}
-                onChange={(e) => setYear(e.target.value)}
-                disabled={selectionLocked}
-                required
-              >
-                {yearOptions.map((y) => (
-                  <option key={y} value={y}>
-                    {y}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div className="form-row">
-              <FormLabelWithHint
-                htmlFor="comp-pool"
-                hint={formatMessage({
-                  id: COMPENSATION_FIELD_HINT_KEYS.monetaryPool as never,
-                })}
-              >
-                {formatMessage({ id: 'admin.compensation.monetaryPool' })}
-              </FormLabelWithHint>
-              <input
-                id="comp-pool"
-                type="number"
-                min="1"
-                step="1"
-                value={form.monetaryPool}
-                onChange={(e) => updateField('monetaryPool', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <label htmlFor="comp-currency">
-                {formatMessage({ id: 'common.currency' })}
-              </label>
-              <input
-                id="comp-currency"
-                type="text"
-                maxLength={3}
-                value={form.currency}
-                onChange={(e) =>
-                  updateField('currency', e.target.value.toUpperCase())
-                }
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <FormLabelWithHint
-                htmlFor="comp-threshold"
-                hint={formatMessage({
-                  id: COMPENSATION_FIELD_HINT_KEYS.acceptablePerformanceRating as never,
-                })}
-              >
-                {formatMessage({
-                  id: 'admin.compensation.acceptablePerformanceThreshold',
-                })}
-              </FormLabelWithHint>
-              <input
-                id="comp-threshold"
-                type="number"
-                min="1"
-                max="5"
-                step="0.1"
-                value={form.acceptablePerformanceRating}
-                onChange={(e) =>
-                  updateField('acceptablePerformanceRating', e.target.value)
-                }
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <FormLabelWithHint
-                htmlFor="comp-exponent"
-                hint={formatMessage({
-                  id: COMPENSATION_FIELD_HINT_KEYS.exponent as never,
-                })}
-              >
-                Eksponent
-              </FormLabelWithHint>
-              <input
-                id="comp-exponent"
-                type="number"
-                min="0.1"
-                step="0.1"
-                value={form.exponent}
-                onChange={(e) => updateField('exponent', e.target.value)}
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <FormLabelWithHint
-                htmlFor="comp-dependency"
-                hint={formatMessage({
-                  id: COMPENSATION_FIELD_HINT_KEYS.dependencyWeight as never,
-                })}
-              >
-                Ponder zavisnosti (bodovi)
-              </FormLabelWithHint>
-              <input
-                id="comp-dependency"
-                type="number"
-                min="0.01"
-                step="0.01"
-                value={form.dependencyWeight}
-                onChange={(e) =>
-                  updateField('dependencyWeight', e.target.value)
-                }
-                required
-              />
-            </div>
-
-            <div className="form-row">
-              <FormLabelWithHint
-                htmlFor="comp-negative"
-                hint={formatMessage({
-                  id: COMPENSATION_FIELD_HINT_KEYS.allowNegativeVariable as never,
-                })}
-              >
-                Negativna varijabila
-              </FormLabelWithHint>
-              <select
-                id="comp-negative"
-                value={form.allowNegativeVariable ? '1' : '0'}
-                onChange={(e) =>
-                  updateField('allowNegativeVariable', e.target.value === '1')
-                }
-              >
-                <option value="0">{formatMessage({ id: 'common.no' })}</option>
-                <option value="1">{formatMessage({ id: 'common.yes' })}</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="form-actions compensation-params__actions">
-            <button
-              type="submit"
-              className="btn btn-primary"
-              disabled={actionsDisabled}
-            >
-              {saving
-                ? formatMessage({ id: 'buttons.saving' })
-                : existingId
-                  ? formatMessage({ id: 'buttons.saveChanges' })
-                  : formatMessage({
-                      id: 'admin.compensation.createParameters',
-                    })}
-            </button>
-            {existingId ? (
-              <div className="compensation-params__actions-calc">
-                <button
-                  type="button"
-                  className="btn btn-accent"
-                  disabled={actionsDisabled}
-                  onClick={handleCalculate}
+          <form className="admin-form" onSubmit={handleSave}>
+            <div className="form-grid admin-form__grid compensation-params__grid">
+              <div className="form-row">
+                <FormLabelWithHint
+                  htmlFor="comp-pool"
+                  hint={formatMessage({
+                    id: COMPENSATION_FIELD_HINT_KEYS.monetaryPool as never,
+                  })}
                 >
-                  {calculating
-                    ? formatMessage({ id: 'buttons.calculating' })
-                    : formatMessage({
-                        id: 'admin.compensation.calculateCompensation',
-                      })}
-                </button>
+                  {formatMessage({ id: 'admin.compensation.monetaryPool' })}
+                </FormLabelWithHint>
+                <input
+                  id="comp-pool"
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={form.monetaryPool}
+                  onChange={(e) => updateField('monetaryPool', e.target.value)}
+                  required
+                />
               </div>
-            ) : null}
-          </div>
-        </form>
 
-        <section className="compensation-params__chart card card--chart">
+              <div className="form-row">
+                <label htmlFor="comp-currency">
+                  {formatMessage({ id: 'common.currency' })}
+                </label>
+                <input
+                  id="comp-currency"
+                  type="text"
+                  maxLength={3}
+                  value={form.currency}
+                  onChange={(e) =>
+                    updateField('currency', e.target.value.toUpperCase())
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <FormLabelWithHint
+                  htmlFor="comp-threshold"
+                  hint={formatMessage({
+                    id: COMPENSATION_FIELD_HINT_KEYS.acceptablePerformanceRating as never,
+                  })}
+                >
+                  {formatMessage({
+                    id: 'admin.compensation.acceptablePerformanceThreshold',
+                  })}
+                </FormLabelWithHint>
+                <input
+                  id="comp-threshold"
+                  type="number"
+                  min="1"
+                  max="5"
+                  step="0.1"
+                  value={form.acceptablePerformanceRating}
+                  onChange={(e) =>
+                    updateField('acceptablePerformanceRating', e.target.value)
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <FormLabelWithHint
+                  htmlFor="comp-exponent"
+                  hint={formatMessage({
+                    id: COMPENSATION_FIELD_HINT_KEYS.exponent as never,
+                  })}
+                >
+                  {formatMessage({ id: 'admin.compensation.exponent' })}
+                </FormLabelWithHint>
+                <input
+                  id="comp-exponent"
+                  type="number"
+                  min="0.1"
+                  step="0.1"
+                  value={form.exponent}
+                  onChange={(e) => updateField('exponent', e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <FormLabelWithHint
+                  htmlFor="comp-dependency"
+                  hint={formatMessage({
+                    id: COMPENSATION_FIELD_HINT_KEYS.dependencyWeight as never,
+                  })}
+                >
+                  {formatMessage({ id: 'admin.compensation.dependencyWeight' })}
+                </FormLabelWithHint>
+                <input
+                  id="comp-dependency"
+                  type="number"
+                  min="0.01"
+                  step="0.01"
+                  value={form.dependencyWeight}
+                  onChange={(e) =>
+                    updateField('dependencyWeight', e.target.value)
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-row">
+                <FormLabelWithHint
+                  htmlFor="comp-negative"
+                  hint={formatMessage({
+                    id: COMPENSATION_FIELD_HINT_KEYS.allowNegativeVariable as never,
+                  })}
+                >
+                  {formatMessage({
+                    id: 'admin.compensation.allowNegativeVariable',
+                  })}
+                </FormLabelWithHint>
+                <select
+                  id="comp-negative"
+                  value={form.allowNegativeVariable ? '1' : '0'}
+                  onChange={(e) =>
+                    updateField('allowNegativeVariable', e.target.value === '1')
+                  }
+                >
+                  <option value="0">
+                    {formatMessage({ id: 'common.no' })}
+                  </option>
+                  <option value="1">
+                    {formatMessage({ id: 'common.yes' })}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <div className="form-section__footer compensation-params__actions">
+              <button
+                type="submit"
+                className="btn btn-primary"
+                disabled={actionsDisabled}
+              >
+                {saving
+                  ? formatMessage({ id: 'buttons.saving' })
+                  : existingId
+                    ? formatMessage({ id: 'buttons.saveChanges' })
+                    : formatMessage({
+                        id: 'admin.compensation.createParameters',
+                      })}
+              </button>
+              {existingId ? (
+                <div className="compensation-params__actions-calc">
+                  <button
+                    type="button"
+                    className="btn btn-accent"
+                    disabled={actionsDisabled}
+                    onClick={handleCalculate}
+                  >
+                    {calculating
+                      ? formatMessage({ id: 'buttons.calculating' })
+                      : formatMessage({
+                          id: 'admin.compensation.calculateCompensation',
+                        })}
+                  </button>
+                </div>
+              ) : null}
+            </div>
+          </form>
+        </FormSection>
+
+        <FormSection
+          title={formatMessage({ id: 'admin.compensation.previewTitle' })}
+          className="compensation-params__chart"
+        >
           <div className="compensation-preview-settings">
             <div className="compensation-preview-settings__grid">
               <div className="form-row">
@@ -519,7 +527,7 @@ export function AdminCompensation() {
                     id: COMPENSATION_FIELD_HINT_KEYS.referencePoints as never,
                   })}
                 >
-                  Referentni bodovi
+                  {formatMessage({ id: 'admin.compensation.referencePoints' })}
                 </FormLabelWithHint>
                 <input
                   id="comp-reference-points"
@@ -541,7 +549,9 @@ export function AdminCompensation() {
                     id: COMPENSATION_FIELD_HINT_KEYS.referenceSalaryPerPoint as never,
                   })}
                 >
-                  Zarada po bodu
+                  {formatMessage({
+                    id: 'admin.compensation.referenceSalaryPerPoint',
+                  })}
                 </FormLabelWithHint>
                 <input
                   id="comp-reference-salary"
@@ -583,7 +593,7 @@ export function AdminCompensation() {
               hideFooter
             />
           )}
-        </section>
+        </FormSection>
       </div>
     </div>
   );

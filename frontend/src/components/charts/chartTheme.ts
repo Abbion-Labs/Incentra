@@ -68,3 +68,29 @@ export function sequentialBlue(value: number, max: number): string {
   );
   return SEQUENTIAL_BLUES[Math.min(step, SEQUENTIAL_BLUES.length - 1)];
 }
+
+/**
+ * Osa sa „lepim“ vrednostima: korak je 1, 2, 2,5 ili 5 × 10ⁿ, a vrh ose je
+ * prvi ceo korak iznad najveće vrednosti (npr. 11 → 0, 5, 10, 15).
+ */
+export function niceAxis(
+  maxValue: number,
+  { integer = false, targetSteps = 4 } = {},
+): { max: number; ticks: number[] } {
+  const max = maxValue > 0 ? maxValue : 1;
+  const rough = max / targetSteps;
+  const magnitude = 10 ** Math.floor(Math.log10(rough));
+  const factors =
+    integer && magnitude < 10 ? [1, 2, 5, 10] : [1, 2, 2.5, 5, 10];
+  let step =
+    (factors.find((factor) => factor * magnitude >= rough) ?? 10) * magnitude;
+  if (integer) step = Math.max(1, Math.round(step));
+  const axisMax = Math.ceil(max / step) * step;
+  const count = Math.round(axisMax / step);
+  return {
+    max: axisMax,
+    ticks: Array.from({ length: count + 1 }, (_, index) =>
+      Number((index * step).toFixed(6)),
+    ),
+  };
+}

@@ -1,5 +1,6 @@
 {
   "navigation": {
+    "admin": "Administracija",
     "brand": "Incentra",
     "main": "Glavna navigacija",
     "myAccount": "Moj nalog",
@@ -12,9 +13,8 @@
     "analytics": "Analitika",
     "controllerEmployees": "Moji zaposleni",
     "controllerEvaluators": "Moji ocenjivači",
+    "evaluatorAnalytics": "Analitika ocenjivača",
     "employeeEvaluations": "Moje ocene",
-    "adminCrud": "CRUD",
-    "adminVariableCompensation": "Varijabila",
     "openMenu": "Otvori meni",
     "closeMenu": "Zatvori meni",
     "activeRole": "Aktivna uloga"
@@ -326,6 +326,9 @@
     "searchNamePlaceholder": "Ime ili prezime...",
     "users": {
       "newUser": "Novi korisnik",
+      "addUser": "Dodaj korisnika",
+      "editUser": "Izmena korisnika",
+      "searchPlaceholder": "E-mail ili ime zaposlenog...",
       "createUser": "Kreiraj korisnika",
       "noUsers": "Nema korisnika.",
       "linkedEmployee": "Povezan zaposleni",
@@ -341,16 +344,18 @@
     },
     "employeeForm": {
       "newEmployee": "Novi zaposleni",
+      "editEmployee": "Izmena zaposlenog",
       "addEmployee": "Dodaj zaposlenog",
       "educationLevel": "Stručna sprema",
       "reassignConfirm": "Zaposleni dobija novog ocenjivača.\n\nNacrti ocena koji prelaze na novog ocenjivača: {drafts}\nPoslate ocene koje ostaju kod dosadašnjeg ocenjivača dok ih kontrolor ne vrati na doradu: {submitted}\n\nDa li želite da nastavite?",
       "unlinkAccount": "Odveži nalog",
       "unlinkHint": "Nalog se odvezuje samo radi ispravke greške, i to tek kada nema uloge Zaposleni, Ocenjivač ni Kontrolor.",
-      "unlinkOnSave": "Nalog će biti odvezan kada sačuvate izmene.",
-      "linkHint": "Nalog se obično povezuje već pri pravljenju, na stranici Korisnici. Ovde se može povezati slobodan nalog."
+      "unlinkOnSave": "Nalog će biti odvezan kada sačuvate izmene."
     },
     "ratingConfig": {
       "newDescriptiveRating": "Nova opisna ocena",
+      "editDescriptiveRating": "Izmena opisne ocene",
+      "addDescriptiveRating": "Dodaj opisnu ocenu",
       "code": "Šifra",
       "recommendedShare": "Preporučeni udeo (%)",
       "recommendedPercent": "Preporučeni %",
@@ -364,8 +369,7 @@
     "evaluatorSettings": {
       "newSettings": "Novo podešavanje",
       "noSettings": "Nema podešavanja.",
-      "selectToEdit": "Izaberite ocenjivača iz tabele da biste izmenili njegova podešavanja.",
-      "closeEditor": "Zatvori izmenu",
+      "editTitle": "Izmena ocenjivača",
       "noController": "Bez kontrolora (ocena je konačna posle slanja)",
       "noControllerShort": "Bez kontrolora"
     },
@@ -374,6 +378,9 @@
       "allEmployeesHaveSalary": "Svi zaposleni već imaju unetu platu.",
       "validFromAfterCurrentPeriod": "Važi od: isti datum ispravlja važeću platu, kasniji dodaje novu",
       "loadingHistory": "Učitavanje istorije...",
+      "newEntry": "Novi unos plate",
+      "history": "Istorija",
+      "hideHistory": "Sakrij istoriju",
       "noSalaries": "Nema unetih plata. Dodajte platu zaposlenom pre kalkulacije varijable.",
       "points": "Bodovi",
       "earningsPerPoint": "Zarada po bodu",
@@ -393,6 +400,12 @@
     },
     "compensation": {
       "monetaryPool": "Novčana masa",
+      "previewTitle": "Pregled varijabile po oceni",
+      "exponent": "Eksponent",
+      "dependencyWeight": "Ponder zavisnosti (bodovi)",
+      "allowNegativeVariable": "Negativna varijabila",
+      "referencePoints": "Referentni bodovi",
+      "referenceSalaryPerPoint": "Zarada po bodu",
       "acceptablePerformanceThreshold": "Granica prihvatljivog učinka",
       "createParameters": "Kreiraj parametre",
       "calculateCompensation": "Izračunaj kompenzaciju",

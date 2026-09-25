@@ -25,6 +25,8 @@ interface NavItem {
   icon: SidebarNavIconName;
   roles: string[];
   group: NavGroup;
+  /** Drugačiji naziv za pojedine uloge (npr. admin nema „moje“ stavke). */
+  labelKeyByRole?: Partial<Record<string, string>>;
   match?: (pathname: string) => boolean;
 }
 
@@ -67,7 +69,7 @@ const navItems: NavItem[] = [
     to: '/controller',
     labelKey: 'navigation.controllerEmployees',
     icon: 'employees',
-    roles: ['CONTROLLER', 'ADMIN'],
+    roles: ['CONTROLLER'],
     group: 'controller',
     match: (p) => p === '/controller' || p.startsWith('/controller/employees'),
   },
@@ -75,7 +77,7 @@ const navItems: NavItem[] = [
     to: '/controller/workflow',
     labelKey: 'navigation.controllerWorkflow',
     icon: 'evaluation',
-    roles: ['CONTROLLER', 'ADMIN'],
+    roles: ['CONTROLLER'],
     group: 'controller',
     match: (p) =>
       p.startsWith('/controller/workflow') ||
@@ -84,6 +86,8 @@ const navItems: NavItem[] = [
   {
     to: '/controller/evaluators',
     labelKey: 'navigation.controllerEvaluators',
+    // Admin nema „svoje“ ocenjivače: vidi analitiku svih.
+    labelKeyByRole: { ADMIN: 'navigation.evaluatorAnalytics' },
     icon: 'evaluators',
     roles: ['CONTROLLER', 'ADMIN'],
     group: 'controller',
@@ -93,24 +97,48 @@ const navItems: NavItem[] = [
     to: '/employee',
     labelKey: 'navigation.employeeEvaluations',
     icon: 'my-evaluations',
-    roles: ['EMPLOYEE', 'ADMIN'],
+    roles: ['EMPLOYEE'],
     group: 'employee',
   },
   {
     to: '/admin/crud',
-    labelKey: 'navigation.adminCrud',
-    icon: 'crud',
+    labelKey: 'navigation.admin',
+    icon: 'admin',
     roles: ['ADMIN'],
     group: 'admin',
     match: (p) => p.startsWith('/admin/crud'),
   },
   {
-    to: '/admin/varijabila',
-    labelKey: 'navigation.adminVariableCompensation',
-    icon: 'varijabila',
+    to: '/admin/varijabila/salaries',
+    labelKey: 'admin.employeeSalaries',
+    icon: 'salaries',
     roles: ['PAYROLL'],
     group: 'payroll',
-    match: (p) => p.startsWith('/admin/varijabila'),
+    match: (p) => p.startsWith('/admin/varijabila/salaries'),
+  },
+  {
+    to: '/admin/varijabila/compensation',
+    labelKey: 'admin.parameters',
+    icon: 'parameters',
+    roles: ['PAYROLL'],
+    group: 'payroll',
+    match: (p) => p.startsWith('/admin/varijabila/compensation'),
+  },
+  {
+    to: '/admin/varijabila/results',
+    labelKey: 'admin.results',
+    icon: 'results',
+    roles: ['PAYROLL'],
+    group: 'payroll',
+    match: (p) => p.startsWith('/admin/varijabila/results'),
+  },
+  {
+    to: '/admin/varijabila/analytics',
+    labelKey: 'navigation.analytics',
+    icon: 'analytics',
+    roles: ['PAYROLL'],
+    group: 'payroll',
+    match: (p) => p.startsWith('/admin/varijabila/analytics'),
   },
 ];
 
@@ -271,7 +299,10 @@ export function AppLayout({
                 const active = item.match
                   ? item.match(location.pathname)
                   : location.pathname.startsWith(item.to);
-                const label = formatMessage({ id: item.labelKey as never });
+                const label = formatMessage({
+                  id: ((activeRole && item.labelKeyByRole?.[activeRole]) ??
+                    item.labelKey) as never,
+                });
                 return (
                   <Link
                     key={item.to}

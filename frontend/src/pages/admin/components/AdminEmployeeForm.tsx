@@ -102,6 +102,13 @@ export function AdminEmployeeForm({
         onSubmit();
       }}
     >
+      <h2 className="admin-form__title">
+        {formatMessage({
+          id: editingId
+            ? 'admin.employeeForm.editEmployee'
+            : 'admin.employeeForm.newEmployee',
+        })}
+      </h2>
       <div className="form-grid admin-form__grid">
         <div className="form-row">
           <label htmlFor="emp-first-name">
@@ -287,9 +294,6 @@ export function AdminEmployeeForm({
                     </option>
                   ))}
                 </select>
-                <p className="form-hint">
-                  {formatMessage({ id: 'admin.employeeForm.linkHint' })}
-                </p>
               </>
             )}
           </div>
@@ -303,15 +307,9 @@ export function AdminEmployeeForm({
               ? formatMessage({ id: 'buttons.saveChanges' })
               : formatMessage({ id: 'admin.employeeForm.addEmployee' })}
         </button>
-        {editingId && (
-          <button
-            type="button"
-            className="btn btn-secondary"
-            onClick={onCancel}
-          >
-            {formatMessage({ id: 'buttons.cancel' })}
-          </button>
-        )}
+        <button type="button" className="btn btn-secondary" onClick={onCancel}>
+          {formatMessage({ id: 'buttons.cancel' })}
+        </button>
       </div>
     </form>
   );

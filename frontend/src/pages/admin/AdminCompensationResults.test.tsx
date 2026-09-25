@@ -79,7 +79,7 @@ function renderPage(immediate: Record<string, unknown> = {}) {
 }
 
 function selectOrg(orgId: number) {
-  fireEvent.change(screen.getByLabelText('common.organizationUnit'), {
+  fireEvent.change(screen.getByLabelText('evaluation.orgUnitShort'), {
     target: { value: String(orgId) },
   });
 }
@@ -137,7 +137,7 @@ describe('AdminCompensationResults', () => {
 
     fireEvent.click(finalize);
 
-    expect(screen.getByLabelText('common.organizationUnit')).toHaveProperty(
+    expect(screen.getByLabelText('evaluation.orgUnitShort')).toHaveProperty(
       'disabled',
       true,
     );

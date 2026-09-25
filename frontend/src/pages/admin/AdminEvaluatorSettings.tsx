@@ -6,7 +6,7 @@ import type { AdminUser, Employee, EvaluatorSettings } from '../../api/types';
 import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { isEditConflict } from '../../utils/editConflict';
-import { AdminPageHeader } from './components/AdminPageHeader';
+import { TableIconButton } from '../../components/common/TableIconButton';
 import { adminEvaluatorAnalyticsState } from './adminNavigation';
 import { NO_CONTROLLER, controllerIdFromForm } from './evaluatorController';
 
@@ -167,26 +167,11 @@ export function AdminEvaluatorSettings() {
 
   return (
     <div className="admin-page">
-      <AdminPageHeader
-        actions={
-          editingId ? (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={closeEditor}
-            >
-              {formatMessage({ id: 'admin.evaluatorSettings.closeEditor' })}
-            </button>
-          ) : null
-        }
-      />
-
-      {editingId === null ? (
-        <div className="card">
-          <p>{formatMessage({ id: 'admin.evaluatorSettings.selectToEdit' })}</p>
-        </div>
-      ) : (
+      {editingId !== null && (
         <form className="card admin-form" onSubmit={handleSubmit}>
+          <h2 className="admin-form__title">
+            {formatMessage({ id: 'admin.evaluatorSettings.editTitle' })}
+          </h2>
           <div className="form-grid admin-form__grid">
             <div className="form-row">
               <label>{formatMessage({ id: 'admin.evaluators' })}</label>
@@ -235,12 +220,12 @@ export function AdminEvaluatorSettings() {
         </form>
       )}
 
-      <div className="card">
+      <div className="card card--flush">
         {loading ? (
           <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
         ) : (
           <div className="table-wrap">
-            <table className="table table--hover table--compact table--clickable">
+            <table className="table table--hover table--compact table--clickable table--stack">
               <thead>
                 <tr>
                   <th className="col-text">
@@ -277,23 +262,24 @@ export function AdminEvaluatorSettings() {
                         }
                       }}
                     >
-                      <td className="cell-primary col-text">
+                      <td className="cell-primary col-text stack-title">
                         {item.employeeFullName}
                       </td>
-                      <td className="col-text">
+                      <td
+                        className="col-text"
+                        data-label={formatMessage({ id: 'roles.CONTROLLER' })}
+                      >
                         {item.controllerFullName ??
                           formatMessage({
                             id: 'admin.evaluatorSettings.noControllerShort',
                           })}
                       </td>
                       <td className="col-actions">
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={(e) => startEdit(item, e)}
-                        >
-                          {formatMessage({ id: 'buttons.edit' })}
-                        </button>
+                        <TableIconButton
+                          icon="edit"
+                          label={formatMessage({ id: 'buttons.edit' })}
+                          onClick={() => startEdit(item)}
+                        />
                       </td>
                     </tr>
                   ))
