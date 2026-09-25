@@ -1203,6 +1203,19 @@ a.btn-secondary:hover {
   letter-spacing: 0.04em;
 }
 
+.evaluation-scores-summary__part {
+  font-weight: 600;
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.evaluation-scores-summary__item--total {
+  padding-left: 2.5rem;
+  border-left: 1px solid var(--border);
+}
+
 .evaluation-scores-summary__value {
   font-weight: 700;
   font-size: var(--text-xl);
@@ -1210,13 +1223,10 @@ a.btn-secondary:hover {
   line-height: 1.2;
 }
 
-.evaluation-scores-summary__descriptive {
-  font-weight: 600;
-  font-size: var(--text-base);
-}
-
-.evaluation-submit-footer .form-hint {
-  text-align: right;
+.evaluation-submit-footer__hint {
+  margin: 0 auto 0 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
 }
 
 .evaluation-submit-footer .actions {
@@ -1224,6 +1234,22 @@ a.btn-secondary:hover {
 }
 
 @container main (max-width: 640px) {
+  .evaluation-scores-summary {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+  }
+
+  .evaluation-scores-summary__item {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .evaluation-scores-summary__item--total {
+    padding-left: 0;
+    border-left: 0;
+  }
+
   .evaluation-submit-footer .actions {
     flex-direction: column;
   }
@@ -1265,6 +1291,10 @@ a.btn-secondary:hover {
 }
 
 .form-section__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
   flex-shrink: 0;
 }
 
@@ -1281,21 +1311,6 @@ a.btn-secondary:hover {
 .card--actions {
   display: flex;
   justify-content: flex-end;
-}
-
-.form-section__footer--average {
-  display: flex;
-  justify-content: flex-end;
-}
-
-.section-average {
-  font-size: var(--text-sm);
-  color: var(--muted);
-}
-
-.section-average strong {
-  color: var(--text);
-  font-size: var(--text-base);
 }
 
 .form-section-grid {
@@ -1510,11 +1525,178 @@ a.btn-secondary:hover {
   box-shadow: var(--shadow-xs);
 }
 
+.measure-card.is-rated {
+  border-color: rgba(31, 90, 166, 0.22);
+}
+
+/* Naslov i opis levo, ocena desno u istom redu. */
 .measure-card__header {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 0.35rem 0.75rem;
+}
+
+.measure-card__heading {
+  min-width: 0;
+}
+
+.measure-card__title {
+  margin: 0.15rem 0 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.measure-card__description {
+  margin: 0.25rem 0 0;
+  color: var(--muted);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.measure-card__comment {
+  margin: 0.75rem 0 0 2.5rem;
+  padding: 0.45rem 0.75rem;
+  border-left: 3px solid var(--primary);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--primary-soft);
+  color: var(--text);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+@container main (max-width: 640px) {
+  .measure-card__header {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .measure-card__header .rating-scale {
+    grid-column: 1 / -1;
+  }
+
+  .measure-card__comment {
+    margin-left: 0;
+  }
+}
+
+/* ==========================================================================
+   Ocena klikom: dugmići 1–5
+   ========================================================================== */
+.rating-scale {
+  display: inline-flex;
+  gap: 0.3rem;
+  flex-shrink: 0;
+}
+
+.rating-scale__option {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  padding: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    border-color var(--transition),
+    color var(--transition);
+}
+
+.rating-scale__option:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.rating-scale__option:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.rating-scale__option.is-selected {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: #fff;
+}
+
+.rating-scale__option:disabled {
+  cursor: default;
+}
+
+/* Samo prikaz: neizabrane ocene tiše, izabrana ostaje istaknuta. */
+.rating-scale--readonly .rating-scale__option:not(.is-selected) {
+  border-color: var(--border);
+  color: var(--muted);
+  opacity: 0.6;
+}
+
+/* Na telefonu dugmići ravnomerno popunjavaju red, dovoljno veliki za prst. */
+@container main (max-width: 640px) {
+  .rating-scale {
+    display: flex;
+    width: 100%;
+  }
+
+  .rating-scale__option {
+    flex: 1;
+    width: auto;
+    height: 2.5rem;
+  }
+}
+
+/* ==========================================================================
+   Napredak i prosek uz naslov sekcije
+   ========================================================================== */
+.section-progress {
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-md);
+  gap: 0.75rem;
+}
+
+.section-progress__count {
+  padding: 0.2rem 0.6rem;
+  border-radius: var(--radius-pill);
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.section-progress__count.is-complete {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.section-progress__average {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.4rem;
+}
+
+.section-progress__label {
+  font-size: var(--text-xs);
+  color: var(--muted);
+}
+
+.section-progress__average strong {
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Obuka i razvoj: na širem ekranu polja u dve kolone. */
+@container main (min-width: 900px) {
+  .training-fields {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1.25rem;
+  }
 }
 
 .measure-card__index {
@@ -1527,57 +1709,6 @@ a.btn-secondary:hover {
   color: var(--primary);
   font-size: var(--text-xs);
   font-weight: 700;
-}
-
-.measure-card__title {
-  margin: 0;
-  font-size: 1rem;
-  font-weight: 600;
-}
-
-.measure-card__description {
-  margin: 0 0 var(--space-md);
-  color: var(--muted);
-  font-size: var(--text-sm);
-  line-height: 1.5;
-}
-
-.measure-card__rating-row {
-  display: flex;
-  align-items: center;
-  gap: var(--space-md);
-  flex-wrap: wrap;
-}
-
-.measure-card__rating-control {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-.measure-card__rating-control label {
-  font-size: var(--text-sm);
-  color: var(--muted);
-  margin: 0;
-}
-
-.measure-card__rating-value {
-  font-weight: 600;
-  min-width: 1.5rem;
-}
-
-.measure-card__comment-inline {
-  margin: 0;
-  flex: 1;
-  min-width: 12rem;
-  padding: 0.55rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  background: var(--surface);
-  color: var(--text);
-  font-size: var(--text-sm);
-  line-height: 1.6;
 }
 
 .table--form {
@@ -1595,19 +1726,9 @@ a.btn-secondary:hover {
   padding: 0.45rem 2rem 0.45rem 0.75rem;
 }
 
-.select-inline--rating-value {
-  width: 5rem;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
-}
-
 @media (min-width: 769px) {
   .select-inline {
     max-width: 12rem;
-  }
-
-  .select-inline--rating-value {
-    max-width: 5rem;
   }
 }
 
@@ -1926,6 +2047,12 @@ input[type='search']::-webkit-search-cancel-button {
     text-transform: uppercase;
     letter-spacing: 0.06em;
     color: var(--muted);
+  }
+
+  /* Kolona koja na telefonu zauzima ceo red (npr. ocena klikom). */
+  .table.table--stack tbody td.stack-wide {
+    grid-column: 1 / -1;
+    align-items: stretch;
   }
 
   .table--stack tbody td.stack-title {

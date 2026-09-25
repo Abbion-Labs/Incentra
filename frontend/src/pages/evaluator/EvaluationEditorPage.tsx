@@ -400,6 +400,13 @@ export function EvaluationEditorPage() {
     liveGoalsAverage,
     liveMeasuresAverage,
   );
+  // Koliko ciljeva i merila još čeka ocenu, za napomenu pored dugmeta za slanje.
+  const remainingCount = evaluation
+    ? evaluation.goals.filter((goal) => goal.ratingLevelId === notRatedLevelId)
+        .length +
+      measures.filter((measure) => measure.ratingLevelId === notRatedLevelId)
+        .length
+    : 0;
   const liveDescriptiveRatingName =
     !incompleteRatings && liveOverallAverage != null
       ? descriptiveRatingNameFromAverage(liveOverallAverage, descriptiveRatings)
@@ -521,6 +528,9 @@ export function EvaluationEditorPage() {
             incompleteRatings={incompleteRatings}
             liveOverallAverage={liveOverallAverage}
             liveDescriptiveRatingName={liveDescriptiveRatingName}
+            liveGoalsAverage={liveGoalsAverage}
+            liveMeasuresAverage={liveMeasuresAverage}
+            remainingCount={remainingCount}
             submitAllowed={submitAllowed}
             submitRequirementsKey={
               conditionsFulfilled

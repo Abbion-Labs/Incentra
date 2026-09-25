@@ -6,18 +6,18 @@ import {
 } from '../../../utils/evaluationBuckets';
 import { formatAverageDisplay } from '../../../utils/scoring';
 import { AverageDisplay } from '../../../components/evaluation/AverageDisplay';
+import { DescriptiveRatingBadge } from '../../../components/evaluation/DescriptiveRatingBadge';
 import { EvaluationStatusWithHistory } from '../../../components/evaluation/EvaluationStatusWithHistory';
 import { PeriodPill } from '../../../components/common/PageHeader';
-import {
-  descriptiveRatingColor,
-  formatDescriptiveRatingLabel,
-} from '../../../utils/descriptiveRating';
 
 export interface EvaluationRatingMetaProps {
   evaluation: EvaluationDetail;
   incompleteRatings: boolean;
   liveOverallAverage?: number | null;
   liveDescriptiveRatingName?: string | null;
+  /** Prosek ciljeva i merila dok se ocena unosi; inače se čitaju sa ocene. */
+  liveGoalsAverage?: number | null;
+  liveMeasuresAverage?: number | null;
 }
 
 export function EvaluationStatusSummary({
@@ -83,40 +83,68 @@ export function EvaluationScoresSummary({
   incompleteRatings,
   liveOverallAverage,
   liveDescriptiveRatingName,
+  liveGoalsAverage,
+  liveMeasuresAverage,
 }: EvaluationRatingMetaProps) {
   const { formatMessage } = useIntl();
   const overallAverage = liveOverallAverage ?? evaluation.overallAverage;
-  const descriptiveRatingLabel = formatDescriptiveRatingLabel(formatMessage, {
-    name: liveDescriptiveRatingName ?? evaluation.descriptiveRatingName,
-    descriptiveRatingId: evaluation.descriptiveRatingId,
-  });
-  const descriptiveRatingStyleKey =
-    liveDescriptiveRatingName ?? evaluation.descriptiveRatingName ?? null;
-  const averageText = formatAverageDisplay(incompleteRatings, overallAverage);
+  const goalsAverage =
+    liveGoalsAverage !== undefined ? liveGoalsAverage : evaluation.goalsAverage;
+  const measuresAverage =
+    liveMeasuresAverage !== undefined
+      ? liveMeasuresAverage
+      : evaluation.measuresAverage;
+  // Deo koji još nije sasvim ocenjen nema prosek: prikazuje se „/“.
+  const componentText = (value: number | null) =>
+    value == null ? (incompleteRatings ? '/' : '—') : Number(value).toFixed(2);
+
+  const components = [
+    { key: 'goals', labelKey: 'evaluation.summaryGoals', value: goalsAverage },
+    {
+      key: 'measures',
+      labelKey: 'evaluation.summaryMeasures',
+      value: measuresAverage,
+    },
+  ] as const;
 
   return (
     <div className="evaluation-scores-summary">
-      <div className="evaluation-scores-summary__item">
+      {components.map((component) => (
+        <div
+          key={component.key}
+          className="evaluation-scores-summary__item evaluation-scores-summary__item--part"
+        >
+          <span className="evaluation-scores-summary__label">
+            {formatMessage({ id: component.labelKey })}
+          </span>
+          <span className="evaluation-scores-summary__part">
+            <AverageDisplay value={componentText(component.value)} />
+          </span>
+        </div>
+      ))}
+      <div className="evaluation-scores-summary__item evaluation-scores-summary__item--total">
         <span className="evaluation-scores-summary__label">
-          {formatMessage({ id: 'evaluation.averageLabel' })}
+          {formatMessage({ id: 'evaluation.summaryOverall' })}
         </span>
         <span className="evaluation-scores-summary__value">
-          <AverageDisplay value={averageText} />
+          <AverageDisplay
+            value={formatAverageDisplay(incompleteRatings, overallAverage)}
+          />
         </span>
       </div>
       <div className="evaluation-scores-summary__item">
         <span className="evaluation-scores-summary__label">
           {formatMessage({ id: 'evaluation.descriptiveLabel' })}
         </span>
-        {!incompleteRatings && descriptiveRatingLabel ? (
-          <span
-            className="evaluation-scores-summary__descriptive"
-            style={{ color: descriptiveRatingColor(descriptiveRatingStyleKey) }}
-          >
-            {descriptiveRatingLabel}
-          </span>
-        ) : (
+        {incompleteRatings ? (
           <span className="average-muted">—</span>
+        ) : (
+          <DescriptiveRatingBadge
+            name={liveDescriptiveRatingName ?? evaluation.descriptiveRatingName}
+            descriptiveRatingId={
+              liveDescriptiveRatingName ? null : evaluation.descriptiveRatingId
+            }
+          />
         )}
       </div>
     </div>

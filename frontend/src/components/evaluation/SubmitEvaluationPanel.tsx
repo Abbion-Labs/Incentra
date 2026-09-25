@@ -9,6 +9,8 @@ interface SubmitEvaluationPanelProps extends EvaluationRatingMetaProps {
   submitRequirementsKey?:
     | 'evaluation.submitRequirements'
     | 'evaluation.submitRequirementsConditionsNotMet';
+  /** Broj ciljeva i merila koji još nisu ocenjeni. */
+  remainingCount?: number;
   saving: boolean;
   onSave: () => void;
   onSubmit: () => void;
@@ -19,6 +21,9 @@ export function SubmitEvaluationPanel({
   incompleteRatings,
   liveOverallAverage,
   liveDescriptiveRatingName,
+  liveGoalsAverage,
+  liveMeasuresAverage,
+  remainingCount = 0,
   submitAllowed,
   submitRequirementsKey = 'evaluation.submitRequirements',
   saving,
@@ -34,14 +39,22 @@ export function SubmitEvaluationPanel({
           incompleteRatings={incompleteRatings}
           liveOverallAverage={liveOverallAverage}
           liveDescriptiveRatingName={liveDescriptiveRatingName}
+          liveGoalsAverage={liveGoalsAverage}
+          liveMeasuresAverage={liveMeasuresAverage}
         />
       )}
-      {!submitAllowed && (
-        <p className="form-hint form-hint--error">
-          {formatMessage({ id: submitRequirementsKey })}
-        </p>
-      )}
       <div className="actions">
+        {/* Šta još treba pre slanja: napomena, ne greška. */}
+        {!submitAllowed && (
+          <p className="evaluation-submit-footer__hint">
+            {evaluation.conditionsFulfilled !== false && remainingCount > 0
+              ? formatMessage(
+                  { id: 'evaluation.remainingToRate' },
+                  { count: remainingCount },
+                )
+              : formatMessage({ id: submitRequirementsKey })}
+          </p>
+        )}
         <button
           type="button"
           className="btn btn-secondary"

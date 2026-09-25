@@ -1,14 +1,13 @@
 import type { MeasureType, RatingLevel } from '../../api/types';
 import { useIntl } from '../../i18n';
 import { FormSection } from '../forms/FormSection';
-import { SectionAverageFooter } from './SectionAverageFooter';
-import { RatingValueSelect } from './RatingValueSelect';
+import { RatingScale } from './RatingScale';
+import { SectionProgress } from './SectionProgress';
 import {
   calculateComponentAverage,
   findRatingLevel,
   formatComponentAverage,
   isNotRated,
-  ratingValueOptionLabel,
 } from '../../utils/scoring';
 import {
   getMeasureRatingComment,
@@ -86,11 +85,25 @@ export function MeasuresEditorSection({
     measuresAverage,
     measures.length > 0,
   );
+  const ratedCount = measures.filter((measure) => {
+    const level = findRatingLevel(ratingLevels, measure.ratingLevelId);
+    return level && !isNotRated(level);
+  }).length;
 
   return (
     <FormSection
       title={formatMessage({ id: 'evaluation.measuresTitle' })}
-      hint={formatMessage({ id: 'evaluation.measuresHint' })}
+      hint={
+        editable ? formatMessage({ id: 'evaluation.measuresHint' }) : undefined
+      }
+      meta={
+        <SectionProgress
+          rated={ratedCount}
+          total={measures.length}
+          average={averageText}
+          showCount={editable}
+        />
+      }
     >
       <div className="measure-list">
         {measures.map((m, idx) => {
@@ -100,68 +113,61 @@ export function MeasuresEditorSection({
             ? getMeasureTypeDescription(mt.code, formatMessage, mt.description)
             : '';
 
+          const title = mt
+            ? formatMeasureTypeName(formatMessage, {
+                code: mt.code,
+                name: mt.name,
+              })
+            : formatMessage({ id: 'evaluation.measureFallback' });
+          const rated = Boolean(selectedLevel && !isNotRated(selectedLevel));
+
           return (
-            <article key={m.measureTypeId} className="measure-card">
+            <article
+              key={m.measureTypeId}
+              className={`measure-card${rated ? ' is-rated' : ''}`}
+            >
               <div className="measure-card__header">
                 <span className="measure-card__index">{idx + 1}</span>
-                <h3 className="measure-card__title">
-                  {mt
-                    ? formatMeasureTypeName(formatMessage, {
-                        code: mt.code,
-                        name: mt.name,
-                      })
-                    : formatMessage({ id: 'evaluation.measureFallback' })}
-                </h3>
-              </div>
-
-              {description && (
-                <p className="measure-card__description">{description}</p>
-              )}
-
-              <div className="measure-card__rating-row">
-                <div className="measure-card__rating-control">
-                  <label>{formatMessage({ id: 'evaluation.rating' })}</label>
-                  {editable ? (
-                    <RatingValueSelect
-                      ratingLevels={ratingLevels}
-                      value={m.ratingLevelId}
-                      onChange={(ratingLevelId) => {
-                        const level = findRatingLevel(
-                          ratingLevels,
-                          ratingLevelId,
-                        );
-                        const next = [...measures];
-                        next[idx] = applyRatingToMeasure(
-                          m,
-                          mt,
-                          level,
-                          formatMessage,
-                        );
-                        onMeasuresChange(next);
-                      }}
-                    />
-                  ) : (
-                    <span className="measure-card__rating-value">
-                      {selectedLevel
-                        ? ratingValueOptionLabel(selectedLevel)
-                        : '—'}
-                    </span>
+                <div className="measure-card__heading">
+                  <h3 className="measure-card__title">{title}</h3>
+                  {description && (
+                    <p className="measure-card__description">{description}</p>
                   )}
                 </div>
-                {m.ratingComment && (
-                  <p className="measure-card__comment-inline">
-                    {m.ratingComment}
-                  </p>
-                )}
+                <RatingScale
+                  ratingLevels={ratingLevels}
+                  value={m.ratingLevelId}
+                  label={title}
+                  onChange={
+                    editable
+                      ? (ratingLevelId) => {
+                          const level = findRatingLevel(
+                            ratingLevels,
+                            ratingLevelId,
+                          );
+                          const next = [...measures];
+                          next[idx] = applyRatingToMeasure(
+                            m,
+                            mt,
+                            level,
+                            formatMessage,
+                          );
+                          onMeasuresChange(next);
+                        }
+                      : undefined
+                  }
+                />
               </div>
+
+              {m.ratingComment && (
+                <blockquote className="measure-card__comment">
+                  {m.ratingComment}
+                </blockquote>
+              )}
             </article>
           );
         })}
       </div>
-      <SectionAverageFooter
-        label={formatMessage({ id: 'evaluation.measuresAverage' })}
-        value={averageText}
-      />
     </FormSection>
   );
 }
