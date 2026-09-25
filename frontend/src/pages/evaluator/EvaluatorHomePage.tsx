@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import type { Employee } from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 import { AppLayout } from '../../components/AppLayout';
-import { PageIntro } from '../../components/common/PageIntro';
+import { ToolbarSearch } from '../../components/common/ToolbarSearch';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { roleListPath } from '../../utils/evaluationApi';
@@ -45,28 +45,18 @@ export function EvaluatorHomePage() {
 
   return (
     <AppLayout title={formatMessage({ id: 'admin.employees' })}>
-      <PageIntro
-        title={formatMessage({ id: 'navigation.evaluatorEmployees' })}
-        subtitle={formatMessage({ id: 'pageIntro.evaluatorEmployeesSubtitle' })}
-      />
-      <div className="card card--filter">
-        <div className="form-row filter-bar-search">
-          <label htmlFor="employee-search">
-            {formatMessage({ id: 'evaluation.searchEmployees' })}
-          </label>
-          <input
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
+          <ToolbarSearch
             id="employee-search"
-            type="search"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            label={formatMessage({ id: 'evaluation.searchEmployees' })}
             placeholder={formatMessage({
               id: 'evaluation.employeeSearchPlaceholder',
             })}
+            value={searchInput}
+            onChange={setSearchInput}
           />
         </div>
-      </div>
-
-      <div className="card card--flush">
         <EmployeeListTable
           employees={employees}
           loading={loading && employees.length === 0}

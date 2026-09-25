@@ -1,7 +1,6 @@
-import { useId, useMemo } from 'react';
+import { useMemo } from 'react';
 import type { EvaluatorAnalytics } from '../../api/types';
 import { useIntl } from '../../i18n';
-import { PageIntro } from '../common/PageIntro';
 import { currentYear } from '../../utils/status';
 import { DescriptiveRatingPieChart } from '../../pages/evaluator/components/DescriptiveRatingPieChart';
 import { OverallStatsChart } from '../../pages/evaluator/components/OverallStatsChart';
@@ -65,19 +64,14 @@ interface EvaluatorAnalyticsViewProps {
   analytics: EvaluatorAnalytics;
   year: number;
   onYearChange: (year: number) => void;
-  title?: string;
-  hint?: string;
 }
 
 export function EvaluatorAnalyticsView({
   analytics,
   year,
   onYearChange,
-  title,
-  hint,
 }: EvaluatorAnalyticsViewProps) {
   const { formatMessage } = useIntl();
-  const yearSelectId = useId();
   const yearOptions = useMemo(() => {
     const years = new Set<number>();
     for (let y = currentYear; y >= currentYear - 4; y -= 1) {
@@ -87,43 +81,44 @@ export function EvaluatorAnalyticsView({
     return [...years].sort((a, b) => b - a);
   }, [year]);
 
-  const displayTitle =
-    title ??
-    (analytics.evaluatorFullName
-      ? formatMessage(
-          { id: 'analytics.titleWithName' },
-          { name: analytics.evaluatorFullName },
-        )
-      : formatMessage({ id: 'analytics.title' }));
-
-  const yearFilter = (
-    <div className="analytics-toolbar">
-      <label htmlFor={yearSelectId}>
+  const yearOptionElements = yearOptions.map((option) => (
+    <option key={option} value={option}>
+      {option}.
+    </option>
+  ));
+  const yearCard = (
+    <label className="card analytics-summary-card analytics-summary-card--slate analytics-year-card">
+      <span className="analytics-summary-card__icon" aria-hidden>
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+        </svg>
+      </span>
+      <span className="analytics-summary-card__label">
         {formatMessage({ id: 'common.year' })}
-      </label>
+      </span>
       <select
-        id={yearSelectId}
+        className="analytics-year-card__select"
         value={year}
         onChange={(event) => onYearChange(Number(event.target.value))}
       >
-        {yearOptions.map((option) => (
-          <option key={option} value={option}>
-            {option}.
-          </option>
-        ))}
+        {yearOptionElements}
       </select>
-    </div>
+    </label>
   );
 
   return (
     <div className="analytics-page">
-      {title || hint ? (
-        <PageIntro title={displayTitle} subtitle={hint} actions={yearFilter} />
-      ) : (
-        <div className="analytics-page__toolbar-row">{yearFilter}</div>
-      )}
-
-      <div className="analytics-summary-grid">
+      <div className="analytics-summary-grid analytics-summary-grid--with-filter">
         <KpiCard
           tone="blue"
           icon="people"
@@ -157,6 +152,7 @@ export function EvaluatorAnalyticsView({
           )}
           value={analytics.overallStats.selectedYear.median?.toFixed(2) ?? '—'}
         />
+        {yearCard}
       </div>
 
       <div className="analytics-grid">

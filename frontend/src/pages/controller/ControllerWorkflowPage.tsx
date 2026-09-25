@@ -82,42 +82,46 @@ export function ControllerWorkflowPage() {
 
   return (
     <AppLayout title={formatMessage({ id: 'controller.evaluationsTitle' })}>
-      <div className="card card--filter">
-        <PeriodFilters
-          year={year}
-          quarter={quarter}
-          onYearChange={setYear}
-          onQuarterChange={setQuarter}
-          showAllQuartersOption
-          search={searchInput}
-          onSearchChange={setSearchInput}
-        />
-      </div>
-
-      <EvaluationBucketTabs
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab as ControllerBucket)}
-        tabs={controllerBucketTabs}
-        counts={tabCounts}
-        tabLabels={controllerBucketTabLabels}
-      />
-
       <EvaluationSummaryTableCard
         loading={loading}
         empty={!loading && evaluations.length === 0}
         activeTab={activeTab}
         emptyStateMap={emptyStateByControllerBucket}
+        toolbar={
+          <>
+            <EvaluationBucketTabs
+              activeTab={activeTab}
+              onTabChange={(tab) => setActiveTab(tab as ControllerBucket)}
+              tabs={controllerBucketTabs}
+              counts={tabCounts}
+              tabLabels={controllerBucketTabLabels}
+            />
+            <PeriodFilters
+              compact
+              year={year}
+              quarter={quarter}
+              onYearChange={setYear}
+              onQuarterChange={setQuarter}
+              showAllQuartersOption
+              search={searchInput}
+              onSearchChange={setSearchInput}
+              canReset={
+                searchInput !== '' || year !== currentYear || quarter !== null
+              }
+              onReset={() => {
+                setSearchInput('');
+                setYear(currentYear);
+                setQuarter(null);
+              }}
+            />
+          </>
+        }
       >
         <EvaluationSummaryTable
           evaluations={evaluations}
-          activeTab={activeTab}
           detailPath={(id) => `/controller/evaluations/${id}`}
           showEvaluator
           showNewBadge
-          pendingActionLabel={formatMessage({
-            id: 'controller.reviewAndDecision',
-          })}
-          pendingTabs={['pending']}
           hasMore={hasMore}
           loadingMore={loadingMore}
           onLoadMore={loadMore}

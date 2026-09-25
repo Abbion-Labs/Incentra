@@ -1,19 +1,17 @@
 import { useCallback, useEffect, useState } from 'react';
-import { useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import type {
   EmployeeEvaluationBenchmarks,
   EvaluationDetail,
 } from '../../api/types';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
-import { PageBackLink } from '../../components/common/PageBackLink';
 import { AppLayout } from '../../components/AppLayout';
 import { EmployeeAvatarUpload } from '../../components/employee/EmployeeAvatarUpload';
 import { useToast } from '../../hooks';
 import { EvaluationBenchmarkChart } from './components/EvaluationBenchmarkChart';
 import { EmployeeQuarterList } from './components/EmployeeQuarterList';
 import { SelectedEvaluationPanel } from './components/SelectedEvaluationPanel';
-import type { PageBackState } from '../admin/adminNavigation';
 import { useIntl } from '../../i18n';
 import { formatDate } from '../../utils/formatLocale';
 
@@ -21,8 +19,6 @@ export function EvaluatorEmployeePage() {
   const { formatMessage } = useIntl();
   const toast = useToast();
   const { employeeId } = useParams<{ employeeId: string }>();
-  const location = useLocation();
-  const backState = location.state as PageBackState | null;
   const [searchParams, setSearchParams] = useSearchParams();
   const [benchmarks, setBenchmarks] =
     useState<EmployeeEvaluationBenchmarks | null>(null);
@@ -120,10 +116,11 @@ export function EvaluatorEmployeePage() {
   if (!benchmarks) {
     return (
       <AppLayout title={formatMessage({ id: 'admin.employees' })}>
-        <PageBackLink
-          to="/evaluator"
-          label={formatMessage({ id: 'buttons.backToList' })}
-        />
+        <div className="card card--muted">
+          <p className="empty-inline">
+            {formatMessage({ id: 'errors.loadFailed' })}
+          </p>
+        </div>
       </AppLayout>
     );
   }
@@ -132,18 +129,6 @@ export function EvaluatorEmployeePage() {
 
   return (
     <AppLayout title={employee.fullName}>
-      {backState?.backTo ? (
-        <PageBackLink
-          to={backState.backTo}
-          label={formatMessage({ id: backState.backLabelKey as never })}
-        />
-      ) : (
-        <PageBackLink
-          to="/evaluator"
-          label={formatMessage({ id: 'buttons.backToList' })}
-        />
-      )}
-
       <div className="employee-profile-layout">
         <aside className="employee-profile-layout__sidebar">
           <div className="card employee-card">

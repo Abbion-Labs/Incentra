@@ -19,12 +19,6 @@
     "closeMenu": "Zatvori meni",
     "activeRole": "Aktivna uloga"
   },
-  "pageIntro": {
-    "evaluatorEmployeesSubtitle": "Zaposleni koje ocenjujete. Otvorite profil za istoriju ocena i poređenje sa organizacionom jedinicom.",
-    "evaluatorGoalsSubtitle": "Postavite ciljeve, uslove i kriterijume za kvartal pre nego što počne ocenjivanje.",
-    "evaluatorWorkflowSubtitle": "Ocenite zaposlene i pratite status svake ocene kroz proces odobravanja.",
-    "evaluatorAnalyticsSubtitle": "Raspodela ocena vašeg tima i poređenje sa prethodnom godinom."
-  },
   "roleSwitch": {
     "pageNeedsRole": "Ova stranica pripada ulozi {role}, a vi trenutno radite u drugoj.",
     "action": "Pređi u ulogu {role}",
@@ -79,6 +73,8 @@
     "active": "Aktivan",
     "inactive": "Neaktivan",
     "back": "Nazad",
+    "allShort": "Svi",
+    "resetFilters": "Poništi filtere",
     "allQuarters": "Svi kvartali",
     "linkedAccount": "Povezan nalog",
     "search": "Pretraga",
@@ -163,6 +159,7 @@
     "submittedAt": "Poslato",
     "review": "Pregled",
     "all": "Sve",
+    "newEvaluation": "Nova ocena",
     "new": "Novo",
     "revise": "Doradi ocenu",
     "goalsCount": "Ciljeva",

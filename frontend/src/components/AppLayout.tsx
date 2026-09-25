@@ -15,7 +15,8 @@ import {
 import { SidebarNavIcon, type SidebarNavIconName } from './SidebarNavIcon';
 import { TopbarUserAvatar } from './common/TopbarUserAvatar';
 
-const SIDEBAR_WIDTH = '248px';
+// Na desktopu je meni uska traka sa ikonicama; nazivi su u tooltip-u.
+const SIDEBAR_WIDTH = '76px';
 
 interface NavItem {
   to: string;
@@ -163,7 +164,11 @@ export function AppLayout({
   const logoutLabel = formatMessage({ id: 'navigation.logout' });
 
   const brand = (
-    <Link to="/" className="app-brand">
+    <Link
+      to="/"
+      className="app-brand"
+      title={formatMessage({ id: 'navigation.brand' })}
+    >
       <span className="app-brand__mark">
         <BrandMark />
       </span>
@@ -235,7 +240,7 @@ export function AppLayout({
 
   return (
     <div
-      className={`app-shell${showSidebar ? ' app-shell--with-sidebar' : ''}${navOpen ? ' app-shell--nav-open' : ''}`}
+      className={`app-shell${showSidebar ? ' app-shell--with-sidebar' : ''}${showSidebar ? ' app-shell--rail' : ''}${navOpen ? ' app-shell--nav-open' : ''}`}
       style={shellStyle}
     >
       {showSidebar && (
@@ -271,23 +276,26 @@ export function AppLayout({
                 const active = item.match
                   ? item.match(location.pathname)
                   : location.pathname.startsWith(item.to);
+                const label = formatMessage({ id: item.labelKey as never });
                 return (
                   <Link
                     key={item.to}
                     to={item.to}
                     className={active ? 'active' : ''}
                     aria-current={active ? 'page' : undefined}
+                    title={label}
                   >
                     <span className="sidebar__icon">
                       <SidebarNavIcon name={item.icon} />
                     </span>
-                    <span className="sidebar__label">
-                      {formatMessage({ id: item.labelKey as never })}
-                    </span>
+                    <span className="sidebar__label">{label}</span>
                   </Link>
                 );
               })}
             </nav>
+            <div className="sidebar__locale">
+              <LocaleSwitcher />
+            </div>
             <div className="sidebar__footer">
               {userCard}
               {logoutButton}

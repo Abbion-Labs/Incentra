@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { Employee } from '../../../api/types';
 
-import { EmployeeAvatar } from '../../../components/employee/EmployeeAvatar';
+import { PersonName } from '../../../components/employee/PersonName';
 
 import { EmptyState } from '../../../components/common/EmptyState';
 
@@ -38,7 +38,7 @@ export function EmployeeListTable({
   const { formatMessage } = useIntl();
 
   if (loading) {
-    return <TableSkeleton rows={6} columns={5} />;
+    return <TableSkeleton rows={6} columns={4} />;
   }
 
   if (employees.length === 0) {
@@ -76,10 +76,6 @@ export function EmployeeListTable({
               {formatMessage({ id: 'evaluation.jobPosition' })}
             </th>
 
-            <th className="col-text">
-              {formatMessage({ id: 'common.education' })}
-            </th>
-
             <th className="col-meta">
               {formatMessage({ id: 'evaluation.status' })}
             </th>
@@ -101,11 +97,7 @@ export function EmployeeListTable({
               role="link"
             >
               <td className="cell-primary col-text stack-title">
-                <span className="employee-list-name">
-                  <EmployeeAvatar employee={emp} size="sm" />
-
-                  <span>{emp.fullName}</span>
-                </span>
+                <PersonName fullName={emp.fullName} avatarUrl={emp.avatarUrl} />
               </td>
 
               <td
@@ -120,14 +112,6 @@ export function EmployeeListTable({
                 data-label={formatMessage({ id: 'evaluation.jobPosition' })}
               >
                 {emp.jobPositionName}
-              </td>
-
-              <td
-                className="cell-muted col-text"
-                data-label={formatMessage({ id: 'common.education' })}
-              >
-                {emp.educationLevelName ??
-                  formatMessage({ id: 'common.emptyValue' })}
               </td>
 
               <td

@@ -26,6 +26,10 @@ import {
   adminEvaluatorAnalyticsState,
 } from './adminNavigation';
 import { useIntl } from '../../i18n';
+import {
+  FilterChip,
+  ToolbarSearch,
+} from '../../components/common/ToolbarSearch';
 import { isEditConflict } from '../../utils/editConflict';
 
 function buildEmployeePayload(
@@ -306,27 +310,20 @@ export function AdminEmployees() {
         onCancel={startCreate}
       />
 
-      <div className="card">
-        <div className="filter-bar admin-filters">
-          <div className="form-row filter-bar-search">
-            <label htmlFor="emp-search">
-              {formatMessage({ id: 'evaluation.search' })}
-            </label>
-            <input
-              id="emp-search"
-              value={search}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="emp-filter-org">
-              {formatMessage({ id: 'evaluation.orgUnitShort' })}
-            </label>
-            <select
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
+          <ToolbarSearch
+            id="emp-search"
+            label={formatMessage({ id: 'evaluation.search' })}
+            placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
+            value={search}
+            onChange={setSearchInput}
+          >
+            <FilterChip
               id="emp-filter-org"
+              label={formatMessage({ id: 'evaluation.orgUnitShort' })}
               value={filterOrgId}
-              onChange={(e) => setFilterOrgId(e.target.value)}
+              onChange={setFilterOrgId}
             >
               <option value="">{formatMessage({ id: 'common.all' })}</option>
               {orgUnits.map((o) => (
@@ -334,16 +331,12 @@ export function AdminEmployees() {
                   {o.name}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="form-row">
-            <label htmlFor="emp-filter-active">
-              {formatMessage({ id: 'evaluation.status' })}
-            </label>
-            <select
+            </FilterChip>
+            <FilterChip
               id="emp-filter-active"
+              label={formatMessage({ id: 'evaluation.status' })}
               value={filterActive}
-              onChange={(e) => setFilterActive(e.target.value)}
+              onChange={setFilterActive}
             >
               <option value="">
                 {formatMessage({ id: 'evaluation.all' })}
@@ -354,8 +347,8 @@ export function AdminEmployees() {
               <option value="false">
                 {formatMessage({ id: 'admin.inactivePlural' })}
               </option>
-            </select>
-          </div>
+            </FilterChip>
+          </ToolbarSearch>
         </div>
 
         {loading ? (

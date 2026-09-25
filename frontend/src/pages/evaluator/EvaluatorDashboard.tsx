@@ -10,7 +10,6 @@ import {
   EvaluationSummaryTableCard,
 } from '../../components/evaluation/EvaluationSummaryTable';
 import { AppLayout } from '../../components/AppLayout';
-import { PageIntro } from '../../components/common/PageIntro';
 import { PeriodFilters, currentYear } from '../../components/PeriodFilters';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
@@ -81,36 +80,40 @@ export function EvaluatorDashboard() {
 
   return (
     <AppLayout title={formatMessage({ id: 'evaluation.ratingTitle' })}>
-      <PageIntro
-        title={formatMessage({ id: 'navigation.evaluatorWorkflow' })}
-        subtitle={formatMessage({ id: 'pageIntro.evaluatorWorkflowSubtitle' })}
-      />
-      <div className="card card--filter">
-        <PeriodFilters
-          year={year}
-          quarter={quarter}
-          onYearChange={setYear}
-          onQuarterChange={setQuarter}
-          showAllQuartersOption
-          search={searchInput}
-          onSearchChange={setSearchInput}
-        />
-      </div>
-
-      <EvaluationBucketTabs
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab as EvaluationBucket)}
-        counts={tabCounts}
-      />
-
       <EvaluationSummaryTableCard
         loading={loading}
         empty={!loading && evaluations.length === 0}
         activeTab={activeTab}
+        toolbar={
+          <>
+            <EvaluationBucketTabs
+              activeTab={activeTab}
+              onTabChange={(tab) => setActiveTab(tab as EvaluationBucket)}
+              counts={tabCounts}
+            />
+            <PeriodFilters
+              compact
+              year={year}
+              quarter={quarter}
+              onYearChange={setYear}
+              onQuarterChange={setQuarter}
+              showAllQuartersOption
+              search={searchInput}
+              onSearchChange={setSearchInput}
+              canReset={
+                searchInput !== '' || year !== currentYear || quarter !== null
+              }
+              onReset={() => {
+                setSearchInput('');
+                setYear(currentYear);
+                setQuarter(null);
+              }}
+            />
+          </>
+        }
       >
         <EvaluationSummaryTable
           evaluations={evaluations}
-          activeTab={activeTab}
           detailPath={(id) => `/evaluator/evaluations/${id}`}
           hasMore={hasMore}
           loadingMore={loadingMore}

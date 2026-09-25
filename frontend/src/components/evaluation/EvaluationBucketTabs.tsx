@@ -1,6 +1,7 @@
 import type { EvaluationBucket } from '../../utils/evaluationBuckets';
 import { bucketTabLabelKeys } from '../../utils/evaluationBuckets';
 import { useIntl } from '../../i18n';
+import { StatusTabIcon } from './StatusTabIcon';
 
 export const evaluationBucketTabs: EvaluationBucket[] = [
   'unrated',
@@ -38,11 +39,14 @@ export function EvaluationBucketTabs({
             className={`tab ${activeTab === tab ? 'active' : ''}`}
             onClick={() => onTabChange(tab)}
           >
-            {formatMessage({
-              id: (tabLabels[tab] ??
-                bucketTabLabelKeys[tab as EvaluationBucket] ??
-                tab) as never,
-            })}
+            <StatusTabIcon status={tab} />
+            <span className="tab__label">
+              {formatMessage({
+                id: (tabLabels[tab] ??
+                  bucketTabLabelKeys[tab as EvaluationBucket] ??
+                  tab) as never,
+              })}
+            </span>
             {count !== undefined && <span className="tab-count">{count}</span>}
           </button>
         );

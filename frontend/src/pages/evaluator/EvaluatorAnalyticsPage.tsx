@@ -52,8 +52,6 @@ export function EvaluatorAnalyticsPage() {
           analytics={analytics}
           year={year}
           onYearChange={setYear}
-          title={formatMessage({ id: 'navigation.analytics' })}
-          hint={formatMessage({ id: 'pageIntro.evaluatorAnalyticsSubtitle' })}
         />
       )}
     </AppLayout>

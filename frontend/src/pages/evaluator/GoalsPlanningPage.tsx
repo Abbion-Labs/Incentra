@@ -8,7 +8,6 @@ import type {
   PagedResult,
 } from '../../api/types';
 import { LoadingEmpty } from '../../components/common/LoadingEmpty';
-import { PageBackLink } from '../../components/common/PageBackLink';
 import { FormSection } from '../../components/forms/FormSection';
 import { GoalListEditor } from '../../components/forms/GoalListEditor';
 import { TextListEditor } from '../../components/forms/TextListEditor';
@@ -366,10 +365,6 @@ export function GoalsPlanningPage() {
           : `${formatMessage({ id: 'evaluation.setGoals' })} — ${evaluation.employeeFullName}`
       }
     >
-      <PageBackLink
-        to="/evaluator/goals"
-        label={formatMessage({ id: 'buttons.backToList' })}
-      />
       <GoalsPlanningEmployeeCard
         evaluation={evaluation}
         employee={employee}
@@ -385,7 +380,7 @@ export function GoalsPlanningPage() {
           </div>
           <GoalsReadOnlyOverview evaluation={evaluation} />
           {editable && (
-            <div className="card">
+            <div className="card card--actions">
               <Link
                 to={`/evaluator/evaluations/${evaluation.id}`}
                 className="btn btn-primary"
