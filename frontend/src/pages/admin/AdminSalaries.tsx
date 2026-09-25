@@ -552,12 +552,12 @@ export function AdminSalaries() {
 
       {!loading && (totalCount > 0 || !showAdd) && (
         <div
-          className="filter-bar admin-filters"
+          className="filter-bar filter-bar--compact admin-filters"
           style={{ marginBottom: '1rem' }}
         >
           {totalCount > 0 ? (
             <div className="form-row filter-bar-search">
-              <label htmlFor="salary-search">
+              <label htmlFor="salary-search" className="sr-only">
                 {formatMessage({ id: 'common.search' })}
               </label>
               <input

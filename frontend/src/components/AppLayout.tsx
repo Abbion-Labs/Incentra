@@ -1,9 +1,10 @@
+import { useEffect, useState, type CSSProperties } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import type { CSSProperties } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { useIntl } from '../i18n';
 import { BrandMark } from './BrandMark';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import { RoleSwitcher } from './RoleSwitcher';
 import type { ActiveRoleNavigationState } from './ProtectedRoute';
 import { roleLabel } from '../utils/status';
 import {
@@ -15,7 +16,8 @@ import {
 import { SidebarNavIcon, type SidebarNavIconName } from './SidebarNavIcon';
 import { TopbarUserAvatar } from './common/TopbarUserAvatar';
 
-const SIDEBAR_WIDTH = '220px';
+// Na desktopu je meni uska traka sa ikonicama; nazivi su u tooltip-u.
+const SIDEBAR_WIDTH = '76px';
 
 interface NavItem {
   to: string;
@@ -123,6 +125,7 @@ export function AppLayout({
   const { formatMessage } = useIntl();
   const location = useLocation();
   const navigate = useNavigate();
+  const [navOpen, setNavOpen] = useState(false);
 
   const visibleNav = sortNavByGroup(
     navItems.filter(
@@ -135,6 +138,20 @@ export function AppLayout({
     ? roleLabel(activeRole, formatMessage)
     : null;
 
+  // Fioka menija na telefonu se zatvara posle navigacije i na Escape.
+  useEffect(() => {
+    setNavOpen(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!navOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key === 'Escape') setNavOpen(false);
+    }
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [navOpen]);
+
   // Prvo navigacija, pa promena uloge na početnoj stranici te uloge. Tako
   // upozorenje o nesačuvanim izmenama stigne pre nego što se sesija promeni.
   function switchRole(role: string) {
@@ -145,104 +162,191 @@ export function AppLayout({
   const shellStyle = {
     '--sidebar-width': showSidebar ? SIDEBAR_WIDTH : '0px',
   } as CSSProperties;
+  const logoutLabel = formatMessage({ id: 'navigation.logout' });
+
+  const brand = (
+    <Link
+      to="/"
+      className="app-brand"
+      title={formatMessage({ id: 'navigation.brand' })}
+    >
+      <span className="app-brand__mark">
+        <BrandMark />
+      </span>
+      <span className="app-brand__name">
+        {formatMessage({ id: 'navigation.brand' })}
+      </span>
+    </Link>
+  );
+
+  const userCard = user && (
+    <Link
+      to="/account"
+      className="user-card"
+      title={formatMessage({ id: 'navigation.myAccount' })}
+    >
+      <TopbarUserAvatar user={user} />
+      <span className="user-card__text">
+        <span className="user-card__name">
+          {user.employeeFullName ?? user.email}
+        </span>
+        {activeRoleLabel && !showRoleSwitch && (
+          <span className="user-card__role">{activeRoleLabel}</span>
+        )}
+      </span>
+    </Link>
+  );
+
+  const logoutButton = (
+    <button
+      type="button"
+      className="icon-btn user-logout"
+      onClick={logout}
+      aria-label={logoutLabel}
+      title={logoutLabel}
+    >
+      <svg
+        width="18"
+        height="18"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.75"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden
+      >
+        <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+        <path d="m16 17 5-5-5-5" />
+        <path d="M21 12H9" />
+      </svg>
+    </button>
+  );
+
+  const roleSwitch = showRoleSwitch && activeRole && (
+    <RoleSwitcher
+      roles={roleOptions}
+      activeRole={activeRole}
+      label={formatMessage({ id: 'navigation.activeRole' })}
+      roleLabel={(role) => roleLabel(role, formatMessage)}
+      onChange={switchRole}
+    />
+  );
 
   return (
     <div
-      className={`app-shell${showSidebar ? ' app-shell--sidebar-open' : ''}`}
+      className={`app-shell${showSidebar ? ' app-shell--with-sidebar' : ''}${showSidebar ? ' app-shell--rail' : ''}${navOpen ? ' app-shell--nav-open' : ''}`}
       style={shellStyle}
     >
-      <header className="topbar">
-        <div className="topbar__start">
-          <div className="topbar__brand">
-            <Link to="/" className="app-brand">
-              <span className="app-brand__mark">
-                <BrandMark />
-              </span>
-              <span className="app-brand__text">
-                <span className="app-brand__name">
-                  {formatMessage({ id: 'navigation.brand' })}
-                </span>
-                <span className="topbar__page">{title}</span>
-              </span>
-            </Link>
-          </div>
-        </div>
-        <div className="topbar__center">
-          <LocaleSwitcher />
-        </div>
-        <div className="topbar-meta">
-          {showRoleSwitch && (
-            <select
-              className="topbar-role-switch"
-              value={activeRole ?? ''}
-              onChange={(e) => switchRole(e.target.value)}
-              aria-label={formatMessage({ id: 'navigation.activeRole' })}
-              title={formatMessage({ id: 'navigation.activeRole' })}
-            >
-              {roleOptions.map((role) => (
-                <option key={role} value={role}>
-                  {roleLabel(role, formatMessage)}
-                </option>
-              ))}
-            </select>
-          )}
-          {user && (
-            <Link
-              to="/account"
-              className="topbar-user"
-              title={formatMessage({ id: 'navigation.myAccount' })}
-            >
-              <TopbarUserAvatar user={user} />
-              <div className="topbar-user__text">
-                <span className="topbar-user__name">
-                  {user.employeeFullName ?? user.email}
-                </span>
-                {activeRoleLabel && !showRoleSwitch && (
-                  <span className="topbar-user__role">{activeRoleLabel}</span>
-                )}
-              </div>
-            </Link>
-          )}
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={logout}
-          >
-            {formatMessage({ id: 'navigation.logout' })}
-          </button>
-        </div>
-      </header>
-      <div className="layout-body">
-        {showSidebar && (
-          <nav
-            id="app-sidebar"
-            className="sidebar"
-            aria-label={formatMessage({ id: 'navigation.main' })}
-          >
-            {visibleNav.map((item) => (
-              <Link
-                key={item.to}
-                to={item.to}
-                className={
-                  (
-                    item.match
-                      ? item.match(location.pathname)
-                      : location.pathname.startsWith(item.to)
-                  )
-                    ? 'active'
-                    : ''
-                }
+      {showSidebar && (
+        <>
+          <aside id="app-sidebar" className="sidebar">
+            <div className="sidebar__brand">
+              {brand}
+              <button
+                type="button"
+                className="icon-btn sidebar__close"
+                onClick={() => setNavOpen(false)}
+                aria-label={formatMessage({ id: 'navigation.closeMenu' })}
               >
-                <span className="sidebar__icon">
-                  <SidebarNavIcon name={item.icon} />
-                </span>
-                <span className="sidebar__label">
-                  {formatMessage({ id: item.labelKey as never })}
-                </span>
-              </Link>
-            ))}
-          </nav>
-        )}
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M18 6 6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <nav
+              className="sidebar__nav"
+              aria-label={formatMessage({ id: 'navigation.main' })}
+            >
+              {visibleNav.map((item) => {
+                const active = item.match
+                  ? item.match(location.pathname)
+                  : location.pathname.startsWith(item.to);
+                const label = formatMessage({ id: item.labelKey as never });
+                return (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={active ? 'active' : ''}
+                    aria-current={active ? 'page' : undefined}
+                    title={label}
+                  >
+                    <span className="sidebar__icon">
+                      <SidebarNavIcon name={item.icon} />
+                    </span>
+                    <span className="sidebar__label">{label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+            <div className="sidebar__locale">
+              <LocaleSwitcher />
+            </div>
+            <div className="sidebar__footer">
+              {userCard}
+              {logoutButton}
+            </div>
+          </aside>
+          <div
+            className="sidebar-backdrop"
+            onClick={() => setNavOpen(false)}
+            aria-hidden
+          />
+        </>
+      )}
+
+      <div className="app-main">
+        <header className="topbar">
+          <div className="topbar__start">
+            {showSidebar ? (
+              <button
+                type="button"
+                className="icon-btn topbar__menu"
+                onClick={() => setNavOpen(true)}
+                aria-label={formatMessage({ id: 'navigation.openMenu' })}
+                aria-controls="app-sidebar"
+                aria-expanded={navOpen}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  aria-hidden
+                >
+                  <path d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            ) : (
+              brand
+            )}
+            <p className="topbar__page" title={title}>
+              {title}
+            </p>
+          </div>
+          <div className="topbar-meta">
+            <LocaleSwitcher />
+            {roleSwitch}
+            {!showSidebar && (
+              <>
+                {userCard}
+                {logoutButton}
+              </>
+            )}
+          </div>
+        </header>
         <main className="main-content">{children}</main>
       </div>
     </div>

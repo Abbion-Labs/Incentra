@@ -2,6 +2,7 @@ import type { KeyboardEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import type { EvaluationSummary } from '../../../api/types';
 import { EmptyState } from '../../../components/common/EmptyState';
+import { PersonName } from '../../../components/employee/PersonName';
 import { useIntl } from '../../../i18n';
 import {
   evaluationDisplayClass,
@@ -50,7 +51,7 @@ export function SetGoalsTable({ evaluations, search }: SetGoalsTableProps) {
 
   return (
     <div className="table-wrap">
-      <table className="table table--hover table--clickable">
+      <table className="table table--hover table--clickable table--stack">
         <thead>
           <tr>
             <th className="col-text">
@@ -77,12 +78,25 @@ export function SetGoalsTable({ evaluations, search }: SetGoalsTableProps) {
               tabIndex={0}
               role="link"
             >
-              <td className="cell-primary col-text">{ev.employeeFullName}</td>
-              <td className="cell-muted col-meta">
+              <td className="cell-primary col-text stack-title">
+                <PersonName fullName={ev.employeeFullName} />
+              </td>
+              <td
+                className="cell-muted col-meta"
+                data-label={formatMessage({ id: 'evaluation.period' })}
+              >
                 Q{ev.quarter}/{ev.year}
               </td>
-              <td className="cell-muted col-num">{ev.goalCount ?? 0}</td>
-              <td className="col-meta">
+              <td
+                className="cell-muted col-num"
+                data-label={formatMessage({ id: 'evaluation.goalsCount' })}
+              >
+                {ev.goalCount ?? 0}
+              </td>
+              <td
+                className="col-meta"
+                data-label={formatMessage({ id: 'evaluation.statusLabel' })}
+              >
                 <span className={evaluationDisplayClass(ev)}>
                   {evaluationDisplayLabel(ev, formatMessage)}
                 </span>

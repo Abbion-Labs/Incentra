@@ -380,7 +380,7 @@ export function GoalsPlanningPage() {
           </div>
           <GoalsReadOnlyOverview evaluation={evaluation} />
           {editable && (
-            <div className="card">
+            <div className="card card--actions">
               <Link
                 to={`/evaluator/evaluations/${evaluation.id}`}
                 className="btn btn-primary"

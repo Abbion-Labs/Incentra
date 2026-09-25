@@ -6,20 +6,70 @@ import { DescriptiveRatingPieChart } from '../../pages/evaluator/components/Desc
 import { OverallStatsChart } from '../../pages/evaluator/components/OverallStatsChart';
 import { RatingCountComparisonChart } from '../../pages/evaluator/components/RatingCountComparisonChart';
 
+type KpiIcon = 'people' | 'check' | 'average' | 'median';
+
+const kpiIconPaths: Record<KpiIcon, string[]> = {
+  people: [
+    'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2',
+    'M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8z',
+    'M22 21v-2a4 4 0 0 0-3-3.87',
+    'M16 3.13a4 4 0 0 1 0 7.75',
+  ],
+  check: [
+    'M9 11l3 3L22 4',
+    'M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11',
+  ],
+  average: ['M3 3v18h18', 'M7 14l4-4 4 4 5-6'],
+  median: ['M3 12h18', 'M7 6v12', 'M17 9v6', 'M12 4v16'],
+};
+
+function KpiCard({
+  label,
+  value,
+  icon,
+  tone,
+}: {
+  label: string;
+  value: string | number;
+  icon: KpiIcon;
+  tone: 'blue' | 'teal' | 'violet' | 'amber';
+}) {
+  return (
+    <div
+      className={`card analytics-summary-card analytics-summary-card--${tone}`}
+    >
+      <span className="analytics-summary-card__icon" aria-hidden>
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          {kpiIconPaths[icon].map((d) => (
+            <path key={d} d={d} />
+          ))}
+        </svg>
+      </span>
+      <span className="analytics-summary-card__label">{label}</span>
+      <strong className="analytics-summary-card__value">{value}</strong>
+    </div>
+  );
+}
+
 interface EvaluatorAnalyticsViewProps {
   analytics: EvaluatorAnalytics;
   year: number;
   onYearChange: (year: number) => void;
-  title?: string;
-  hint?: string;
 }
 
 export function EvaluatorAnalyticsView({
   analytics,
   year,
   onYearChange,
-  title,
-  hint,
 }: EvaluatorAnalyticsViewProps) {
   const { formatMessage } = useIntl();
   const yearOptions = useMemo(() => {
@@ -31,83 +81,78 @@ export function EvaluatorAnalyticsView({
     return [...years].sort((a, b) => b - a);
   }, [year]);
 
-  const displayTitle =
-    title ??
-    (analytics.evaluatorFullName
-      ? formatMessage(
-          { id: 'analytics.titleWithName' },
-          { name: analytics.evaluatorFullName },
-        )
-      : formatMessage({ id: 'analytics.title' }));
+  const yearOptionElements = yearOptions.map((option) => (
+    <option key={option} value={option}>
+      {option}.
+    </option>
+  ));
+  const yearCard = (
+    <label className="card analytics-summary-card analytics-summary-card--slate analytics-year-card">
+      <span className="analytics-summary-card__icon" aria-hidden>
+        <svg
+          width="18"
+          height="18"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.9"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <rect x="3" y="4" width="18" height="18" rx="2" />
+          <path d="M16 2v4M8 2v4M3 10h18" />
+        </svg>
+      </span>
+      <span className="analytics-summary-card__label">
+        {formatMessage({ id: 'common.year' })}
+      </span>
+      <select
+        className="analytics-year-card__select"
+        value={year}
+        onChange={(event) => onYearChange(Number(event.target.value))}
+      >
+        {yearOptionElements}
+      </select>
+    </label>
+  );
 
   return (
     <div className="analytics-page">
-      {(title || hint) && (
-        <div className="card card--flush analytics-page__intro">
-          <div className="card__header">
-            <h2 className="card__title">{displayTitle}</h2>
-            {hint && <p className="card__hint">{hint}</p>}
-          </div>
-        </div>
-      )}
-
-      <div className="analytics-summary-grid">
-        <div className="card analytics-summary-card">
-          <span className="analytics-summary-card__label">
-            {formatMessage({ id: 'analytics.subordinates' })}
-          </span>
-          <strong className="analytics-summary-card__value">
-            {analytics.subordinateCount}
-          </strong>
-        </div>
-        <div className="card analytics-summary-card">
-          <span className="analytics-summary-card__label">
-            {formatMessage(
-              { id: 'analytics.ratedInYear' },
-              { year: analytics.year },
-            )}
-          </span>
-          <strong className="analytics-summary-card__value">
-            {analytics.ratedEvaluationsThisYear}
-          </strong>
-        </div>
-        <div className="card analytics-summary-card">
-          <span className="analytics-summary-card__label">
-            {formatMessage(
-              { id: 'analytics.averageInYear' },
-              { year: analytics.year },
-            )}
-          </span>
-          <strong className="analytics-summary-card__value">
-            {analytics.overallStats.selectedYear.average?.toFixed(2) ?? '—'}
-          </strong>
-        </div>
-        <div className="card analytics-summary-card">
-          <span className="analytics-summary-card__label">
-            {formatMessage(
-              { id: 'analytics.medianInYear' },
-              { year: analytics.year },
-            )}
-          </span>
-          <strong className="analytics-summary-card__value">
-            {analytics.overallStats.selectedYear.median?.toFixed(2) ?? '—'}
-          </strong>
-        </div>
-        <label className="card analytics-summary-card analytics-summary-card--filter">
-          <span className="analytics-summary-card__label">
-            {formatMessage({ id: 'common.year' })}
-          </span>
-          <select
-            value={year}
-            onChange={(event) => onYearChange(Number(event.target.value))}
-          >
-            {yearOptions.map((option) => (
-              <option key={option} value={option}>
-                {option}.
-              </option>
-            ))}
-          </select>
-        </label>
+      <div className="analytics-summary-grid analytics-summary-grid--with-filter">
+        <KpiCard
+          tone="blue"
+          icon="people"
+          label={formatMessage({ id: 'analytics.subordinates' })}
+          value={analytics.subordinateCount}
+        />
+        <KpiCard
+          tone="teal"
+          icon="check"
+          label={formatMessage(
+            { id: 'analytics.ratedInYear' },
+            { year: analytics.year },
+          )}
+          value={analytics.ratedEvaluationsThisYear}
+        />
+        <KpiCard
+          tone="violet"
+          icon="average"
+          label={formatMessage(
+            { id: 'analytics.averageInYear' },
+            { year: analytics.year },
+          )}
+          value={analytics.overallStats.selectedYear.average?.toFixed(2) ?? '—'}
+        />
+        <KpiCard
+          tone="amber"
+          icon="median"
+          label={formatMessage(
+            { id: 'analytics.medianInYear' },
+            { year: analytics.year },
+          )}
+          value={analytics.overallStats.selectedYear.median?.toFixed(2) ?? '—'}
+        />
+        {yearCard}
       </div>
 
       <div className="analytics-grid">

@@ -15,6 +15,8 @@
     "employeeEvaluations": "Moje ocene",
     "adminCrud": "CRUD",
     "adminVariableCompensation": "Varijabila",
+    "openMenu": "Otvori meni",
+    "closeMenu": "Zatvori meni",
     "activeRole": "Aktivna uloga"
   },
   "roleSwitch": {
@@ -71,6 +73,8 @@
     "active": "Aktivan",
     "inactive": "Neaktivan",
     "back": "Nazad",
+    "allShort": "Svi",
+    "resetFilters": "Poništi filtere",
     "allQuarters": "Svi kvartali",
     "linkedAccount": "Povezan nalog",
     "search": "Pretraga",
@@ -155,6 +159,7 @@
     "submittedAt": "Poslato",
     "review": "Pregled",
     "all": "Sve",
+    "newEvaluation": "Nova ocena",
     "new": "Novo",
     "revise": "Doradi ocenu",
     "goalsCount": "Ciljeva",
@@ -204,6 +209,7 @@
     "continueToEvaluation": "Nastavi na ocenjivanje",
     "goalDescriptionPlaceholder": "Opis cilja...",
     "addGoal": "Dodaj cilj",
+    "goalShare": "Ponder",
     "goalWeight": "Težina",
     "goalWeightLabel": "Težina cilja {index} u procentima",
     "goalWeightHint": "Koliki deo proseka ciljeva nosi ovaj cilj. Zbir svih ciljeva mora biti 100%, a svaki cilj najmanje {min}%.",

@@ -213,29 +213,42 @@ export function EvaluatorGoalsDashboard() {
 
   const loading = activeTab === 'pending' ? loadingEmployees : loadingSet;
 
-  return (
-    <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
-      <div className="card card--filter">
-        <PeriodFilters
-          year={year}
-          quarter={quarter}
-          onYearChange={setYear}
-          onQuarterChange={(q) => {
-            if (q != null) setQuarter(q as 1 | 2 | 3 | 4);
-          }}
-          search={searchInput}
-          onSearchChange={setSearchInput}
-        />
-      </div>
-
+  const toolbar = (
+    <div className="data-panel__toolbar">
       <GoalsBucketTabs
         activeTab={activeTab}
         onTabChange={handleTabChange}
         counts={tabCounts}
       />
+      <PeriodFilters
+        compact
+        year={year}
+        quarter={quarter}
+        onYearChange={setYear}
+        onQuarterChange={(q) => {
+          if (q != null) setQuarter(q as 1 | 2 | 3 | 4);
+        }}
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        canReset={
+          searchInput !== '' ||
+          year !== currentYear ||
+          quarter !== currentQuarter
+        }
+        onReset={() => {
+          setSearchInput('');
+          setYear(currentYear);
+          setQuarter(currentQuarter);
+        }}
+      />
+    </div>
+  );
 
+  return (
+    <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
       {activeTab === 'pending' ? (
-        <div className="card card--flush card--table-fill">
+        <div className="card card--flush card--table-fill data-panel">
+          {toolbar}
           {loading ? (
             <TableSkeleton rows={4} columns={4} />
           ) : (
@@ -246,9 +259,6 @@ export function EvaluatorGoalsDashboard() {
                   creatingFor={creatingFor}
                   search={search}
                   onStartPlanning={canPlan ? startPlanning : undefined}
-                  evaluationLabel={() =>
-                    formatMessage({ id: 'evaluation.setGoals' })
-                  }
                 />
 
                 <InfiniteScrollSentinel
@@ -261,7 +271,8 @@ export function EvaluatorGoalsDashboard() {
           )}
         </div>
       ) : (
-        <div className="card card--flush card--table-fill">
+        <div className="card card--flush card--table-fill data-panel">
+          {toolbar}
           {loading ? (
             <TableSkeleton rows={4} columns={4} />
           ) : (

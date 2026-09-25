@@ -13,6 +13,7 @@ import { downloadCsv } from '../../utils/downloadCsv';
 import { currentYear } from '../../utils/status';
 import { usePagedList, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
+import { FilterChip } from '../../components/common/ToolbarSearch';
 import {
   formatDateTime,
   formatNumber,
@@ -283,55 +284,45 @@ export function AdminCompensationResults() {
 
   return (
     <div className="card card--table-fill">
-      <div className="filter-bar compensation-results-toolbar">
-        <div className="compensation-results-filters form-grid admin-form__grid">
-          <div className="form-row">
-            <label htmlFor="results-org">
-              {formatMessage({ id: 'common.organizationUnit' })}
-            </label>
-            <select
-              id="results-org"
-              value={organizationUnitId}
-              onChange={(e) => setOrganizationUnitId(e.target.value)}
-              disabled={finalizing}
-            >
-              {orgUnits.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-row">
-            <label htmlFor="results-year">
-              {formatMessage({ id: 'common.year' })}
-            </label>
-            <select
-              id="results-year"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-              disabled={finalizing}
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-row filter-bar-search">
-            <label htmlFor="results-search">
-              {formatMessage({ id: 'admin.employeeSearch' })}
-            </label>
-            <input
-              id="results-search"
-              type="search"
-              placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-          </div>
+      <div className="filter-bar filter-bar--compact compensation-results-toolbar">
+        <div className="form-row filter-bar-search">
+          <label htmlFor="results-search" className="sr-only">
+            {formatMessage({ id: 'admin.employeeSearch' })}
+          </label>
+          <input
+            id="results-search"
+            type="search"
+            placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
+        <FilterChip
+          id="results-org"
+          label={formatMessage({ id: 'common.organizationUnit' })}
+          value={organizationUnitId}
+          onChange={setOrganizationUnitId}
+          disabled={finalizing}
+        >
+          {orgUnits.map((unit) => (
+            <option key={unit.id} value={unit.id}>
+              {unit.name}
+            </option>
+          ))}
+        </FilterChip>
+        <FilterChip
+          id="results-year"
+          label={formatMessage({ id: 'common.year' })}
+          value={year}
+          onChange={setYear}
+          disabled={finalizing}
+        >
+          {yearOptions.map((y) => (
+            <option key={y} value={y}>
+              {y}
+            </option>
+          ))}
+        </FilterChip>
         {parametersId ? (
           <div className="filter-bar__actions compensation-results-toolbar__actions">
             <span className="table-currency-badge">{currency}</span>
