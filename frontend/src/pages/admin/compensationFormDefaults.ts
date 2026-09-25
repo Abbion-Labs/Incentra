@@ -38,8 +38,6 @@ export const COMPENSATION_FIELD_HINT_KEYS = {
 
   allowNegativeVariable: 'admin.compensation.hints.allowNegativeVariable',
 
-  calculateAllowNegative: 'admin.compensation.hints.calculateAllowNegative',
-
   referencePoints: 'admin.compensation.hints.referencePoints',
 
   referenceSalaryPerPoint: 'admin.compensation.hints.referenceSalaryPerPoint',

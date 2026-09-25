@@ -64,7 +64,6 @@ export function AdminCompensation() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [calculating, setCalculating] = useState(false);
-  const [calculateAllowNegative, setCalculateAllowNegative] = useState(false);
   // Brza promena jedinice/godine pokreće više zahteva; samo poslednji sme da upiše parametre.
   const parametersRequestRef = useRef(0);
 
@@ -107,7 +106,6 @@ export function AdminCompensation() {
           setExistingId(data[0].id);
           setExistingVersion(data[0].version);
           setForm(paramsToForm(data[0]));
-          setCalculateAllowNegative(data[0].allowNegativeVariable);
           const status = await fetchCalculationStatus(data[0].id);
           if (!isLatest()) return;
           setCalculationStatus(status);
@@ -116,9 +114,6 @@ export function AdminCompensation() {
           setExistingVersion(null);
           setCalculationStatus(null);
           setForm({ ...DEFAULT_COMPENSATION_PARAMS });
-          setCalculateAllowNegative(
-            DEFAULT_COMPENSATION_PARAMS.allowNegativeVariable,
-          );
         }
       } catch (e) {
         if (!isLatest()) return;
@@ -190,13 +185,7 @@ export function AdminCompensation() {
     key: K,
     value: CompensationParamsForm[K],
   ) {
-    setForm((current) => {
-      const next = { ...current, [key]: value };
-      if (key === 'allowNegativeVariable') {
-        setCalculateAllowNegative(value as boolean);
-      }
-      return next;
-    });
+    setForm((current) => ({ ...current, [key]: value }));
   }
 
   function updatePreviewField<K extends keyof PreviewProfileForm>(
@@ -278,7 +267,6 @@ export function AdminCompensation() {
       }>(`/api/compensation-parameters/${existingId}/calculate`, {
         isFinal: false,
         requireAllQuarters: false,
-        allowNegativeVariable: calculateAllowNegative,
       });
       const count = response.employeesCalculated;
       toast.success(
@@ -504,34 +492,6 @@ export function AdminCompensation() {
             </button>
             {existingId ? (
               <div className="compensation-params__actions-calc">
-                <div
-                  className="form-row compensation-params__calc-row"
-                  style={{ margin: 0 }}
-                >
-                  <FormLabelWithHint
-                    htmlFor="calc-negative"
-                    hint={formatMessage({
-                      id: COMPENSATION_FIELD_HINT_KEYS.calculateAllowNegative as never,
-                    })}
-                  >
-                    Negativna varijabila pri kalkulaciji
-                  </FormLabelWithHint>
-                  <select
-                    id="calc-negative"
-                    value={calculateAllowNegative ? '1' : '0'}
-                    onChange={(e) =>
-                      setCalculateAllowNegative(e.target.value === '1')
-                    }
-                    disabled={actionsDisabled}
-                  >
-                    <option value="0">
-                      {formatMessage({ id: 'common.no' })}
-                    </option>
-                    <option value="1">
-                      {formatMessage({ id: 'common.yes' })}
-                    </option>
-                  </select>
-                </div>
                 <button
                   type="button"
                   className="btn btn-accent"

@@ -44,6 +44,4 @@ public sealed class CalculateCompensationRequest
     public bool IsFinal { get; init; }
 
     public bool RequireAllQuarters { get; init; }
-
-    public bool? AllowNegativeVariable { get; init; }
 }
