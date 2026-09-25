@@ -5,6 +5,7 @@ import { currentYear } from '../../utils/status';
 import { DescriptiveRatingPieChart } from '../../pages/evaluator/components/DescriptiveRatingPieChart';
 import { OverallStatsChart } from '../../pages/evaluator/components/OverallStatsChart';
 import { RatingCountComparisonChart } from '../../pages/evaluator/components/RatingCountComparisonChart';
+import { FieldHint } from '../common/FieldHint';
 
 type KpiIcon = 'people' | 'check' | 'average' | 'median';
 
@@ -157,15 +158,17 @@ export function EvaluatorAnalyticsView({
 
       <div className="analytics-grid">
         <section className="card analytics-panel">
-          <h3>
-            {formatMessage({ id: 'analytics.descriptiveDistributionTitle' })}
-          </h3>
-          <p className="card__hint">
-            {formatMessage(
-              { id: 'analytics.descriptiveDistributionHint' },
-              { year: analytics.year },
-            )}
-          </p>
+          <header className="analytics-panel__header">
+            <h3>
+              {formatMessage({ id: 'analytics.descriptiveDistributionTitle' })}
+            </h3>
+            <FieldHint
+              hint={formatMessage(
+                { id: 'analytics.descriptiveDistributionHint' },
+                { year: analytics.year },
+              )}
+            />
+          </header>
           <DescriptiveRatingPieChart
             items={analytics.distributionThisYear}
             year={analytics.year}
@@ -173,13 +176,17 @@ export function EvaluatorAnalyticsView({
         </section>
 
         <section className="card analytics-panel">
-          <h3>{formatMessage({ id: 'analytics.averageAndVarianceTitle' })}</h3>
-          <p className="card__hint">
-            {formatMessage(
-              { id: 'analytics.statsComparisonHint' },
-              { year: analytics.year },
-            )}
-          </p>
+          <header className="analytics-panel__header">
+            <h3>
+              {formatMessage({ id: 'analytics.averageAndVarianceTitle' })}
+            </h3>
+            <FieldHint
+              hint={formatMessage(
+                { id: 'analytics.statsComparisonHint' },
+                { year: analytics.year },
+              )}
+            />
+          </header>
           <OverallStatsChart
             stats={analytics.overallStats}
             year={analytics.year}
@@ -187,13 +194,15 @@ export function EvaluatorAnalyticsView({
         </section>
 
         <section className="card analytics-panel analytics-panel--wide">
-          <h3>{formatMessage({ id: 'analytics.ratingComparisonTitle' })}</h3>
-          <p className="card__hint">
-            {formatMessage(
-              { id: 'analytics.ratingComparisonHint' },
-              { previousYear: analytics.previousYear, year: analytics.year },
-            )}
-          </p>
+          <header className="analytics-panel__header">
+            <h3>{formatMessage({ id: 'analytics.ratingComparisonTitle' })}</h3>
+            <FieldHint
+              hint={formatMessage(
+                { id: 'analytics.ratingComparisonHint' },
+                { previousYear: analytics.previousYear, year: analytics.year },
+              )}
+            />
+          </header>
           <RatingCountComparisonChart
             items={analytics.ratingComparison}
             previousYear={analytics.previousYear}

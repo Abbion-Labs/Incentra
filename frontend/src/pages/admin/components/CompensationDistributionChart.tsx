@@ -1,7 +1,12 @@
 import { useMemo, useState } from 'react';
 import type { CompensationAnalyticsBucket } from '../../../api/types';
+import { ChartTooltip } from '../../../components/charts/ChartTooltip';
+import {
+  CHART,
+  barPath,
+  sequentialBlue,
+} from '../../../components/charts/chartTheme';
 import { useIntl } from '../../../i18n';
-import { chartColor } from '../../../utils/compensationAnalytics';
 import { useAnalyticsChartContainerHeight } from './useAnalyticsChartContainerHeight';
 
 interface CompensationDistributionChartProps {
@@ -9,19 +14,25 @@ interface CompensationDistributionChartProps {
   ariaLabel: string;
 }
 
-interface TooltipState {
-  label: string;
-  count: number;
+interface HoverState {
+  index: number;
   x: number;
   y: number;
 }
 
+/** Tooltip ne sme da izađe iznad okvira grafikona (okvir ima skrol). */
+const TOOLTIP_MIN_Y = 84;
+
+/**
+ * Broj zaposlenih po rasponu: nijansa plave prati broj (brojniji raspon je
+ * tamniji), broj iznad svakog stupca.
+ */
 export function CompensationDistributionChart({
   buckets,
   ariaLabel,
 }: CompensationDistributionChartProps) {
   const { formatMessage } = useIntl();
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const [hover, setHover] = useState<HoverState | null>(null);
   const {
     ref: containerRef,
     height,
@@ -61,29 +72,17 @@ export function CompensationDistributionChart({
     );
   }
 
-  const padding = { top: 24, right: 24, bottom: 108, left: 56 };
+  const padding = { top: 28, right: 24, bottom: 108, left: 56 };
   const minContentWidth =
-    visibleBuckets.length * 80 + padding.left + padding.right;
+    visibleBuckets.length * 56 + padding.left + padding.right;
   const width = Math.max(containerWidth || 520, minContentWidth);
   const chartWidth = width - padding.left - padding.right;
   const chartHeight = height - padding.top - padding.bottom;
+  const baseline = padding.top + chartHeight;
   const groupWidth = chartWidth / visibleBuckets.length;
-  const barWidth = Math.min(56, groupWidth * 0.7);
+  const barWidth = Math.min(48, groupWidth * 0.6);
 
-  function showTooltip(
-    event: React.MouseEvent<SVGRectElement>,
-    bucket: CompensationAnalyticsBucket,
-  ) {
-    const wrap = event.currentTarget.closest('.analytics-chart__canvas-wrap');
-    if (!wrap) return;
-    const rect = wrap.getBoundingClientRect();
-    setTooltip({
-      label: bucket.label,
-      count: bucket.count,
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    });
-  }
+  const hovered = hover ? visibleBuckets[hover.index] : null;
 
   return (
     <div className="analytics-chart analytics-chart--responsive analytics-chart--fill">
@@ -91,22 +90,23 @@ export function CompensationDistributionChart({
         ref={containerRef}
         className="analytics-chart__canvas-wrap analytics-chart__canvas-wrap--fill"
       >
-        {tooltip && (
-          <div
-            className="analytics-chart__tooltip"
-            style={{ left: tooltip.x, top: tooltip.y }}
-            role="tooltip"
-          >
-            <span className="analytics-chart__tooltip-period">
-              {tooltip.label}
-            </span>
-            <strong>
-              {formatMessage(
-                { id: 'charts.employeeCount' },
-                { count: tooltip.count },
-              )}
-            </strong>
-          </div>
+        {hover && hovered && (
+          <ChartTooltip
+            title={hovered.label}
+            rows={[
+              {
+                label: formatMessage(
+                  { id: 'charts.employeeCount' },
+                  { count: hovered.count },
+                ),
+                value: `${Math.round((hovered.count / total) * 100)}%`,
+                color: sequentialBlue(hovered.count, maxValue),
+              },
+            ]}
+            x={hover.x}
+            y={Math.max(hover.y, TOOLTIP_MIN_Y)}
+            containerWidth={width}
+          />
         )}
 
         <svg
@@ -123,7 +123,7 @@ export function CompensationDistributionChart({
         >
           {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
             const value = Math.round(maxValue * tick);
-            const y = padding.top + chartHeight - tick * chartHeight;
+            const y = baseline - tick * chartHeight;
             return (
               <g key={tick}>
                 <line
@@ -131,14 +131,13 @@ export function CompensationDistributionChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke="#e2e8f0"
+                  stroke={CHART.grid}
                 />
                 <text
                   x={padding.left - 8}
                   y={y + 4}
                   textAnchor="end"
-                  fontSize="11"
-                  fill="#64748b"
+                  className="chart-axis-text"
                 >
                   {value}
                 </text>
@@ -146,47 +145,80 @@ export function CompensationDistributionChart({
             );
           })}
 
-          <line
-            x1={padding.left}
-            y1={padding.top + chartHeight}
-            x2={width - padding.right}
-            y2={padding.top + chartHeight}
-            stroke="#94a3b8"
-          />
-
           {visibleBuckets.map((bucket, index) => {
+            const groupLeft = padding.left + index * groupWidth;
             const barHeight = (bucket.count / maxValue) * chartHeight;
-            const x =
-              padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
-            const y = padding.top + chartHeight - barHeight;
+            const x = groupLeft + (groupWidth - barWidth) / 2;
+            const y = baseline - barHeight;
+            const labelY = baseline + 20;
 
             return (
               <g key={bucket.label}>
-                <rect
-                  x={x}
-                  y={y}
-                  width={barWidth}
-                  height={Math.max(barHeight, bucket.count > 0 ? 4 : 0)}
-                  rx={4}
-                  fill={chartColor(index)}
-                  className="analytics-chart__bar"
-                  onMouseEnter={(event) => showTooltip(event, bucket)}
-                  onMouseMove={(event) => showTooltip(event, bucket)}
-                  onMouseLeave={() => setTooltip(null)}
-                />
+                {hover?.index === index && (
+                  <rect
+                    x={groupLeft + 4}
+                    y={padding.top}
+                    width={groupWidth - 8}
+                    height={chartHeight}
+                    rx={6}
+                    fill={CHART.highlight}
+                  />
+                )}
+                {bucket.count > 0 && (
+                  <>
+                    <path
+                      d={barPath(x, y, barWidth, Math.max(barHeight, 4))}
+                      fill={sequentialBlue(bucket.count, maxValue)}
+                    />
+                    <text
+                      x={x + barWidth / 2}
+                      y={y - 6}
+                      textAnchor="middle"
+                      className="chart-value-text"
+                    >
+                      {bucket.count}
+                    </text>
+                  </>
+                )}
                 <text
                   x={x + barWidth / 2}
-                  y={padding.top + chartHeight + 20}
+                  y={labelY}
                   textAnchor="end"
-                  fontSize="10"
-                  fill="#334155"
-                  transform={`rotate(-35, ${x + barWidth / 2}, ${padding.top + chartHeight + 20})`}
+                  className="chart-category-text"
+                  transform={`rotate(-35, ${x + barWidth / 2}, ${labelY})`}
                 >
                   {bucket.label}
                 </text>
+                <rect
+                  x={groupLeft}
+                  y={padding.top}
+                  width={groupWidth}
+                  height={chartHeight}
+                  fill="transparent"
+                  onMouseMove={(event) => {
+                    const wrap = containerRef.current;
+                    if (!wrap) return;
+                    const box = wrap.getBoundingClientRect();
+                    setHover({
+                      index,
+                      x: event.clientX - box.left + wrap.scrollLeft,
+                      y: event.clientY - box.top,
+                    });
+                  }}
+                  onMouseLeave={() => setHover(null)}
+                />
               </g>
             );
           })}
+
+          <line
+            x1={padding.left}
+            y1={baseline}
+            x2={width - padding.right}
+            y2={baseline}
+            stroke={CHART.axisText}
+            strokeOpacity={0.4}
+          />
         </svg>
       </div>
     </div>
