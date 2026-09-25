@@ -4,6 +4,8 @@ import type {
   EvaluationGoal,
 } from '../../api/types';
 import { useIntl } from '../../i18n';
+import { FormSection } from '../forms/FormSection';
+import { PlanItemList } from './PlanItemList';
 import { formatGoalWeight } from '../../utils/goalsPlanning';
 import { formatLocalizedRatingDisplay } from '../../utils/ratingLevelLabels';
 
@@ -20,20 +22,15 @@ export function EvaluationTextListSection({
 }: EvaluationTextListSectionProps) {
   const { formatMessage } = useIntl();
   return (
-    <div className="card">
-      <h2>{title}</h2>
+    <FormSection title={title}>
       {items.length === 0 ? (
-        <p className="empty">
+        <p className="empty-inline">
           {emptyMessage ?? formatMessage({ id: 'evaluation.noItems' })}
         </p>
       ) : (
-        <ul>
-          {items.map((item) => (
-            <li key={item.id}>{item.description}</li>
-          ))}
-        </ul>
+        <PlanItemList items={items} />
       )}
-    </div>
+    </FormSection>
   );
 }
 
@@ -109,36 +106,34 @@ export function EvaluationGoalsList({
 }: EvaluationGoalsListProps) {
   const { formatMessage } = useIntl();
   return (
-    <div className="card">
-      <h2>{formatMessage({ id: 'evaluation.goalsTitle' })}</h2>
-      <ul>
-        {goals.map((g) => (
-          <li key={g.id}>
-            {g.description}
-            {g.weight != null && (
-              <span className="goal-weight-tag">
-                {formatGoalWeight(g.weight)}
-              </span>
-            )}
-            {showRatings && g.ratingLevelLabel && (
-              <span style={{ color: 'var(--muted)' }}>
-                {' '}
-                —{' '}
-                {formatLocalizedRatingDisplay(
-                  formatMessage,
-                  g.ratingLevelValue,
-                  g.ratingLevelLabel,
-                )}
-              </span>
-            )}
-          </li>
-        ))}
-      </ul>
-      {goals.length === 0 && (
-        <p className="empty">
+    <FormSection title={formatMessage({ id: 'evaluation.goalsTitle' })}>
+      {goals.length === 0 ? (
+        <p className="empty-inline">
           {emptyMessage ?? formatMessage({ id: 'evaluation.goalsNotDefined' })}
         </p>
+      ) : (
+        <PlanItemList
+          items={goals}
+          renderAside={(g) => (
+            <>
+              {showRatings && g.ratingLevelLabel && (
+                <span className="plan-item-list__meta">
+                  {formatLocalizedRatingDisplay(
+                    formatMessage,
+                    g.ratingLevelValue,
+                    g.ratingLevelLabel,
+                  )}
+                </span>
+              )}
+              {g.weight != null && (
+                <span className="goal-weight-tag">
+                  {formatGoalWeight(g.weight)}
+                </span>
+              )}
+            </>
+          )}
+        />
       )}
-    </div>
+    </FormSection>
   );
 }

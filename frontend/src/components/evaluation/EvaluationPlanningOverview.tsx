@@ -5,6 +5,7 @@ import {
   ConditionsFulfilledToggle,
   ConditionsNotMetCommentField,
 } from './ConditionsFulfilledControls';
+import { PlanItemList } from './PlanItemList';
 import { RatingScale } from './RatingScale';
 import { SectionProgress } from './SectionProgress';
 import {
@@ -13,10 +14,7 @@ import {
   findRatingLevel,
   isNotRated,
 } from '../../utils/scoring';
-import {
-  formatLocalizedRatingDisplay,
-  formatRatingLevelLabel,
-} from '../../utils/ratingLevelLabels';
+import { formatLocalizedRatingDisplay } from '../../utils/ratingLevelLabels';
 import { formatGoalWeight } from '../../utils/goalsPlanning';
 
 interface EvaluationGoalsEditableProps {
@@ -93,9 +91,6 @@ function EvaluationGoalsEditable({
             <th style={{ width: '6rem' }}>
               {formatMessage({ id: 'evaluation.goalShare' })}
             </th>
-            <th style={{ width: '11rem' }}>
-              {formatMessage({ id: 'evaluation.descriptiveLabel' })}
-            </th>
           </tr>
         </thead>
         <tbody>
@@ -159,18 +154,6 @@ function EvaluationGoalsEditable({
                   })}
                 >
                   {goalShare(g.weight)}
-                </td>
-                <td
-                  className="cell-muted"
-                  data-label={formatMessage({
-                    id: 'evaluation.descriptiveLabel',
-                  })}
-                >
-                  {formatRatingLevelLabel(formatMessage, {
-                    level: selectedLevel,
-                    value: g.ratingLevelValue,
-                    label: g.ratingLevelLabel,
-                  })}
                 </td>
               </tr>
             );
@@ -254,25 +237,15 @@ export function EvaluationPlanningOverview({
             {evaluation.conditions.length > 0 && (
               <FormSection
                 title={formatMessage({ id: 'evaluation.conditionsTitle' })}
-                variant="secondary"
               >
-                <ul className="readonly-list">
-                  {evaluation.conditions.map((c) => (
-                    <li key={c.id}>{c.description}</li>
-                  ))}
-                </ul>
+                <PlanItemList items={evaluation.conditions} />
               </FormSection>
             )}
             {evaluation.criteria.length > 0 && (
               <FormSection
                 title={formatMessage({ id: 'evaluation.criteriaTitle' })}
-                variant="secondary"
               >
-                <ul className="readonly-list">
-                  {evaluation.criteria.map((c) => (
-                    <li key={c.id}>{c.description}</li>
-                  ))}
-                </ul>
+                <PlanItemList items={evaluation.criteria} />
               </FormSection>
             )}
           </div>

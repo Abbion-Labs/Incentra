@@ -1,6 +1,6 @@
 import type { TextItemDraft } from '../../utils/goalsPlanning';
-import { useIntl } from '../../i18n';
 import { TEXT_LIMITS } from '../../utils/textLimits';
+import { AddItemButton, RemoveItemButton } from './ListItemButtons';
 
 const maxLength = TEXT_LIMITS.planItem;
 // Brojač se pojavljuje tek kad se tekst približi granici.
@@ -19,8 +19,6 @@ export function TextListEditor({
   placeholder,
   addLabel,
 }: TextListEditorProps) {
-  const { formatMessage } = useIntl();
-
   return (
     <>
       <div className="form-list">
@@ -47,28 +45,20 @@ export function TextListEditor({
               )}
             </div>
             {items.length > 1 && (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
+              <RemoveItemButton
                 onClick={() => setItems(items.filter((_, i) => i !== idx))}
-                aria-label={formatMessage({ id: 'common.removeItem' })}
-              >
-                {formatMessage({ id: 'common.remove' })}
-              </button>
+              />
             )}
           </div>
         ))}
       </div>
       <div className="form-list__footer">
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
+        <AddItemButton
+          label={addLabel}
           onClick={() =>
             setItems([...items, { description: '', sortOrder: items.length }])
           }
-        >
-          {addLabel}
-        </button>
+        />
       </div>
     </>
   );

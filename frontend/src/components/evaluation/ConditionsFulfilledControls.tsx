@@ -6,25 +6,51 @@ interface ConditionsFulfilledToggleProps {
   onChange: (value: boolean) => void;
 }
 
+/**
+ * Da li su uslovi ispunjeni: izbor Da/Ne u stilu ocene. Ako nisu, ciljevi se
+ * ne ocenjuju nego se upisuje obrazloženje.
+ */
 export function ConditionsFulfilledToggle({
   checked,
   editable,
   onChange,
 }: ConditionsFulfilledToggleProps) {
   const { formatMessage } = useIntl();
+  const label = formatMessage({ id: 'evaluation.conditionsFulfilledLabel' });
+  const options = [
+    { value: true, labelKey: 'common.yes' },
+    { value: false, labelKey: 'common.no' },
+  ] as const;
 
   return (
-    <label className="conditions-fulfilled-toggle">
-      <input
-        type="checkbox"
-        checked={checked}
-        disabled={!editable}
-        onChange={(e) => onChange(e.target.checked)}
-      />
-      <span>
-        {formatMessage({ id: 'evaluation.conditionsFulfilledLabel' })}
+    <div className="conditions-choice">
+      <span className="conditions-choice__label" id="conditions-choice-label">
+        {formatMessage({ id: 'evaluation.conditionsFulfilledShort' })}
       </span>
-    </label>
+      <div
+        className={`rating-scale conditions-choice__options${editable ? '' : ' rating-scale--readonly'}`}
+        role="radiogroup"
+        aria-labelledby="conditions-choice-label"
+        title={label}
+      >
+        {options.map((option) => {
+          const selected = checked === option.value;
+          return (
+            <button
+              key={String(option.value)}
+              type="button"
+              role="radio"
+              aria-checked={selected}
+              className={`rating-scale__option conditions-choice__option${selected ? ' is-selected' : ''}${option.value ? '' : ' is-negative'}`}
+              disabled={!editable}
+              onClick={() => onChange(option.value)}
+            >
+              {formatMessage({ id: option.labelKey })}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 

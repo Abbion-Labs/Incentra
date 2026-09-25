@@ -93,9 +93,6 @@ export function MeasuresEditorSection({
   return (
     <FormSection
       title={formatMessage({ id: 'evaluation.measuresTitle' })}
-      hint={
-        editable ? formatMessage({ id: 'evaluation.measuresHint' }) : undefined
-      }
       meta={
         <SectionProgress
           rated={ratedCount}
