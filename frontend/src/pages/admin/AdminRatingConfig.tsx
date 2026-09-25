@@ -5,7 +5,7 @@ import { useIntl } from '../../i18n';
 import { formatDescriptiveRatingLabel } from '../../utils/descriptiveRating';
 import { useToast } from '../../hooks';
 import { isEditConflict } from '../../utils/editConflict';
-import { AdminPageHeader } from './components/AdminPageHeader';
+import { TableIconButton } from '../../components/common/TableIconButton';
 import { TEXT_LIMITS } from '../../utils/textLimits';
 
 interface RatingFormValues {
@@ -49,6 +49,8 @@ export function AdminRatingConfig() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Forma za unos je skrivena dok se ne izabere dodavanje ili izmena.
+  const [formOpen, setFormOpen] = useState(false);
   // Verzija opisne ocene sa kojom je forma otvorena; šalje se uz izmenu.
   const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [form, setForm] = useState<RatingFormValues>(emptyForm());
@@ -89,10 +91,23 @@ export function AdminRatingConfig() {
     setForm(emptyForm());
   }
 
+  function openCreate() {
+    startCreate();
+    setFormOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    startCreate();
+    setFormOpen(false);
+  }
+
   function startEdit(rating: DescriptiveRating) {
     setEditingId(rating.id);
     setEditingVersion(rating.version);
     setForm(ratingToForm(rating));
+    setFormOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
   function setField<K extends keyof RatingFormValues>(
@@ -112,10 +127,10 @@ export function AdminRatingConfig() {
       if (fresh) {
         startEdit(fresh);
       } else {
-        startCreate();
+        closeForm();
       }
     } catch {
-      startCreate();
+      closeForm();
     }
     await load();
   }
@@ -140,10 +155,11 @@ export function AdminRatingConfig() {
         );
         setEditingVersion(saved.version);
         toast.success(formatMessage({ id: 'alerts.descriptiveRatingUpdated' }));
+        closeForm();
       } else {
         await api.post('/api/descriptive-ratings', payload);
         toast.success(formatMessage({ id: 'alerts.descriptiveRatingAdded' }));
-        startCreate();
+        closeForm();
       }
       await load();
     } catch (err) {
@@ -161,170 +177,174 @@ export function AdminRatingConfig() {
     }
   }
 
+  const sharesComplete = Math.abs(totalRecommendedPercent - 100) <= 0.5;
+
   return (
     <div className="admin-page">
-      <AdminPageHeader
-        actions={
-          editingId ? (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={startCreate}
-            >
-              {formatMessage({ id: 'admin.ratingConfig.newDescriptiveRating' })}
-            </button>
-          ) : null
-        }
-      />
-
-      <form
-        className="card admin-form admin-rating-form"
-        onSubmit={handleSubmit}
-      >
-        <div
-          className={`admin-rating-form__grid${editingId ? ' admin-rating-form__grid--editing' : ''}`}
+      {formOpen && (
+        <form
+          className="card admin-form admin-rating-form"
+          onSubmit={handleSubmit}
         >
-          <div className="form-row">
-            <label htmlFor="rating-code">
-              {formatMessage({ id: 'admin.ratingConfig.code' })}
-            </label>
-            <input
-              id="rating-code"
-              value={form.code}
-              maxLength={TEXT_LIMITS.code}
-              onChange={(e) => setField('code', e.target.value.toUpperCase())}
-              required
-              disabled={!!editingId}
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="rating-name">
-              {formatMessage({ id: 'common.name' })}
-            </label>
-            <input
-              id="rating-name"
-              value={form.name}
-              onChange={(e) => setField('name', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="rating-min">
-              {formatMessage({ id: 'admin.ratingConfig.minAverage' })}
-            </label>
-            <input
-              id="rating-min"
-              type="number"
-              step="0.01"
-              min="0"
-              max="5"
-              value={form.minAverage}
-              onChange={(e) => setField('minAverage', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="rating-max">
-              {formatMessage({ id: 'admin.ratingConfig.maxAverage' })}
-            </label>
-            <input
-              id="rating-max"
-              type="number"
-              step="0.01"
-              min="0"
-              max="5"
-              value={form.maxAverage}
-              onChange={(e) => setField('maxAverage', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="rating-sort">
-              {formatMessage({ id: 'admin.ratingConfig.sortOrder' })}
-            </label>
-            <input
-              id="rating-sort"
-              type="number"
-              value={form.sortOrder}
-              onChange={(e) => setField('sortOrder', e.target.value)}
-              required
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="rating-share">
-              {formatMessage({ id: 'admin.ratingConfig.recommendedShare' })}
-            </label>
-            <input
-              id="rating-share"
-              type="number"
-              step="0.1"
-              min="0"
-              max="100"
-              value={form.recommendedSharePercent}
-              onChange={(e) =>
-                setField('recommendedSharePercent', e.target.value)
-              }
-              required
-            />
-          </div>
-          {editingId && (
+          <h2 className="admin-form__title">
+            {formatMessage({
+              id: editingId
+                ? 'admin.ratingConfig.editDescriptiveRating'
+                : 'admin.ratingConfig.newDescriptiveRating',
+            })}
+          </h2>
+          <div
+            className={`admin-rating-form__grid${editingId ? ' admin-rating-form__grid--editing' : ''}`}
+          >
             <div className="form-row">
-              <label htmlFor="rating-active">
-                {formatMessage({ id: 'admin.active' })}
+              <label htmlFor="rating-code">
+                {formatMessage({ id: 'admin.ratingConfig.code' })}
               </label>
-              <select
-                id="rating-active"
-                value={form.isActive ? '1' : '0'}
-                onChange={(e) => setField('isActive', e.target.value === '1')}
-              >
-                <option value="1">{formatMessage({ id: 'common.yes' })}</option>
-                <option value="0">{formatMessage({ id: 'common.no' })}</option>
-              </select>
+              <input
+                id="rating-code"
+                value={form.code}
+                maxLength={TEXT_LIMITS.code}
+                onChange={(e) => setField('code', e.target.value.toUpperCase())}
+                required
+                disabled={!!editingId}
+              />
             </div>
-          )}
-        </div>
-        <div className="actions">
-          <button type="submit" className="btn btn-primary" disabled={saving}>
-            {saving
-              ? formatMessage({ id: 'buttons.saving' })
-              : editingId
-                ? formatMessage({ id: 'buttons.saveChanges' })
-                : formatMessage({ id: 'buttons.add' })}
-          </button>
-          {editingId && (
+            <div className="form-row">
+              <label htmlFor="rating-name">
+                {formatMessage({ id: 'common.name' })}
+              </label>
+              <input
+                id="rating-name"
+                value={form.name}
+                onChange={(e) => setField('name', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="rating-min">
+                {formatMessage({ id: 'admin.ratingConfig.minAverage' })}
+              </label>
+              <input
+                id="rating-min"
+                type="number"
+                step="0.01"
+                min="0"
+                max="5"
+                value={form.minAverage}
+                onChange={(e) => setField('minAverage', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="rating-max">
+                {formatMessage({ id: 'admin.ratingConfig.maxAverage' })}
+              </label>
+              <input
+                id="rating-max"
+                type="number"
+                step="0.01"
+                min="0"
+                max="5"
+                value={form.maxAverage}
+                onChange={(e) => setField('maxAverage', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="rating-sort">
+                {formatMessage({ id: 'admin.ratingConfig.sortOrder' })}
+              </label>
+              <input
+                id="rating-sort"
+                type="number"
+                value={form.sortOrder}
+                onChange={(e) => setField('sortOrder', e.target.value)}
+                required
+              />
+            </div>
+            <div className="form-row">
+              <label htmlFor="rating-share">
+                {formatMessage({ id: 'admin.ratingConfig.recommendedShare' })}
+              </label>
+              <input
+                id="rating-share"
+                type="number"
+                step="0.1"
+                min="0"
+                max="100"
+                value={form.recommendedSharePercent}
+                onChange={(e) =>
+                  setField('recommendedSharePercent', e.target.value)
+                }
+                required
+              />
+            </div>
+            {editingId && (
+              <div className="form-row">
+                <label htmlFor="rating-active">
+                  {formatMessage({ id: 'admin.active' })}
+                </label>
+                <select
+                  id="rating-active"
+                  value={form.isActive ? '1' : '0'}
+                  onChange={(e) => setField('isActive', e.target.value === '1')}
+                >
+                  <option value="1">
+                    {formatMessage({ id: 'common.yes' })}
+                  </option>
+                  <option value="0">
+                    {formatMessage({ id: 'common.no' })}
+                  </option>
+                </select>
+              </div>
+            )}
+          </div>
+          <div className="actions">
+            <button type="submit" className="btn btn-primary" disabled={saving}>
+              {saving
+                ? formatMessage({ id: 'buttons.saving' })
+                : editingId
+                  ? formatMessage({ id: 'buttons.saveChanges' })
+                  : formatMessage({ id: 'buttons.add' })}
+            </button>
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={startCreate}
+              onClick={closeForm}
             >
               {formatMessage({ id: 'buttons.cancel' })}
             </button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
 
-      <div className="card">
-        <div className="admin-rating-summary">
-          <p className="card__hint">
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
+          {/* Zbir preporučenih udela aktivnih ocena: zeleno kad je 100%. */}
+          <span
+            className={`share-total ${sharesComplete ? 'is-complete' : 'is-invalid'}`}
+            role="status"
+          >
             {formatMessage({ id: 'admin.ratingConfig.totalRecommendedActive' })}{' '}
-            <strong
-              className={
-                Math.abs(totalRecommendedPercent - 100) > 0.5
-                  ? 'text-warning'
-                  : ''
-              }
-            >
-              {totalRecommendedPercent.toFixed(1)}%
-            </strong>
-            {Math.abs(totalRecommendedPercent - 100) > 0.5 &&
+            {totalRecommendedPercent.toFixed(1)}%
+            {!sharesComplete &&
               formatMessage({ id: 'admin.ratingConfig.idealShareHint' })}
-          </p>
+          </span>
+          {!formOpen && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={openCreate}
+            >
+              {formatMessage({ id: 'admin.ratingConfig.addDescriptiveRating' })}
+            </button>
+          )}
         </div>
         {loading ? (
           <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
         ) : (
           <div className="table-wrap">
-            <table className="table table--hover">
+            <table className="table table--hover table--stack">
               <thead>
                 <tr>
                   <th className="col-text">
@@ -356,34 +376,59 @@ export function AdminRatingConfig() {
               <tbody>
                 {ratings.map((rating) => (
                   <tr key={rating.id}>
-                    <td className="col-text">
+                    <td className="col-text stack-title">
                       {formatDescriptiveRatingLabel(formatMessage, {
                         code: rating.code,
                         name: rating.name,
                       })}
                     </td>
-                    <td className="col-meta">{rating.code}</td>
-                    <td className="col-num">
+                    <td
+                      className="col-meta cell-code"
+                      data-label={formatMessage({
+                        id: 'admin.ratingConfig.code',
+                      })}
+                    >
+                      {rating.code}
+                    </td>
+                    <td
+                      className="col-num"
+                      data-label={formatMessage({
+                        id: 'admin.ratingConfig.averageRange',
+                      })}
+                    >
                       {rating.minAverage?.toFixed(2)} –{' '}
                       {rating.maxAverage?.toFixed(2)}
                     </td>
-                    <td className="col-num">
+                    <td
+                      className="col-num"
+                      data-label={formatMessage({
+                        id: 'admin.ratingConfig.recommendedPercent',
+                      })}
+                    >
                       {(rating.recommendedShare * 100).toFixed(1)}%
                     </td>
-                    <td className="col-num">{rating.sortOrder}</td>
-                    <td className="col-meta table-col--compact">
+                    <td
+                      className="col-num"
+                      data-label={formatMessage({
+                        id: 'admin.ratingConfig.sortOrder',
+                      })}
+                    >
+                      {rating.sortOrder}
+                    </td>
+                    <td
+                      className="col-meta table-col--compact"
+                      data-label={formatMessage({ id: 'admin.active' })}
+                    >
                       {rating.isActive
                         ? formatMessage({ id: 'common.yes' })
                         : formatMessage({ id: 'common.no' })}
                     </td>
                     <td className="col-actions">
-                      <button
-                        type="button"
-                        className="btn btn-secondary btn-sm"
+                      <TableIconButton
+                        icon="edit"
+                        label={formatMessage({ id: 'buttons.edit' })}
                         onClick={() => startEdit(rating)}
-                      >
-                        {formatMessage({ id: 'buttons.edit' })}
-                      </button>
+                      />
                     </td>
                   </tr>
                 ))}

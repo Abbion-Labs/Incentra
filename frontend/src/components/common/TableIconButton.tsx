@@ -38,7 +38,11 @@ export function TableIconButton({
       aria-label={label}
       aria-pressed={icon === 'history' ? active : undefined}
       title={label}
-      onClick={onClick}
+      onClick={(event) => {
+        // Red tabele može biti klikabilan; akcija ne sme da otvori i njega.
+        event.stopPropagation();
+        onClick();
+      }}
     >
       <svg
         viewBox="0 0 24 24"

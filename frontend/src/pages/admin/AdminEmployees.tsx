@@ -20,7 +20,6 @@ import {
   employeeToForm,
   type EmployeeFormValues,
 } from './components/AdminEmployeeForm';
-import { AdminPageHeader } from './components/AdminPageHeader';
 import {
   adminEmployeeProfileState,
   adminEvaluatorAnalyticsState,
@@ -30,6 +29,7 @@ import {
   FilterChip,
   ToolbarSearch,
 } from '../../components/common/ToolbarSearch';
+import { TableIconButton } from '../../components/common/TableIconButton';
 import { isEditConflict } from '../../utils/editConflict';
 
 function buildEmployeePayload(
@@ -72,6 +72,8 @@ export function AdminEmployees() {
   const [formValues, setFormValues] =
     useState<EmployeeFormValues>(emptyEmployeeForm());
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Forma za unos je skrivena dok se ne izabere dodavanje ili izmena.
+  const [formOpen, setFormOpen] = useState(false);
   // Verzija zapisa sa kojom je forma otvorena; šalje se uz izmenu.
   const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [linkedUserId, setLinkedUserId] = useState('');
@@ -163,12 +165,24 @@ export function AdminEmployees() {
     setLinkedUserId('');
   }
 
+  function openCreate() {
+    startCreate();
+    setFormOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    startCreate();
+    setFormOpen(false);
+  }
+
   function startEdit(employee: Employee, e?: React.MouseEvent) {
     e?.stopPropagation();
     setEditingId(employee.id);
     setEditingVersion(employee.version);
     setFormValues(employeeToForm(employee));
     setLinkedUserId(employee.userId ? String(employee.userId) : '');
+    setFormOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
@@ -217,7 +231,7 @@ export function AdminEmployees() {
     try {
       startEdit(await api.get<Employee>(`/api/employees/${employeeId}`));
     } catch {
-      startCreate();
+      closeForm();
     }
     await reload();
   }
@@ -247,11 +261,12 @@ export function AdminEmployees() {
           });
         }
         toast.success(formatMessage({ id: 'alerts.employeeUpdated' }));
+        closeForm();
       } else {
         const payload = buildEmployeePayload(formValues, false);
         await api.post('/api/employees', payload);
         toast.success(formatMessage({ id: 'alerts.employeeAdded' }));
-        startCreate();
+        closeForm();
       }
       await Promise.all([reload(), loadLookups()]);
     } catch (e) {
@@ -276,39 +291,27 @@ export function AdminEmployees() {
 
   return (
     <div className="admin-page">
-      <AdminPageHeader
-        actions={
-          editingId ? (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={startCreate}
-            >
-              {formatMessage({ id: 'admin.employeeForm.newEmployee' })}
-            </button>
-          ) : null
-        }
-      />
-
-      <AdminEmployeeForm
-        values={formValues}
-        orgUnits={orgUnits}
-        positions={positions}
-        educationLevels={educationLevels}
-        evaluators={formEvaluators}
-        users={users}
-        linkedUserId={linkedUserId}
-        savedUserId={
-          employees.find((employee) => employee.id === editingId)?.userId ??
-          null
-        }
-        editingId={editingId}
-        saving={saving}
-        onChange={setFormValues}
-        onLinkedUserChange={setLinkedUserId}
-        onSubmit={handleSubmit}
-        onCancel={startCreate}
-      />
+      {formOpen && (
+        <AdminEmployeeForm
+          values={formValues}
+          orgUnits={orgUnits}
+          positions={positions}
+          educationLevels={educationLevels}
+          evaluators={formEvaluators}
+          users={users}
+          linkedUserId={linkedUserId}
+          savedUserId={
+            employees.find((employee) => employee.id === editingId)?.userId ??
+            null
+          }
+          editingId={editingId}
+          saving={saving}
+          onChange={setFormValues}
+          onLinkedUserChange={setLinkedUserId}
+          onSubmit={handleSubmit}
+          onCancel={closeForm}
+        />
+      )}
 
       <div className="card card--flush data-panel">
         <div className="data-panel__toolbar">
@@ -349,6 +352,15 @@ export function AdminEmployees() {
               </option>
             </FilterChip>
           </ToolbarSearch>
+          {!formOpen && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={openCreate}
+            >
+              {formatMessage({ id: 'admin.employeeForm.addEmployee' })}
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -356,7 +368,7 @@ export function AdminEmployees() {
         ) : (
           <>
             <div className="table-wrap">
-              <table className="table table--hover table--clickable">
+              <table className="table table--hover table--clickable table--stack">
                 <thead>
                   <tr>
                     <th className="col-text">
@@ -403,14 +415,27 @@ export function AdminEmployees() {
                           }
                         }}
                       >
-                        <td className="cell-primary col-text">
+                        <td className="cell-primary col-text stack-title">
                           {employee.fullName}
                         </td>
-                        <td className="col-text">
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({
+                            id: 'evaluation.orgUnitShort',
+                          })}
+                        >
                           {employee.organizationUnitName}
                         </td>
-                        <td className="col-text">{employee.jobPositionName}</td>
-                        <td className="col-text">
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({ id: 'common.position' })}
+                        >
+                          {employee.jobPositionName}
+                        </td>
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({ id: 'admin.evaluators' })}
+                        >
                           {employee.evaluatorEmployeeId &&
                           employee.evaluatorFullName ? (
                             <button
@@ -429,25 +454,29 @@ export function AdminEmployees() {
                             '—'
                           )}
                         </td>
-                        <td className="col-text">
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({ id: 'common.account' })}
+                        >
                           {employee.userId
                             ? (users.find((u) => u.id === employee.userId)
                                 ?.email ?? `#${employee.userId}`)
                             : '—'}
                         </td>
-                        <td className="col-meta table-col--compact">
+                        <td
+                          className="col-meta table-col--compact"
+                          data-label={formatMessage({ id: 'common.active' })}
+                        >
                           {employee.isActive
                             ? formatMessage({ id: 'common.yes' })
                             : formatMessage({ id: 'common.no' })}
                         </td>
                         <td className="col-actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            onClick={(e) => startEdit(employee, e)}
-                          >
-                            {formatMessage({ id: 'buttons.edit' })}
-                          </button>
+                          <TableIconButton
+                            icon="edit"
+                            label={formatMessage({ id: 'buttons.edit' })}
+                            onClick={() => startEdit(employee)}
+                          />
                         </td>
                       </tr>
                     ))

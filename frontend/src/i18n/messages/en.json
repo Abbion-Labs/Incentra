@@ -1,5 +1,6 @@
 {
   "navigation": {
+    "admin": "Administration",
     "brand": "Incentra",
     "main": "Main navigation",
     "myAccount": "My account",
@@ -12,8 +13,8 @@
     "analytics": "Analytics",
     "controllerEmployees": "My employees",
     "controllerEvaluators": "My evaluators",
+    "evaluatorAnalytics": "Evaluator analytics",
     "employeeEvaluations": "My evaluations",
-    "adminCrud": "CRUD",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
     "activeRole": "Active role"
@@ -325,6 +326,9 @@
     "searchNamePlaceholder": "First name or last name...",
     "users": {
       "newUser": "New user",
+      "addUser": "Add user",
+      "editUser": "Edit user",
+      "searchPlaceholder": "Email or employee name...",
       "createUser": "Create user",
       "noUsers": "No users.",
       "linkedEmployee": "Linked employee",
@@ -340,16 +344,18 @@
     },
     "employeeForm": {
       "newEmployee": "New employee",
+      "editEmployee": "Edit employee",
       "addEmployee": "Add employee",
       "educationLevel": "Education level",
       "reassignConfirm": "The employee gets a new evaluator.\n\nDraft evaluations moving to the new evaluator: {drafts}\nSubmitted evaluations staying with the current evaluator until the controller returns them for revision: {submitted}\n\nDo you want to continue?",
       "unlinkAccount": "Unlink account",
       "unlinkHint": "An account is unlinked only to correct a mistake, and only once it has none of the Employee, Evaluator and Controller roles.",
-      "unlinkOnSave": "The account will be unlinked when you save.",
-      "linkHint": "An account is usually linked when it is created, on the Users page. A free account can be linked here."
+      "unlinkOnSave": "The account will be unlinked when you save."
     },
     "ratingConfig": {
       "newDescriptiveRating": "New descriptive rating",
+      "editDescriptiveRating": "Edit descriptive rating",
+      "addDescriptiveRating": "Add descriptive rating",
       "code": "Code",
       "recommendedShare": "Recommended share (%)",
       "recommendedPercent": "Recommended %",
@@ -363,8 +369,7 @@
     "evaluatorSettings": {
       "newSettings": "New settings",
       "noSettings": "No settings.",
-      "selectToEdit": "Pick an evaluator from the table to change their settings.",
-      "closeEditor": "Close editor",
+      "editTitle": "Edit evaluator",
       "noController": "No controller (the evaluation is final once submitted)",
       "noControllerShort": "No controller"
     },

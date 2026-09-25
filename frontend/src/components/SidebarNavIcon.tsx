@@ -10,7 +10,12 @@ export type SidebarNavIconName =
   | 'evaluators'
   | 'controller'
   | 'my-evaluations'
-  | 'crud'
+  | 'admin'
+  | 'users'
+  | 'id-card'
+  | 'hierarchy'
+  | 'lookups'
+  | 'rating-scale'
   | 'salaries'
   | 'parameters'
   | 'results';
@@ -90,11 +95,61 @@ export function SidebarNavIcon({ name }: SidebarNavIconProps) {
           <path d="M8 17h5" />
         </svg>
       );
-    case 'crud':
+    case 'admin':
       return (
         <svg {...iconProps}>
-          <path d="M12 20h9" />
-          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
+          <path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" />
+          <circle cx="12" cy="11" r="2.5" />
+          <path d="M8.5 16.5a4 4 0 0 1 7 0" />
+        </svg>
+      );
+    case 'id-card':
+      return (
+        <svg {...iconProps}>
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <circle cx="9" cy="11" r="2" />
+          <path d="M6.5 16a3 3 0 0 1 5 0" />
+          <path d="M14 10h4" />
+          <path d="M14 14h3" />
+        </svg>
+      );
+    case 'hierarchy':
+      return (
+        <svg {...iconProps}>
+          <rect x="9" y="3" width="6" height="5" rx="1" />
+          <rect x="3" y="16" width="6" height="5" rx="1" />
+          <rect x="15" y="16" width="6" height="5" rx="1" />
+          <path d="M12 8v4" />
+          <path d="M6 16v-2h12v2" />
+        </svg>
+      );
+    case 'users':
+      return (
+        <svg {...iconProps}>
+          <circle cx="12" cy="8" r="4" />
+          <path d="M4 21v-1a6 6 0 0 1 9-5.2" />
+          <circle cx="18" cy="17" r="2.5" />
+          <path d="M18 13.5v1" />
+          <path d="M18 19.5v1" />
+          <path d="M21.5 17h-1" />
+          <path d="M15.5 17h-1" />
+        </svg>
+      );
+    case 'lookups':
+      return (
+        <svg {...iconProps}>
+          <path d="M8 6h13" />
+          <path d="M8 12h13" />
+          <path d="M8 18h13" />
+          <path d="M3 6h.01" />
+          <path d="M3 12h.01" />
+          <path d="M3 18h.01" />
+        </svg>
+      );
+    case 'rating-scale':
+      return (
+        <svg {...iconProps}>
+          <path d="M12 3l2.6 5.3 5.9.9-4.2 4.1 1 5.8L12 16.4l-5.3 2.7 1-5.8-4.2-4.1 5.9-.9z" />
         </svg>
       );
     case 'salaries':
