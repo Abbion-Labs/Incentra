@@ -209,6 +209,7 @@
     "continueToEvaluation": "Continue to evaluation",
     "goalDescriptionPlaceholder": "Goal description...",
     "addGoal": "Add goal",
+    "goalShare": "Weight",
     "goalWeight": "Weight",
     "goalWeightLabel": "Weight of goal {index} in percent",
     "goalWeightHint": "How much of the goals average this goal carries. All goals together must make 100%, and each at least {min}%.",

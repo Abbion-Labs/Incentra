@@ -209,6 +209,7 @@
     "continueToEvaluation": "Nastavi na ocenjivanje",
     "goalDescriptionPlaceholder": "Opis cilja...",
     "addGoal": "Dodaj cilj",
+    "goalShare": "Ponder",
     "goalWeight": "Težina",
     "goalWeightLabel": "Težina cilja {index} u procentima",
     "goalWeightHint": "Koliki deo proseka ciljeva nosi ovaj cilj. Zbir svih ciljeva mora biti 100%, a svaki cilj najmanje {min}%.",

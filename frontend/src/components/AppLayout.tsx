@@ -4,6 +4,7 @@ import { useAuth } from '../auth/AuthContext';
 import { useIntl } from '../i18n';
 import { BrandMark } from './BrandMark';
 import { LocaleSwitcher } from './LocaleSwitcher';
+import { RoleSwitcher } from './RoleSwitcher';
 import type { ActiveRoleNavigationState } from './ProtectedRoute';
 import { roleLabel } from '../utils/status';
 import {
@@ -222,20 +223,14 @@ export function AppLayout({
     </button>
   );
 
-  const roleSwitch = showRoleSwitch && (
-    <select
-      className="topbar-role-switch"
-      value={activeRole ?? ''}
-      onChange={(e) => switchRole(e.target.value)}
-      aria-label={formatMessage({ id: 'navigation.activeRole' })}
-      title={formatMessage({ id: 'navigation.activeRole' })}
-    >
-      {roleOptions.map((role) => (
-        <option key={role} value={role}>
-          {roleLabel(role, formatMessage)}
-        </option>
-      ))}
-    </select>
+  const roleSwitch = showRoleSwitch && activeRole && (
+    <RoleSwitcher
+      roles={roleOptions}
+      activeRole={activeRole}
+      label={formatMessage({ id: 'navigation.activeRole' })}
+      roleLabel={(role) => roleLabel(role, formatMessage)}
+      onChange={switchRole}
+    />
   );
 
   return (

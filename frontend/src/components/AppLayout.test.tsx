@@ -72,10 +72,10 @@ describe('AppLayout', () => {
     expect(sidebar.getByText('Ocenjivanje')).toBeTruthy();
     expect(sidebar.queryByText('Kontrola ocena')).toBeNull();
 
-    await userEvent.selectOptions(
-      screen.getByRole('combobox', { name: 'Aktivna uloga' }),
-      'CONTROLLER',
+    await userEvent.click(
+      screen.getByRole('button', { name: 'Aktivna uloga: Ocenjivač' }),
     );
+    await userEvent.click(screen.getByRole('option', { name: 'Kontrolor' }));
 
     expect(await screen.findByText('controller home')).toBeTruthy();
     expect(router.state.location.pathname).toBe('/controller/workflow');
@@ -97,7 +97,7 @@ describe('AppLayout', () => {
     };
     renderLayout('EVALUATOR');
 
-    expect(screen.queryByRole('combobox')).toBeNull();
+    expect(screen.queryByRole('button', { name: /Aktivna uloga/ })).toBeNull();
     expect(screen.getByText('Ocenjivač')).toBeTruthy();
   });
 });

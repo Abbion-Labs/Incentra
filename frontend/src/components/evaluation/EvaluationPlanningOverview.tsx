@@ -60,7 +60,12 @@ function EvaluationGoalsEditable({
     })),
     ratingLevels,
   );
-  const showWeights = evaluation.goals.some((goal) => goal.weight != null);
+  // Udeo cilja u proseku je ponder iz postavljanja ciljeva; bez pondera se
+  // prosek računa kao prosta sredina, pa svaki cilj ima jednak udeo.
+  const hasWeights = evaluation.goals.some((goal) => goal.weight != null);
+  const equalShare = Math.round(100 / evaluation.goals.length);
+  const goalShare = (weight: number | null) =>
+    hasWeights ? (formatGoalWeight(weight) ?? '0%') : `${equalShare}%`;
   const averageText = formatComponentAverage(
     goalsIncomplete(evaluation.goals, ratingLevels),
     goalsAverage,
@@ -75,13 +80,11 @@ function EvaluationGoalsEditable({
             <tr>
               <th style={{ width: '2rem' }}>#</th>
               <th>{formatMessage({ id: 'evaluation.goalDescription' })}</th>
-              {showWeights && (
-                <th style={{ width: '5rem' }}>
-                  {formatMessage({ id: 'evaluation.goalWeight' })}
-                </th>
-              )}
               <th style={{ width: '5.5rem' }}>
                 {formatMessage({ id: 'evaluation.rating' })}
+              </th>
+              <th style={{ width: '6rem' }}>
+                {formatMessage({ id: 'evaluation.goalShare' })}
               </th>
               <th style={{ width: '11rem' }}>
                 {formatMessage({ id: 'evaluation.descriptiveLabel' })}
@@ -103,16 +106,6 @@ function EvaluationGoalsEditable({
                     </span>
                     {g.description}
                   </td>
-                  {showWeights && (
-                    <td
-                      className="cell-muted cell-nowrap"
-                      data-label={formatMessage({
-                        id: 'evaluation.goalWeight',
-                      })}
-                    >
-                      {formatGoalWeight(g.weight)}
-                    </td>
-                  )}
                   <td data-label={formatMessage({ id: 'evaluation.rating' })}>
                     {editable ? (
                       <RatingValueSelect
@@ -145,6 +138,14 @@ function EvaluationGoalsEditable({
                         g.ratingLevelLabel,
                       )
                     )}
+                  </td>
+                  <td
+                    className="cell-nowrap goal-share"
+                    data-label={formatMessage({
+                      id: 'evaluation.goalShare',
+                    })}
+                  >
+                    {goalShare(g.weight)}
                   </td>
                   <td
                     className="cell-muted"
