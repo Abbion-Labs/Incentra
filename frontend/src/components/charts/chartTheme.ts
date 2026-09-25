@@ -50,3 +50,21 @@ export function barPath(
     'Z',
   ].join(' ');
 }
+
+/** Plava skala od svetle ka tamnoj, za veličinu (veća vrednost je tamnija). */
+export const SEQUENTIAL_BLUES = [
+  '#b9d0ee',
+  '#8fb3e0',
+  '#5f92d2',
+  '#3673bd',
+  '#1f5aa6',
+  '#173f7a',
+] as const;
+
+export function sequentialBlue(value: number, max: number): string {
+  if (max <= 0) return SEQUENTIAL_BLUES[0];
+  const step = Math.floor(
+    (Math.max(value, 0) / max) * (SEQUENTIAL_BLUES.length - 1) + 1e-4,
+  );
+  return SEQUENTIAL_BLUES[Math.min(step, SEQUENTIAL_BLUES.length - 1)];
+}

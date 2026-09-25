@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import type { CompensationPreviewPoint } from '../compensationPreview';
+import { ChartTooltip } from '../../../components/charts/ChartTooltip';
+import { CHART, barPath } from '../../../components/charts/chartTheme';
 import { useIntl } from '../../../i18n';
 import { formatAmount, formatNumber } from '../../../utils/formatLocale';
 
@@ -10,6 +12,15 @@ interface CompensationRatingPreviewChartProps {
   /** U panelu pored forme — kompaktniji prikaz koji popunjava visinu */
   variant?: 'default' | 'panel';
   hideFooter?: boolean;
+}
+
+/** Tooltip ne sme da izađe iznad okvira grafikona. */
+const TOOLTIP_MIN_Y = 84;
+const BELOW_THRESHOLD_COLOR = '#cbd5e1';
+
+/** Naziv ide posle vrednosti u tooltipu, pa mu dvotačka ne treba. */
+function withoutColon(label: string): string {
+  return label.replace(/:\s*$/, '');
 }
 
 function formatMoney(value: number, currency: string): string {
@@ -77,15 +88,20 @@ export function CompensationRatingPreviewChart({
   hideFooter = false,
 }: CompensationRatingPreviewChartProps) {
   const { formatMessage } = useIntl();
-  const [tooltip, setTooltip] = useState<{
-    rating: number;
-    monthly: number;
-    annual: number;
+  const [hover, setHover] = useState<{
+    index: number;
     x: number;
     y: number;
+    wrapWidth: number;
   } | null>(null);
 
   const isPanel = variant === 'panel';
+
+  // Ispod praga prihvatljivog učinka nema varijabile: sivo; iznad: brend plava.
+  const barColor = (rating: number) =>
+    rating < acceptablePerformanceRating
+      ? BELOW_THRESHOLD_COLOR
+      : CHART.primary;
 
   const dataMax = useMemo(
     () => Math.max(...points.map((point) => point.monthlyVariable), 0),
@@ -117,48 +133,47 @@ export function CompensationRatingPreviewChart({
   const groupWidth = chartWidth / points.length;
   const barWidth = Math.min(isPanel ? 40 : 48, groupWidth * 0.55);
 
-  function showTooltip(
-    event: React.MouseEvent<SVGRectElement>,
-    point: CompensationPreviewPoint,
-  ) {
+  function showTooltip(event: React.MouseEvent<SVGRectElement>, index: number) {
     const wrap = event.currentTarget.closest('.analytics-chart__canvas-wrap');
     if (!wrap) return;
     const rect = wrap.getBoundingClientRect();
-    setTooltip({
-      rating: point.rating,
-      monthly: point.monthlyVariable,
-      annual: point.annualVariable,
+    setHover({
+      index,
       x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
+      y: Math.max(event.clientY - rect.top, TOOLTIP_MIN_Y),
+      wrapWidth: rect.width,
     });
   }
+
+  const hovered = hover ? points[hover.index] : null;
 
   return (
     <div
       className={`analytics-chart${isPanel ? ' analytics-chart--panel' : ''}`}
     >
       <div className="analytics-chart__canvas-wrap">
-        {tooltip && (
-          <div
-            className="analytics-chart__tooltip"
-            style={{ left: tooltip.x, top: tooltip.y }}
-            role="tooltip"
-          >
-            <span className="analytics-chart__tooltip-period">
-              {formatMessage(
-                { id: 'charts.ratingTooltip' },
-                { rating: tooltip.rating },
-              )}
-            </span>
-            <strong>
-              {formatMessage({ id: 'charts.monthly' })}{' '}
-              {formatMoney(tooltip.monthly, currency)}
-            </strong>
-            <div>
-              {formatMessage({ id: 'charts.annual' })}{' '}
-              {formatMoney(tooltip.annual, currency)}
-            </div>
-          </div>
+        {hover && hovered && (
+          <ChartTooltip
+            title={formatMessage(
+              { id: 'charts.ratingTooltip' },
+              { rating: hovered.rating },
+            )}
+            rows={[
+              {
+                label: withoutColon(formatMessage({ id: 'charts.monthly' })),
+                value: formatMoney(hovered.monthlyVariable, currency),
+                color: barColor(hovered.rating),
+              },
+              {
+                label: withoutColon(formatMessage({ id: 'charts.annual' })),
+                value: formatMoney(hovered.annualVariable, currency),
+                color: barColor(hovered.rating),
+              },
+            ]}
+            x={hover.x}
+            y={hover.y}
+            containerWidth={hover.wrapWidth}
+          />
         )}
 
         <svg
@@ -172,8 +187,7 @@ export function CompensationRatingPreviewChart({
             x={12}
             y={padding.top + chartHeight / 2}
             textAnchor="middle"
-            fontSize="10"
-            fill="#64748b"
+            className="chart-axis-text"
             transform={`rotate(-90, 12, ${padding.top + chartHeight / 2})`}
           >
             {currency}
@@ -191,14 +205,13 @@ export function CompensationRatingPreviewChart({
                   y1={y}
                   x2={width - padding.right}
                   y2={y}
-                  stroke="#e2e8f0"
+                  stroke={CHART.grid}
                 />
                 <text
                   x={padding.left - 10}
                   y={y + 4}
                   textAnchor="end"
-                  fontSize="11"
-                  fill="#64748b"
+                  className="chart-axis-text"
                 >
                   {formatAxisMoney(value)}
                 </text>
@@ -211,7 +224,8 @@ export function CompensationRatingPreviewChart({
             y1={padding.top + chartHeight}
             x2={width - padding.right}
             y2={padding.top + chartHeight}
-            stroke="#94a3b8"
+            stroke={CHART.axisText}
+            strokeOpacity={0.4}
           />
 
           {points.map((point, index) => {
@@ -219,34 +233,49 @@ export function CompensationRatingPreviewChart({
             const barHeight = Math.max(normalized * chartHeight, 0);
             const x =
               padding.left + index * groupWidth + (groupWidth - barWidth) / 2;
-            const y = padding.top + chartHeight - barHeight;
             const belowThreshold = point.rating < acceptablePerformanceRating;
-            const fill = belowThreshold ? '#cbd5e1' : '#1e4d8c';
+            const visibleHeight = Math.max(
+              barHeight,
+              belowThreshold && point.monthlyVariable === 0 ? 2 : 0,
+            );
 
             return (
               <g key={point.rating}>
+                {hover?.index === index && (
+                  <rect
+                    x={padding.left + index * groupWidth + 4}
+                    y={padding.top}
+                    width={groupWidth - 8}
+                    height={chartHeight}
+                    rx={6}
+                    fill={CHART.highlight}
+                  />
+                )}
+                {visibleHeight > 0 && (
+                  <path
+                    d={barPath(
+                      x,
+                      padding.top + chartHeight - visibleHeight,
+                      barWidth,
+                      visibleHeight,
+                    )}
+                    fill={barColor(point.rating)}
+                  />
+                )}
                 <rect
-                  x={x}
-                  y={y}
-                  width={barWidth}
-                  height={Math.max(
-                    barHeight,
-                    belowThreshold && point.monthlyVariable === 0 ? 2 : 0,
-                  )}
-                  rx={4}
-                  fill={fill}
-                  className="analytics-chart__bar"
-                  onMouseEnter={(event) => showTooltip(event, point)}
-                  onMouseMove={(event) => showTooltip(event, point)}
-                  onMouseLeave={() => setTooltip(null)}
+                  x={padding.left + index * groupWidth}
+                  y={padding.top}
+                  width={groupWidth}
+                  height={chartHeight}
+                  fill="transparent"
+                  onMouseMove={(event) => showTooltip(event, index)}
+                  onMouseLeave={() => setHover(null)}
                 />
                 <text
                   x={x + barWidth / 2}
                   y={padding.top + chartHeight + 22}
                   textAnchor="middle"
-                  fontSize="13"
-                  fill="#334155"
-                  fontWeight={600}
+                  className="chart-category-text"
                 >
                   {point.rating}
                 </text>
