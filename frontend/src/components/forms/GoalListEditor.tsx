@@ -9,6 +9,7 @@ import {
   type GoalDraft,
 } from '../../utils/goalsPlanning';
 import { TEXT_LIMITS } from '../../utils/textLimits';
+import { AddItemButton, RemoveItemButton } from './ListItemButtons';
 
 const maxLength = TEXT_LIMITS.planItem;
 // Brojač se pojavljuje tek kad se tekst približi granici.
@@ -33,12 +34,10 @@ export function GoalListEditor({
 }: GoalListEditorProps) {
   const { formatMessage } = useIntl();
   const customized = hasCustomWeights(goals);
-  const { total, valid } = checkGoalWeights(goals);
   const weightHint = formatMessage(
     { id: 'evaluation.goalWeightHint' },
     { min: MIN_GOAL_WEIGHT },
   );
-  const hasDescribedGoal = goals.some((goal) => goal.description.trim());
 
   const update = (index: number, patch: Partial<GoalDraft>) => {
     const next = [...goals];
@@ -97,31 +96,23 @@ export function GoalListEditor({
               <FieldHint hint={weightHint} />
             </div>
             {goals.length > 1 && (
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
+              <RemoveItemButton
                 onClick={() => resize(goals.filter((_, i) => i !== idx))}
-                aria-label={formatMessage({ id: 'common.removeItem' })}
-              >
-                {formatMessage({ id: 'common.remove' })}
-              </button>
+              />
             )}
           </div>
         ))}
       </div>
       <div className="goal-weights__footer">
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
+        <AddItemButton
+          label={addLabel}
           onClick={() =>
             resize([
               ...goals,
               { description: '', sortOrder: goals.length, weight: null },
             ])
           }
-        >
-          {addLabel}
-        </button>
+        />
         {customized && goals.length > 1 && (
           <button
             type="button"
@@ -131,18 +122,26 @@ export function GoalListEditor({
             {formatMessage({ id: 'evaluation.distributeWeightsEvenly' })}
           </button>
         )}
-        {hasDescribedGoal && (
-          <span
-            className={`goal-weights__total${valid ? '' : ' goal-weights__total--invalid'}`}
-            role="status"
-          >
-            {formatMessage(
-              { id: 'evaluation.goalWeightsTotal' },
-              { total, required: TOTAL_GOAL_WEIGHT },
-            )}
-          </span>
-        )}
       </div>
     </>
+  );
+}
+
+/** Zbir pondera uz naslov ciljeva: zelen kad je tačno 100%, crven kad nije. */
+export function GoalWeightsTotal({ goals }: { goals: GoalDraft[] }) {
+  const { formatMessage } = useIntl();
+  const { total, valid } = checkGoalWeights(goals);
+  if (!goals.some((goal) => goal.description.trim())) return null;
+
+  return (
+    <span
+      className={`section-progress__count ${valid ? 'is-complete' : 'is-invalid'}`}
+      role="status"
+    >
+      {formatMessage(
+        { id: 'evaluation.goalWeightsTotal' },
+        { total, required: TOTAL_GOAL_WEIGHT },
+      )}
+    </span>
   );
 }

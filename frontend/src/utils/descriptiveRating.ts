@@ -58,16 +58,6 @@ const DESCRIPTIVE_RATING_CHART_COLOR_BY_CODE: Record<string, string> = {
   OUTSTANDING: '#1f5aa6',
 };
 
-// Boje za tekst opisne ocene: iste nijanse kao tekst bedževa, čitljive na
-// beloj podlozi (svetli tonovi sa grafikona nisu za tekst).
-const DESCRIPTIVE_RATING_TEXT_COLOR_BY_CODE: Record<string, string> = {
-  DOES_NOT_MEET: '#b91c1c',
-  MEETS: '#c2410c',
-  GOOD: '#a16207',
-  EXCEEDS: '#0f766e',
-  OUTSTANDING: '#047857',
-};
-
 interface RatingBand {
   min: number;
   max: number;
@@ -181,15 +171,6 @@ export function descriptiveRatingChartColor(
   const code = resolveCodeForStyling(nameOrCode, ratings);
   if (!code) return '#94a3b8';
   return DESCRIPTIVE_RATING_CHART_COLOR_BY_CODE[code] ?? '#64748b';
-}
-
-export function descriptiveRatingColor(
-  nameOrCode: string | null | undefined,
-  ratings?: DescriptiveRating[],
-): string {
-  const code = resolveCodeForStyling(nameOrCode, ratings);
-  if (!code) return '#64748b';
-  return DESCRIPTIVE_RATING_TEXT_COLOR_BY_CODE[code] ?? '#475569';
 }
 
 export function descriptiveRatingClass(

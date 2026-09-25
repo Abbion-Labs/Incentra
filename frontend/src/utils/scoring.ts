@@ -14,10 +14,6 @@ export function findNotRatedLevelId(levels: RatingLevel[]): number | undefined {
   return levels.find(isNotRated)?.id;
 }
 
-export function ratingValueOptionLabel(level: RatingLevel): string {
-  return isNotRated(level) ? '/' : String(level.value);
-}
-
 export function ratingOptionLabel(level: RatingLevel): string {
   return isNotRated(level) ? '/' : `${level.value} — ${level.label}`;
 }

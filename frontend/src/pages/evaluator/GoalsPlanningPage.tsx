@@ -9,7 +9,10 @@ import type {
 } from '../../api/types';
 import { LoadingEmpty } from '../../components/common/LoadingEmpty';
 import { FormSection } from '../../components/forms/FormSection';
-import { GoalListEditor } from '../../components/forms/GoalListEditor';
+import {
+  GoalListEditor,
+  GoalWeightsTotal,
+} from '../../components/forms/GoalListEditor';
 import { TextListEditor } from '../../components/forms/TextListEditor';
 import { AppLayout } from '../../components/AppLayout';
 import { useAuth } from '../../auth/AuthContext';
@@ -395,6 +398,7 @@ export function GoalsPlanningPage() {
           <FormSection
             title={formatMessage({ id: 'evaluation.goalsTitle' })}
             actions={copyButton}
+            meta={<GoalWeightsTotal goals={goals} />}
           >
             <GoalListEditor
               goals={goals}
@@ -409,7 +413,6 @@ export function GoalsPlanningPage() {
           <div className="form-section-grid">
             <FormSection
               title={formatMessage({ id: 'evaluation.conditionsTitle' })}
-              variant="secondary"
             >
               <TextListEditor
                 items={conditions}
@@ -423,7 +426,6 @@ export function GoalsPlanningPage() {
 
             <FormSection
               title={formatMessage({ id: 'evaluation.criteriaTitle' })}
-              variant="secondary"
             >
               <TextListEditor
                 items={criteria}

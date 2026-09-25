@@ -69,7 +69,7 @@ export function TrainingSection({
     <FormSection
       title={formatMessage({ id: 'evaluation.trainingAndDevelopment' })}
     >
-      <div className="form-list">
+      <div className="form-list training-fields">
         {TRAINING_FIELDS.map((field) => (
           <div key={field.id} className="form-row">
             <label htmlFor={field.id}>
