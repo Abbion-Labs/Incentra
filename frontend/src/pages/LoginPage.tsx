@@ -96,9 +96,6 @@ export function LoginPage() {
               </h2>
               <LocaleSwitcher />
             </div>
-            <p className="login-card__subtitle">
-              {formatMessage({ id: 'auth.subtitle' })}
-            </p>
           </header>
 
           <form className="login-form" onSubmit={handleSubmit}>

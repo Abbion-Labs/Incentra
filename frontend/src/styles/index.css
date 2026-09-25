@@ -2648,12 +2648,6 @@ input[type='search']::-webkit-search-cancel-button {
   color: var(--text);
 }
 
-.login-card__subtitle {
-  margin: 0;
-  font-size: 0.95rem;
-  color: var(--muted);
-}
-
 .login-card__alert {
   margin-bottom: 1rem;
 }
@@ -2712,10 +2706,6 @@ input[type='search']::-webkit-search-cancel-button {
 
 .login-card__title-row .login-card__title {
   margin-bottom: 0;
-}
-
-.login-card__header .login-card__subtitle {
-  margin-top: 0.35rem;
 }
 
 /* Lozinka sa dugmetom za prikaz, unutar polja desno. */

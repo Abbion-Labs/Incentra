@@ -108,7 +108,6 @@
   },
   "auth": {
     "welcome": "Dobrodošli",
-    "subtitle": "Prijavite se email adresom i lozinkom",
     "heroTagline": "Ocenjivanje i varijabilno nagrađivanje",
     "heroPointGoals": "Jasno postavljeni ciljevi i kriterijumi",
     "heroPointWorkflow": "Vođen proces od ocenjivača do kontrole",

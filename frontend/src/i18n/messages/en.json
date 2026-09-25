@@ -108,7 +108,6 @@
   },
   "auth": {
     "welcome": "Welcome",
-    "subtitle": "Sign in with your email and password",
     "heroTagline": "Evaluation and variable compensation",
     "heroPointGoals": "Clearly defined goals and criteria",
     "heroPointWorkflow": "Guided flow from evaluator to controller",
