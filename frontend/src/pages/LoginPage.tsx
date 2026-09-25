@@ -13,30 +13,6 @@ const HERO_POINTS = [
   'auth.heroPointPayout',
 ] as const;
 
-const DEMO_ACCOUNTS = [
-  { labelKey: 'auth.admin', email: 'admin@local.dev', password: 'Admin123!' },
-  {
-    labelKey: 'auth.evaluator',
-    email: 'evaluator@local.dev',
-    password: 'Eval123!',
-  },
-  {
-    labelKey: 'auth.controller',
-    email: 'controller@local.dev',
-    password: 'Control123!',
-  },
-  {
-    labelKey: 'auth.employee',
-    email: 'zaposleni@local.dev',
-    password: 'Zaposleni123!',
-  },
-  {
-    labelKey: 'auth.payroll',
-    email: 'payroll@local.dev',
-    password: 'Payroll123!',
-  },
-];
-
 export function LoginPage() {
   const { formatMessage } = useIntl();
   const { login, user } = useAuth();
@@ -67,11 +43,6 @@ export function LoginPage() {
     } finally {
       setSubmitting(false);
     }
-  }
-
-  function fillDemo(account: (typeof DEMO_ACCOUNTS)[number]) {
-    setEmail(account.email);
-    setPassword(account.password);
   }
 
   return (
@@ -229,24 +200,6 @@ export function LoginPage() {
                 : formatMessage({ id: 'buttons.login' })}
             </button>
           </form>
-
-          <div className="login-demo">
-            <p className="login-demo__label">
-              {formatMessage({ id: 'auth.demoAccounts' })}
-            </p>
-            <div className="login-demo__chips">
-              {DEMO_ACCOUNTS.map((account) => (
-                <button
-                  key={account.email}
-                  type="button"
-                  className="login-demo__chip"
-                  onClick={() => fillDemo(account)}
-                >
-                  {formatMessage({ id: account.labelKey as never })}
-                </button>
-              ))}
-            </div>
-          </div>
         </div>
       </main>
     </div>

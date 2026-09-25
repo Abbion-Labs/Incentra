@@ -117,13 +117,7 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "capsLockOn": "Caps Lock is on.",
-    "demoAccounts": "Demo accounts",
     "placeholderEmail": "name@company.com",
-    "admin": "Admin",
-    "evaluator": "Evaluator and controller",
-    "controller": "Controller",
-    "employee": "Employee",
-    "payroll": "Payroll",
     "noRoleAssigned": "This account has no role assigned for system access. Contact your administrator."
   },
   "account": {

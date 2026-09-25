@@ -2773,46 +2773,6 @@ input[type='search']::-webkit-search-cancel-button {
   border-radius: 10px;
 }
 
-.login-demo {
-  margin-top: 1.75rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid var(--border);
-}
-
-.login-demo__label {
-  margin: 0 0 0.65rem;
-  font-size: 0.75rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-
-.login-demo__chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.login-demo__chip {
-  padding: 0.4rem 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 500;
-  color: var(--primary);
-  background: var(--primary-soft);
-  border: 1px solid transparent;
-  border-radius: 999px;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    border-color 0.15s;
-}
-
-.login-demo__chip:hover {
-  background: #dbeafe;
-  border-color: rgba(30, 77, 140, 0.15);
-}
-
 @media (max-width: 900px) {
   .login-page {
     grid-template-columns: 1fr;
