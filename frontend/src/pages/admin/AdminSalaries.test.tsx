@@ -57,9 +57,11 @@ async function openAnaThenBoraHistory() {
 
   const user = userEvent.setup();
   await screen.findByText('Ana Anić');
-  await user.click(rowOf('Ana Anić').getByRole('button', { name: 'Istorija' }));
   await user.click(
-    rowOf('Bora Borić').getByRole('button', { name: 'Istorija' }),
+    rowOf('Ana Anić').getByRole('button', { name: 'admin.salaries.history' }),
+  );
+  await user.click(
+    rowOf('Bora Borić').getByRole('button', { name: 'admin.salaries.history' }),
   );
   expect(pending.has(anaHistoryPath)).toBe(true);
   expect(pending.has(boraHistoryPath)).toBe(true);
@@ -94,7 +96,9 @@ describe('AdminSalaries history', () => {
     });
     expect(screen.queryByText('stale failure')).toBeNull();
     expect(
-      rowOf('Bora Borić').getByRole('button', { name: 'Sakrij' }),
+      rowOf('Bora Borić').getByRole('button', {
+        name: 'admin.salaries.hideHistory',
+      }),
     ).toBeTruthy();
     expect(screen.getByText('admin.salaries.loadingHistory')).toBeTruthy();
 

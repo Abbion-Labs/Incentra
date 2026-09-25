@@ -11,7 +11,9 @@ export type SidebarNavIconName =
   | 'controller'
   | 'my-evaluations'
   | 'crud'
-  | 'varijabila';
+  | 'salaries'
+  | 'parameters'
+  | 'results';
 
 const iconProps = {
   width: 18,
@@ -95,13 +97,36 @@ export function SidebarNavIcon({ name }: SidebarNavIconProps) {
           <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z" />
         </svg>
       );
-    case 'varijabila':
+    case 'salaries':
       return (
         <svg {...iconProps}>
-          <path d="M4 7h16" />
-          <path d="M4 12h10" />
-          <path d="M4 17h14" />
-          <circle cx="19" cy="12" r="2" />
+          <rect x="2" y="6" width="20" height="12" rx="2" />
+          <circle cx="12" cy="12" r="2.5" />
+          <path d="M6 12h.01" />
+          <path d="M18 12h.01" />
+        </svg>
+      );
+    case 'parameters':
+      return (
+        <svg {...iconProps}>
+          <path d="M4 21v-7" />
+          <path d="M4 10V3" />
+          <path d="M12 21v-9" />
+          <path d="M12 8V3" />
+          <path d="M20 21v-5" />
+          <path d="M20 12V3" />
+          <path d="M1 14h6" />
+          <path d="M9 8h6" />
+          <path d="M17 16h6" />
+        </svg>
+      );
+    case 'results':
+      return (
+        <svg {...iconProps}>
+          <rect x="3" y="3" width="18" height="18" rx="2" />
+          <path d="M3 9h18" />
+          <path d="M3 15h18" />
+          <path d="M9 9v12" />
         </svg>
       );
     default:

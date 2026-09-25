@@ -13,7 +13,10 @@ import { downloadCsv } from '../../utils/downloadCsv';
 import { currentYear } from '../../utils/status';
 import { usePagedList, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
-import { FilterChip } from '../../components/common/ToolbarSearch';
+import {
+  FilterChip,
+  ToolbarSearch,
+} from '../../components/common/ToolbarSearch';
 import {
   formatDateTime,
   formatNumber,
@@ -283,60 +286,53 @@ export function AdminCompensationResults() {
   }
 
   return (
-    <div className="card card--table-fill">
-      <div className="filter-bar filter-bar--compact compensation-results-toolbar">
-        <div className="form-row filter-bar-search">
-          <label htmlFor="results-search" className="sr-only">
-            {formatMessage({ id: 'admin.employeeSearch' })}
-          </label>
-          <input
-            id="results-search"
-            type="search"
-            placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-        <FilterChip
-          id="results-org"
-          label={formatMessage({ id: 'common.organizationUnit' })}
-          value={organizationUnitId}
-          onChange={setOrganizationUnitId}
-          disabled={finalizing}
+    <div className="card card--flush card--table-fill data-panel">
+      <div className="data-panel__toolbar">
+        <ToolbarSearch
+          id="results-search"
+          label={formatMessage({ id: 'admin.employeeSearch' })}
+          placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
+          value={search}
+          onChange={setSearch}
         >
-          {orgUnits.map((unit) => (
-            <option key={unit.id} value={unit.id}>
-              {unit.name}
-            </option>
-          ))}
-        </FilterChip>
-        <FilterChip
-          id="results-year"
-          label={formatMessage({ id: 'common.year' })}
-          value={year}
-          onChange={setYear}
-          disabled={finalizing}
-        >
-          {yearOptions.map((y) => (
-            <option key={y} value={y}>
-              {y}
-            </option>
-          ))}
-        </FilterChip>
+          <FilterChip
+            id="results-org"
+            label={formatMessage({ id: 'evaluation.orgUnitShort' })}
+            value={organizationUnitId}
+            onChange={setOrganizationUnitId}
+            disabled={finalizing}
+          >
+            {orgUnits.map((unit) => (
+              <option key={unit.id} value={unit.id}>
+                {unit.name}
+              </option>
+            ))}
+          </FilterChip>
+          <FilterChip
+            id="results-year"
+            label={formatMessage({ id: 'common.year' })}
+            value={year}
+            onChange={setYear}
+            disabled={finalizing}
+          >
+            {yearOptions.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </FilterChip>
+        </ToolbarSearch>
         {parametersId ? (
-          <div className="filter-bar__actions compensation-results-toolbar__actions">
-            <span className="table-currency-badge">{currency}</span>
-            <button
-              type="button"
-              className="btn btn-secondary btn-sm"
-              onClick={handleExport}
-              disabled={exporting || loading || metaLoading || totalCount === 0}
-            >
-              {exporting
-                ? formatMessage({ id: 'admin.compensationResults.exporting' })
-                : formatMessage({ id: 'admin.compensationResults.exportCsv' })}
-            </button>
-          </div>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={handleExport}
+            disabled={exporting || loading || metaLoading || totalCount === 0}
+          >
+            {exporting
+              ? formatMessage({ id: 'admin.compensationResults.exporting' })
+              : formatMessage({ id: 'admin.compensationResults.exportCsv' })}
+          </button>
         ) : null}
       </div>
       {parametersId && calculationStatus && (
@@ -397,22 +393,26 @@ export function AdminCompensationResults() {
                   <th className="col-num">
                     {formatMessage({
                       id: 'admin.compensationResults.fixedSalary',
-                    })}
+                    })}{' '}
+                    ({currency})
                   </th>
                   <th className="col-num">
                     {formatMessage({
                       id: 'admin.compensationResults.annualCompensation',
-                    })}
+                    })}{' '}
+                    ({currency})
                   </th>
                   <th className="col-num">
                     {formatMessage({
                       id: 'admin.compensationResults.quarterlyCompensation',
-                    })}
+                    })}{' '}
+                    ({currency})
                   </th>
                   <th className="col-num">
                     {formatMessage({
                       id: 'admin.compensationResults.monthlyCompensation',
-                    })}
+                    })}{' '}
+                    ({currency})
                   </th>
                   <th className="col-num">
                     {formatMessage({

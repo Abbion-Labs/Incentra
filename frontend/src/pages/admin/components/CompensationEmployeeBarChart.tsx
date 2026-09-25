@@ -4,6 +4,7 @@ import { ChartTooltip } from '../../../components/charts/ChartTooltip';
 import {
   CHART,
   barPath,
+  niceAxis,
   sequentialBlue,
 } from '../../../components/charts/chartTheme';
 import { useIntl } from '../../../i18n';
@@ -58,6 +59,9 @@ export function CompensationEmployeeBarChart({
     () => Math.max(...series.map((point) => point.value), 1),
     [series],
   );
+
+  // Osa sa lepim vrednostima; nijansa stubca i dalje prati najveću vrednost.
+  const axis = niceAxis(maxValue);
 
   if (series.length === 0) {
     return (
@@ -120,11 +124,10 @@ export function CompensationEmployeeBarChart({
               : undefined
           }
         >
-          {[0, 0.25, 0.5, 0.75, 1].map((tick) => {
-            const value = maxValue * tick;
-            const y = baseline - tick * chartHeight;
+          {axis.ticks.map((value) => {
+            const y = baseline - (value / axis.max) * chartHeight;
             return (
-              <g key={tick}>
+              <g key={value}>
                 <line
                   x1={padding.left}
                   y1={y}
@@ -146,7 +149,7 @@ export function CompensationEmployeeBarChart({
 
           {series.map((point, index) => {
             const groupLeft = padding.left + index * groupWidth;
-            const barHeight = (point.value / maxValue) * chartHeight;
+            const barHeight = (point.value / axis.max) * chartHeight;
             const x = groupLeft + (groupWidth - barWidth) / 2;
             const labelY = baseline + 20;
             const isHovered = hover?.index === index;

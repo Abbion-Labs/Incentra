@@ -8,6 +8,7 @@ interface FormSectionProps {
   meta?: ReactNode;
   children: ReactNode;
   variant?: 'default' | 'secondary';
+  className?: string;
 }
 
 export function FormSection({
@@ -17,10 +18,11 @@ export function FormSection({
   meta,
   children,
   variant = 'default',
+  className,
 }: FormSectionProps) {
   return (
     <section
-      className={`form-section card ${variant === 'secondary' ? 'form-section--secondary' : ''}`}
+      className={`form-section card ${variant === 'secondary' ? 'form-section--secondary' : ''} ${className ?? ''}`}
     >
       <div className="form-section__header">
         <div className="form-section__heading">

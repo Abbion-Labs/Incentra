@@ -49,7 +49,7 @@ async function renderAndSwitchToSales() {
 
   await waitFor(() => expect(pending.has(allOrgPath)).toBe(true));
   await screen.findByRole('option', { name: 'Prodaja' });
-  fireEvent.change(screen.getByLabelText('common.organizationUnit'), {
+  fireEvent.change(screen.getByLabelText('evaluation.orgUnitShort'), {
     target: { value: '1' },
   });
   await waitFor(() => expect(pending.has(salesPath)).toBe(true));
