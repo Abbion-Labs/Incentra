@@ -48,12 +48,24 @@ const DESCRIPTIVE_RATING_CLASS_BY_CODE: Record<string, string> = {
   OUTSTANDING: 'badge-descriptive-outstanding',
 };
 
+// Divergentna skala za grafikone: ispod očekivanja topla, sredina siva, iznad
+// očekivanja plava (bezbedno za daltonizam; susedne ocene ΔE ≥ 8).
 const DESCRIPTIVE_RATING_CHART_COLOR_BY_CODE: Record<string, string> = {
-  DOES_NOT_MEET: '#dc2626',
-  MEETS: '#f97316',
-  GOOD: '#2563eb',
-  EXCEEDS: '#7c3aed',
-  OUTSTANDING: '#059669',
+  DOES_NOT_MEET: '#b2310e',
+  MEETS: '#ee8a61',
+  GOOD: '#d3d7dd',
+  EXCEEDS: '#5a98d8',
+  OUTSTANDING: '#1f5aa6',
+};
+
+// Boje za tekst opisne ocene: iste nijanse kao tekst bedževa, čitljive na
+// beloj podlozi (svetli tonovi sa grafikona nisu za tekst).
+const DESCRIPTIVE_RATING_TEXT_COLOR_BY_CODE: Record<string, string> = {
+  DOES_NOT_MEET: '#b91c1c',
+  MEETS: '#c2410c',
+  GOOD: '#a16207',
+  EXCEEDS: '#0f766e',
+  OUTSTANDING: '#047857',
 };
 
 interface RatingBand {
@@ -175,7 +187,9 @@ export function descriptiveRatingColor(
   nameOrCode: string | null | undefined,
   ratings?: DescriptiveRating[],
 ): string {
-  return descriptiveRatingChartColor(nameOrCode, ratings);
+  const code = resolveCodeForStyling(nameOrCode, ratings);
+  if (!code) return '#64748b';
+  return DESCRIPTIVE_RATING_TEXT_COLOR_BY_CODE[code] ?? '#475569';
 }
 
 export function descriptiveRatingClass(

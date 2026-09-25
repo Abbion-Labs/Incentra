@@ -4192,6 +4192,18 @@ input[type='search']::-webkit-search-cancel-button {
   font-weight: 600;
 }
 
+/* Naslov grafikona levo gore, objašnjenje u „i” ikonici pored njega. */
+.analytics-panel__header {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.analytics-panel__header h3 {
+  margin: 0;
+}
+
 .analytics-panel .card__hint {
   font-size: var(--text-sm);
 }
@@ -4476,84 +4488,12 @@ input[type='search']::-webkit-search-cancel-button {
   max-width: 100%;
 }
 
-.analytics-pie-chart {
-  --pie-chart-size: 280px;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-  gap: var(--space-lg);
-  align-items: stretch;
-  width: 100%;
-  min-width: 0;
-}
-
-.analytics-pie-chart .analytics-chart__legend {
-  justify-self: stretch;
-  width: 100%;
-  align-items: flex-start;
-  justify-content: center;
-  margin: 0;
-  gap: calc(var(--pie-chart-size) * 0.018);
-  font-size: clamp(0.8125rem, calc(var(--pie-chart-size) * 0.048), 1.125rem);
-}
-
-.analytics-pie-chart .analytics-chart__legend li {
-  align-items: center;
-  justify-content: flex-start;
-  text-align: left;
-  gap: calc(var(--pie-chart-size) * 0.016);
-}
-
-.analytics-pie-chart .analytics-chart__legend-swatch {
-  width: calc(var(--pie-chart-size) * 0.034);
-  height: calc(var(--pie-chart-size) * 0.034);
-}
-
-.analytics-pie-chart .analytics-chart__legend-body {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  column-gap: calc(var(--pie-chart-size) * 0.014);
-  row-gap: calc(var(--pie-chart-size) * 0.006);
-  min-width: 0;
-}
-
-.analytics-pie-chart .analytics-chart__legend-label {
-  white-space: nowrap;
-  line-height: 1.3;
-}
-
-.analytics-pie-chart .analytics-chart__legend-value {
-  white-space: nowrap;
-  font-size: clamp(0.75rem, calc(var(--pie-chart-size) * 0.04), 1rem);
-  line-height: 1.3;
-}
-
-.analytics-pie-chart__canvas-wrap {
-  width: 100%;
-  max-width: 260px;
-  min-width: 0;
-  justify-self: center;
-  display: flex;
-  align-items: center;
-}
-
-.analytics-pie-chart .analytics-chart__svg {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: 1;
-}
-
 @container main (max-width: 960px) {
   .analytics-summary-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .analytics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .analytics-pie-chart {
     grid-template-columns: 1fr;
   }
 }
@@ -4564,10 +4504,6 @@ input[type='search']::-webkit-search-cancel-button {
   }
 
   .analytics-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .analytics-pie-chart {
     grid-template-columns: 1fr;
   }
 }
@@ -6105,4 +6041,303 @@ input[type='search']::-webkit-search-cancel-button {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+}
+
+/* ==========================================================================
+   Grafikoni: zajednički delovi (ose, vrednosti, legenda, tooltip)
+   ========================================================================== */
+.chart-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.chart-canvas {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+
+.chart-svg {
+  display: block;
+  overflow: visible;
+}
+
+.chart-axis-text {
+  font-size: 12px;
+  fill: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-value-text {
+  font-size: 12px;
+  font-weight: 600;
+  fill: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-category-text {
+  font-size: 12.5px;
+  font-weight: 500;
+  fill: var(--text-secondary);
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.chart-legend--top {
+  justify-content: flex-end;
+}
+
+.chart-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.chart-legend__swatch {
+  width: 0.7rem;
+  height: 0.7rem;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.chart-legend__line {
+  width: 1rem;
+  height: 2px;
+  flex-shrink: 0;
+  border-radius: 2px;
+}
+
+.chart-stats {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: baseline;
+  gap: 0.5rem 1.5rem;
+  margin: 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.chart-stats dt {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.chart-stats dd {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--muted);
+}
+
+.chart-stats .chart-legend__swatch {
+  align-self: center;
+}
+
+.chart-stats dd strong {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.chart-tooltip {
+  position: absolute;
+  z-index: 5;
+  width: max-content;
+  min-width: 9rem;
+  max-width: 260px;
+  padding: 0.55rem 0.7rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow-md);
+  transform: translate(-50%, calc(-100% - 14px));
+  pointer-events: none;
+  font-size: var(--text-sm);
+}
+
+.chart-tooltip__title {
+  margin-bottom: 0.35rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.chart-tooltip__row {
+  display: grid;
+  grid-template-columns: 0.85rem auto 1fr;
+  align-items: center;
+  gap: 0.45rem;
+  line-height: 1.5;
+}
+
+.chart-tooltip__key {
+  width: 0.85rem;
+  height: 3px;
+  border-radius: 2px;
+}
+
+.chart-tooltip__key--marker {
+  height: 2px;
+}
+
+.chart-tooltip__value {
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-tooltip__label {
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==========================================================================
+   Donut: raspodela opisnih ocena
+   ========================================================================== */
+.donut-chart {
+  display: grid;
+  grid-template-columns: minmax(0, 200px) minmax(0, 340px);
+  justify-content: center;
+  align-content: center;
+  align-items: center;
+  gap: 1.5rem 2.5rem;
+  flex: 1;
+  margin-top: 1rem;
+}
+
+/* Kartica sa prstenom je visoka kao susedna: prsten stoji u sredini prostora. */
+.analytics-panel:has(> .donut-chart) {
+  display: flex;
+  flex-direction: column;
+}
+
+.donut-chart__figure {
+  width: 100%;
+  max-width: 200px;
+}
+
+.donut-chart__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.donut-chart__segment {
+  transition: opacity var(--transition);
+  cursor: default;
+}
+
+.donut-chart__total {
+  font-size: 34px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.donut-chart__caption {
+  font-size: 12px;
+}
+
+.donut-chart__legend {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.donut-chart__row {
+  display: grid;
+  grid-template-columns: 0.7rem minmax(0, 1fr) auto 3.25rem;
+  grid-template-areas:
+    'swatch label count percent'
+    '. bar bar bar';
+  align-items: center;
+  column-gap: 0.6rem;
+  row-gap: 0.3rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  transition:
+    background var(--transition),
+    opacity var(--transition);
+}
+
+.donut-chart__row.is-active {
+  background: var(--surface-sunken);
+}
+
+.donut-chart__row.is-dimmed {
+  opacity: 0.55;
+}
+
+.donut-chart__swatch {
+  grid-area: swatch;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 3px;
+}
+
+.donut-chart__label {
+  grid-area: label;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.donut-chart__count {
+  grid-area: count;
+  font-weight: 700;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.donut-chart__percent {
+  grid-area: percent;
+  text-align: right;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.donut-chart__bar {
+  grid-area: bar;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  overflow: hidden;
+}
+
+.donut-chart__bar span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+@container main (max-width: 560px) {
+  .donut-chart {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .donut-chart__legend {
+    width: 100%;
+  }
 }

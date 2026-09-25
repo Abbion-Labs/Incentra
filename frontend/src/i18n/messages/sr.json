@@ -553,6 +553,7 @@
     "noChartData": "Nema podataka za prikaz grafikona.",
     "noStatsData": "Nema dovoljno podataka za prikaz proseka, medijane i varijanse.",
     "noRatingComparisonData": "Nema podataka za poređenje brojeva ocena.",
+    "ratingsTotal": "ocena u {year}.",
     "noRatedEmployeesForYear": "Nema ocenjenih zaposlenih za {year}. godinu.",
     "descriptiveRatingDistributionAria": "Raspodela opisnih ocena za {year}. godinu",
     "ratingTooltip": "Ocena {rating}",

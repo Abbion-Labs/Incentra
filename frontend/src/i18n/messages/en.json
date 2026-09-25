@@ -553,6 +553,7 @@
     "noChartData": "No data to display chart.",
     "noStatsData": "Not enough data to display mean, median, and variance.",
     "noRatingComparisonData": "No data to compare rating counts.",
+    "ratingsTotal": "ratings in {year}",
     "noRatedEmployeesForYear": "No rated employees for {year}.",
     "descriptiveRatingDistributionAria": "Descriptive rating distribution for {year}",
     "ratingTooltip": "Rating {rating}",
