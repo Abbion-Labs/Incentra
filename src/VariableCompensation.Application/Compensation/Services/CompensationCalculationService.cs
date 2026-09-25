@@ -56,8 +56,7 @@ public sealed class CompensationCalculationService
         VariableCompensationParameters parameters,
         bool requireAllQuarters,
         int points,
-        decimal salaryPerPoint,
-        bool? allowNegativeVariableOverride = null)
+        decimal salaryPerPoint)
     {
         if (evaluations.Count == 0)
         {
@@ -88,7 +87,7 @@ public sealed class CompensationCalculationService
         var goalsAverage = eligible.Average(e => e.GoalsAverage!.Value);
         var measuresAverage = eligible.Average(e => e.MeasuresAverage!.Value);
         var overallAverage = eligible.Average(e => e.OverallAverage!.Value);
-        var ponder = CalculatePonder(overallAverage, parameters, allowNegativeVariableOverride);
+        var ponder = CalculatePonder(overallAverage, parameters);
 
         return (new EmployeeCalculationInput
         {
@@ -105,10 +104,8 @@ public sealed class CompensationCalculationService
 
     public static decimal CalculatePonder(
         decimal overallAverage,
-        VariableCompensationParameters parameters,
-        bool? allowNegativeVariableOverride = null)
+        VariableCompensationParameters parameters)
     {
-        var allowNegativeVariable = allowNegativeVariableOverride ?? parameters.AllowNegativeVariable;
         var difference = overallAverage - parameters.AcceptablePerformanceRating;
 
         if (overallAverage > parameters.AcceptablePerformanceRating)
@@ -116,7 +113,7 @@ public sealed class CompensationCalculationService
             return (decimal)Math.Pow((double)difference, (double)parameters.Exponent);
         }
 
-        if (!allowNegativeVariable)
+        if (!parameters.AllowNegativeVariable)
         {
             return 0m;
         }

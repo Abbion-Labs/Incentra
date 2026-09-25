@@ -406,7 +406,6 @@
         "exponent": "Stepenuje razliku između prosečne ocene i granice prihvatljivog učinka. Veća vrednost pojačava uticaj ocene na raspodelu.",
         "dependencyWeight": "Ponder koji određuje koliko bodovi i zarada po bodu utiču na relativni udeo zaposlenog u fondu, pored ocene.",
         "allowNegativeVariable": "Da li zaposleni sa ocenom ispod granice mogu dobiti negativnu varijabilu pri kalkulaciji.",
-        "calculateAllowNegative": "Izbor važi samo za trenutno pokretanje kalkulacije i ne menja sačuvane parametre.",
         "referencePoints": "Broj bodova fiktivnog zaposlenog za simulaciju na grafikonu. Ne utiče na stvarnu kalkulaciju.",
         "referenceSalaryPerPoint": "Zarada po bodu fiktivnog zaposlenog za simulaciju na grafikonu. Ne utiče na stvarnu kalkulaciju."
       }

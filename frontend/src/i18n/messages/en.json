@@ -406,7 +406,6 @@
         "exponent": "Raises the difference between average rating and acceptable performance threshold. Higher value amplifies rating impact on distribution.",
         "dependencyWeight": "Weight determining how points and salary per point affect employee share in the pool, besides rating.",
         "allowNegativeVariable": "Whether employees below threshold can receive negative variable pay in calculation.",
-        "calculateAllowNegative": "Choice applies only to current calculation run and does not change saved parameters.",
         "referencePoints": "Points for fictional employee in chart simulation. Does not affect actual calculation.",
         "referenceSalaryPerPoint": "Salary per point for fictional employee in chart simulation. Does not affect actual calculation."
       }
