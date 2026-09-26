@@ -116,6 +116,7 @@ public static class ErrorCodes
     public const string EvaluatorInactive = "vn-0118";
     public const string ControllerInactive = "vn-0119";
     public const string AccountEmployeeInactive = "vn-0120";
+    public const string PlanIncomplete = "vn-0121";
     public const string ImageTypeUnsupported = "vn-0122";
     public const string ImageUploadFailed = "vn-0123";
     public const string EvaluationActionNotAllowed = "vn-0124";

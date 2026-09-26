@@ -17,7 +17,7 @@ public class SubmitEvaluationCommandHandlerTests
     public async Task Handle_ValidDraft_SubmitsEvaluation()
     {
         var repository = new FakeEvaluationRepository();
-        var evaluation = new EvaluationBuilder()
+        var evaluation = new EvaluationBuilder().WithAgreedPlan()
             .WithId(1)
             .WithEvaluator(2)
             .WithController(3)
@@ -48,7 +48,7 @@ public class SubmitEvaluationCommandHandlerTests
     public async Task Handle_EvaluatorWithoutController_ApprovesOnSubmission()
     {
         var repository = new FakeEvaluationRepository();
-        repository.Seed(new EvaluationBuilder()
+        repository.Seed(new EvaluationBuilder().WithAgreedPlan()
             .WithId(1)
             .WithEvaluator(2)
             .WithController(null)
@@ -83,7 +83,7 @@ public class SubmitEvaluationCommandHandlerTests
     public async Task Handle_WithoutMeasures_ReturnsError()
     {
         var repository = new FakeEvaluationRepository();
-        repository.Seed(new EvaluationBuilder()
+        repository.Seed(new EvaluationBuilder().WithAgreedPlan()
             .WithId(1)
             .WithEvaluator(2)
             .AddGoal(RatingLevelsFixture.RatedLevelId(3))
@@ -110,7 +110,7 @@ public class SubmitEvaluationCommandHandlerTests
     public async Task Handle_ConditionsNotMetWithoutComment_ReturnsError()
     {
         var repository = new FakeEvaluationRepository();
-        repository.Seed(new EvaluationBuilder()
+        repository.Seed(new EvaluationBuilder().WithAgreedPlan()
             .WithId(1)
             .WithEvaluator(2)
             .WithConditionsFulfilled(false)
@@ -138,7 +138,7 @@ public class SubmitEvaluationCommandHandlerTests
     public async Task Handle_ConditionsNotMetWithComment_SubmitsWithoutMeasures()
     {
         var repository = new FakeEvaluationRepository();
-        repository.Seed(new EvaluationBuilder()
+        repository.Seed(new EvaluationBuilder().WithAgreedPlan()
             .WithId(1)
             .WithEvaluator(2)
             .WithController(3)
@@ -168,7 +168,7 @@ public class SubmitEvaluationCommandHandlerTests
     public async Task Handle_VersionConflict_ReturnsError()
     {
         var repository = new FakeEvaluationRepository();
-        repository.Seed(new EvaluationBuilder()
+        repository.Seed(new EvaluationBuilder().WithAgreedPlan()
             .WithId(1)
             .WithEvaluator(2)
             .WithVersion(2)
