@@ -5,6 +5,7 @@ using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Common.Models;
 using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Evaluation.Services;
+using VariableCompensation.Application.Hr.EvaluatorSettings.Services;
 using VariableCompensation.Application.Hr.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Hr;
@@ -28,6 +29,7 @@ public sealed class CreateEmployeeCommandHandler : IRequestHandler<CreateEmploye
     private readonly IJobPositionRepository jobPositionRepository;
     private readonly IEducationLevelRepository educationLevelRepository;
     private readonly IEvaluatorSettingsRepository evaluatorSettingsRepository;
+    private readonly IUserRepository userRepository;
     private readonly ICurrentUserService currentUserService;
 
     public CreateEmployeeCommandHandler(
@@ -36,6 +38,7 @@ public sealed class CreateEmployeeCommandHandler : IRequestHandler<CreateEmploye
         IJobPositionRepository jobPositionRepository,
         IEducationLevelRepository educationLevelRepository,
         IEvaluatorSettingsRepository evaluatorSettingsRepository,
+        IUserRepository userRepository,
         ICurrentUserService currentUserService)
     {
         this.employeeRepository = employeeRepository;
@@ -43,6 +46,7 @@ public sealed class CreateEmployeeCommandHandler : IRequestHandler<CreateEmploye
         this.jobPositionRepository = jobPositionRepository;
         this.educationLevelRepository = educationLevelRepository;
         this.evaluatorSettingsRepository = evaluatorSettingsRepository;
+        this.userRepository = userRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -113,6 +117,15 @@ public sealed class CreateEmployeeCommandHandler : IRequestHandler<CreateEmploye
             {
                 return Result.Failure(ErrorCodes.EvaluatorNotConfigured);
             }
+
+            if (!await ActiveAssignee.CanSignInAsync(
+                    request.EvaluatorEmployeeId.Value,
+                    this.employeeRepository,
+                    this.userRepository,
+                    cancellationToken))
+            {
+                return Result.Failure(ErrorCodes.EvaluatorInactive);
+            }
         }
 
         return Result.Success();
@@ -139,6 +152,7 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
     private readonly IEducationLevelRepository educationLevelRepository;
     private readonly IEvaluatorSettingsRepository evaluatorSettingsRepository;
     private readonly IEvaluationRepository evaluationRepository;
+    private readonly IUserRepository userRepository;
     private readonly ICurrentUserService currentUserService;
 
     public UpdateEmployeeCommandHandler(
@@ -148,6 +162,7 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
         IEducationLevelRepository educationLevelRepository,
         IEvaluatorSettingsRepository evaluatorSettingsRepository,
         IEvaluationRepository evaluationRepository,
+        IUserRepository userRepository,
         ICurrentUserService currentUserService)
     {
         this.employeeRepository = employeeRepository;
@@ -156,6 +171,7 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
         this.educationLevelRepository = educationLevelRepository;
         this.evaluatorSettingsRepository = evaluatorSettingsRepository;
         this.evaluationRepository = evaluationRepository;
+        this.userRepository = userRepository;
         this.currentUserService = currentUserService;
     }
 
@@ -205,10 +221,16 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
 
         // Deactivating an evaluator would leave the people they rate without
         // anyone able to rate them, the same hole the role rules close.
-        if (entity.IsActive && !request.IsActive
-            && await this.employeeRepository.HasSubordinatesAsync(request.Id, cancellationToken))
+        var deactivating = entity.IsActive && !request.IsActive;
+        if (deactivating && await this.employeeRepository.HasSubordinatesAsync(request.Id, cancellationToken))
         {
             return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeHasSubordinates);
+        }
+
+        // Their account goes with them, and a controller without one leaves their evaluators' reviews to nobody.
+        if (deactivating && await this.evaluatorSettingsRepository.IsControllerForAnyEvaluatorAsync(request.Id, cancellationToken))
+        {
+            return Result.Failure<EmployeeResponse>(ErrorCodes.EmployeeControlsEvaluators);
         }
 
         if (request.EvaluatorEmployeeId is not null)
@@ -221,6 +243,17 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
             if (!await this.evaluatorSettingsRepository.ExistsAsync(request.EvaluatorEmployeeId.Value, cancellationToken))
             {
                 return Result.Failure<EmployeeResponse>(ErrorCodes.EvaluatorNotConfigured);
+            }
+
+            // Only a new choice is checked: an evaluator who has left since is replaced, not refused on every save.
+            if (entity.EvaluatorEmployeeId != request.EvaluatorEmployeeId
+                && !await ActiveAssignee.CanSignInAsync(
+                    request.EvaluatorEmployeeId.Value,
+                    this.employeeRepository,
+                    this.userRepository,
+                    cancellationToken))
+            {
+                return Result.Failure<EmployeeResponse>(ErrorCodes.EvaluatorInactive);
             }
         }
 
@@ -254,6 +287,15 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
             }
         }
 
+        if (deactivating && entity.UserId is { } userId)
+        {
+            var accountClosed = await this.CloseAccountAsync(userId, cancellationToken);
+            if (accountClosed.IsFailure)
+            {
+                return Result.Failure<EmployeeResponse>(accountClosed.Error);
+            }
+        }
+
         entity.FirstName = request.FirstName.Trim();
         entity.LastName = request.LastName.Trim();
         entity.OrganizationUnitId = request.OrganizationUnitId;
@@ -269,5 +311,32 @@ public sealed class UpdateEmployeeCommandHandler : IRequestHandler<UpdateEmploye
 
         var updated = await this.employeeRepository.FindByIdAsync(entity.Id, cancellationToken);
         return Result.Success(HrMappings.ToResponse(updated!));
+    }
+
+    /// <summary>
+    /// Someone who has left signs in no more: the account is deactivated and every session of it ends. Reactivating
+    /// the employee does not bring the account back; that is decided on the account itself.
+    /// </summary>
+    private async Task<Result> CloseAccountAsync(long userId, CancellationToken cancellationToken)
+    {
+        var user = await this.userRepository.FindByIdForUpdateAsync(userId, cancellationToken);
+        if (user is null || !user.IsActive)
+        {
+            return Result.Success();
+        }
+
+        if (user.UserRoles.Any(ur => ur.Role.Code == RoleCodes.Admin)
+            && !await this.userRepository.HasOtherActiveUserInRoleAsync(RoleCodes.Admin, user.Id, cancellationToken))
+        {
+            return Result.Failure(ErrorCodes.LastActiveAdministrator);
+        }
+
+        user.IsActive = false;
+        user.UpdatedAt = DateTime.UtcNow;
+
+        // A form still open on the account has not seen it close.
+        user.Version++;
+        await this.userRepository.RevokeAllRefreshTokensAsync(user.Id, cancellationToken);
+        return Result.Success();
     }
 }

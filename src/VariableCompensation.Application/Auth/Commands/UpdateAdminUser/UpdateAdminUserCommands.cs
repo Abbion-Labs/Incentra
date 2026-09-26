@@ -83,6 +83,12 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
             return Result.Failure<AdminUserListItemResponse>(ErrorCodes.LastActiveAdministrator);
         }
 
+        var activeChange = await this.EnsureActiveChangeAllowedAsync(user.Id, user.IsActive, request.IsActive, cancellationToken);
+        if (activeChange.IsFailure)
+        {
+            return Result.Failure<AdminUserListItemResponse>(activeChange.Error);
+        }
+
         // A role that acts as an employee is only given to an account linked to one. Roles it already holds from
         // before this rule are left alone.
         var heldRoles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
@@ -153,6 +159,42 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
         }
 
         return Result.Success(await AdminUserMapper.MapAsync(reloaded, this.employeeRepository, cancellationToken));
+    }
+
+    /// <summary>
+    /// The account follows its employee. It does not open again while the employee is gone, and it does not close
+    /// while people still depend on it to be rated or reviewed, the same as deactivating the employee.
+    /// </summary>
+    private async Task<Result> EnsureActiveChangeAllowedAsync(
+        long userId,
+        bool isActive,
+        bool staysActive,
+        CancellationToken cancellationToken)
+    {
+        if (isActive == staysActive)
+        {
+            return Result.Success();
+        }
+
+        var employee = await this.employeeRepository.FindByUserIdAsync(userId, cancellationToken);
+        if (employee is null)
+        {
+            return Result.Success();
+        }
+
+        if (staysActive)
+        {
+            return employee.IsActive ? Result.Success() : Result.Failure(ErrorCodes.AccountEmployeeInactive);
+        }
+
+        if (await this.employeeRepository.HasSubordinatesAsync(employee.Id, cancellationToken))
+        {
+            return Result.Failure(ErrorCodes.EmployeeHasSubordinates);
+        }
+
+        return await this.evaluatorSettingsRepository.IsControllerForAnyEvaluatorAsync(employee.Id, cancellationToken)
+            ? Result.Failure(ErrorCodes.EmployeeControlsEvaluators)
+            : Result.Success();
     }
 }
 
