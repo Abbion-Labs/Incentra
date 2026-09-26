@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, ApiError } from '../../api/client';
 import type { Employee } from '../../api/types';
 import { useIntl } from '../../i18n';
+import { localizeApiError } from '../../utils/errorLocalization';
 import { EmployeeAvatar } from './EmployeeAvatar';
 
 interface EmployeeAvatarUploadProps {
@@ -64,7 +65,7 @@ export function EmployeeAvatarUpload({
     } catch (e) {
       setError(
         e instanceof ApiError
-          ? e.message
+          ? localizeApiError(e.message, formatMessage)
           : formatMessage({ id: 'account.uploadFailed' }),
       );
     } finally {
@@ -85,7 +86,7 @@ export function EmployeeAvatarUpload({
     } catch (e) {
       setError(
         e instanceof ApiError
-          ? e.message
+          ? localizeApiError(e.message, formatMessage)
           : formatMessage({ id: 'account.removeFailed' }),
       );
     } finally {

@@ -5,6 +5,7 @@ using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Application.Common.Models;
 using VariableCompensation.Application.Hr.Models;
+using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Hr;
 using VariableCompensation.Domain.Enums;
 
@@ -41,7 +42,7 @@ public sealed class GetEmployeeSalariesPagedQueryHandler
     {
         if (!this.currentUserService.IsInRole(RoleCodes.Payroll))
         {
-            return Result.Failure<PagedResult<EmployeeSalaryResponse>>("Forbidden.");
+            return Result.Failure<PagedResult<EmployeeSalaryResponse>>(ErrorCodes.Forbidden);
         }
 
         var page = request.Page < 1 ? 1 : request.Page;
@@ -99,7 +100,7 @@ public sealed class GetEmployeeSalariesQueryHandler : IRequestHandler<GetEmploye
     {
         if (!this.currentUserService.IsInRole(RoleCodes.Payroll))
         {
-            return Result.Failure<IReadOnlyList<EmployeeSalaryResponse>>("Forbidden.");
+            return Result.Failure<IReadOnlyList<EmployeeSalaryResponse>>(ErrorCodes.Forbidden);
         }
 
         var rows = await this.salaryRepository.GetAllCurrentWithEmployeesAsync(cancellationToken);
@@ -162,13 +163,13 @@ public sealed class GetEmployeeSalaryHistoryQueryHandler
     {
         if (!this.currentUserService.IsInRole(RoleCodes.Payroll))
         {
-            return Result.Failure<IReadOnlyList<EmployeeSalaryResponse>>("Forbidden.");
+            return Result.Failure<IReadOnlyList<EmployeeSalaryResponse>>(ErrorCodes.Forbidden);
         }
 
         var rows = await this.salaryRepository.GetHistoryByEmployeeIdAsync(request.EmployeeId, cancellationToken);
         if (rows.Count == 0)
         {
-            return Result.Failure<IReadOnlyList<EmployeeSalaryResponse>>("Employee not found or has no salary history.");
+            return Result.Failure<IReadOnlyList<EmployeeSalaryResponse>>(ErrorCodes.SalaryHistoryNotFound);
         }
 
         return Result.Success(GetEmployeeSalariesQueryHandler.MapRows(rows, this.encryptionService));
@@ -209,7 +210,7 @@ public sealed class GetEmployeesWithoutSalaryQueryHandler
     {
         if (!this.currentUserService.IsInRole(RoleCodes.Payroll))
         {
-            return Result.Failure<IReadOnlyList<EmployeeSalaryEmployeeOption>>("Forbidden.");
+            return Result.Failure<IReadOnlyList<EmployeeSalaryEmployeeOption>>(ErrorCodes.Forbidden);
         }
 
         var (employees, _) = await this.employeeRepository.GetWithoutCurrentSalaryPagedAsync(
@@ -248,7 +249,7 @@ public sealed class GetEmployeesWithoutSalaryPagedQueryHandler
     {
         if (!this.currentUserService.IsInRole(RoleCodes.Payroll))
         {
-            return Result.Failure<PagedResult<EmployeeSalaryEmployeeOption>>("Forbidden.");
+            return Result.Failure<PagedResult<EmployeeSalaryEmployeeOption>>(ErrorCodes.Forbidden);
         }
 
         var page = request.Page < 1 ? 1 : request.Page;

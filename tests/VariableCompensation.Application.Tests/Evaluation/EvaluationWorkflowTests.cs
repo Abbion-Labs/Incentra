@@ -1,6 +1,7 @@
 using FluentAssertions;
 using EvaluationWorkflowService = VariableCompensation.Application.Evaluation.Services.EvaluationWorkflow;
 using EvaluationWorkflowAction = VariableCompensation.Application.Evaluation.Services.EvaluationWorkflowAction;
+using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Evaluation;
 using VariableCompensation.Domain.Enums;
 using VariableCompensation.Testing.Common.Builders;
@@ -35,7 +36,7 @@ public class EvaluationWorkflowTests
         }
         else
         {
-            error.Should().NotBeNullOrEmpty();
+            error.Should().Be(ErrorCodes.EvaluationActionNotAllowed);
         }
     }
 

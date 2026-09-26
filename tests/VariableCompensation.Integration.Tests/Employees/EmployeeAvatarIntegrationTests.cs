@@ -3,6 +3,7 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using FluentAssertions;
+using VariableCompensation.Domain;
 using VariableCompensation.Testing.Common;
 
 namespace VariableCompensation.Integration.Tests.Employees;
@@ -30,6 +31,7 @@ public class EmployeeAvatarIntegrationTests
 
         var unsupported = await UploadAsync(client, path, "image/gif");
         unsupported.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorAsync(unsupported)).Should().Be(ErrorCodes.ImageTypeUnsupported);
         (await this.CurrentAvatarUrlAsync(client)).Should().Be(firstUrl);
         (await client.GetAsync(firstUrl)).StatusCode.Should().Be(HttpStatusCode.OK);
 
@@ -45,6 +47,21 @@ public class EmployeeAvatarIntegrationTests
         (await this.CurrentAvatarUrlAsync(client)).Should().BeNull();
         (await client.GetAsync(secondUrl)).StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
+
+    [Fact]
+    public async Task UploadWithoutAFile_IsRefusedWithACodeTheAppTranslates()
+    {
+        var client = await this.CreateClientAsync(TestCredentials.EmployeeEmail, TestCredentials.EmployeePassword);
+        using var form = new MultipartFormDataContent { { new StringContent("x"), "other" } };
+
+        var response = await client.PostAsync($"/api/employees/{TestEmployeeIds.Employee}/avatar", form);
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        (await ErrorAsync(response)).Should().Be(ErrorCodes.ImageRequired);
+    }
+
+    private static async Task<string?> ErrorAsync(HttpResponseMessage response) =>
+        (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("error").GetString();
 
     private static async Task<HttpResponseMessage> UploadAsync(HttpClient client, string path, string contentType)
     {

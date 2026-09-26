@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using VariableCompensation.Application.Compensation.Queries;
+using VariableCompensation.Domain;
 
 namespace VariableCompensation.Api.Controllers;
 
@@ -43,7 +44,7 @@ public sealed class CompensationResultsController : ControllerBase
             new GetCompensationAnalyticsQuery(year, organizationUnitId, chartType),
             cancellationToken);
 
-        return result is null ? this.BadRequest(new { error = "Invalid chart type or access denied." }) : this.Ok(result);
+        return result is null ? this.BadRequest(new { error = ErrorCodes.CompensationAnalyticsUnavailable }) : this.Ok(result);
     }
 
     [HttpGet("{id:long}")]
