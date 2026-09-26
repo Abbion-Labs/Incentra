@@ -196,6 +196,8 @@ public class EvaluationReviewRulesIntegrationTests
         };
         evaluation.Goals.Add(new EvaluationGoal { Description = "Cilj", RatingLevelId = rated.Id, SortOrder = 1 });
         evaluation.Measures.Add(new EvaluationMeasure { MeasureTypeId = measureType.Id, RatingLevelId = rated.Id, SortOrder = 1 });
+        evaluation.Conditions.Add(new EvaluationCondition { Description = "Uslov", SortOrder = 1 });
+        evaluation.Criteria.Add(new EvaluationCriterion { Description = "Kriterijum", SortOrder = 1 });
         context.Evaluations.Add(evaluation);
         await context.SaveChangesAsync();
 

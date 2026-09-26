@@ -65,6 +65,12 @@ public sealed class SubmitEvaluationCommandHandler : IRequestHandler<SubmitEvalu
             return Result.Failure<EvaluationDetailResponse>(ErrorCodes.SubmitRequiresGoal);
         }
 
+        // An evaluation is rated against the plan agreed with the employee, so there is nothing to submit without one.
+        if (!EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
+        {
+            return Result.Failure<EvaluationDetailResponse>(ErrorCodes.PlanIncomplete);
+        }
+
         if (entity.ConditionsFulfilled)
         {
             if (entity.Measures.Count == 0)

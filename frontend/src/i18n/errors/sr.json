@@ -110,6 +110,7 @@
     "vn-0113": "Ocenjivač ima ocene koje čekaju pregled kontrolora. Kontrolor ne može da se ukloni dok ih ne odobri ili vrati na doradu.",
     "vn-0114": "Težinu treba zadati za sve ciljeve ili ni za jedan.",
     "vn-0115": "Težina cilja mora biti ceo procenat od {min}% do 100%.",
-    "vn-0116": "Zbir težina ciljeva je {total}%, a mora biti tačno 100%."
+    "vn-0116": "Zbir težina ciljeva je {total}%, a mora biti tačno 100%.",
+    "vn-0121": "Plan mora imati bar jedan cilj, jedan uslov i jedan kriterijum."
   }
 }
