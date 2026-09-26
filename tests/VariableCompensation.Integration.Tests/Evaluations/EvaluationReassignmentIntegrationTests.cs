@@ -98,6 +98,7 @@ public class EvaluationReassignmentIntegrationTests
         var jobPosition = await context.JobPositions.FirstAsync();
         var education = await context.EducationLevels.FirstAsync();
         var controllerRole = await context.Roles.SingleAsync(r => r.Code == RoleCodes.Controller);
+        var evaluatorRole = await context.Roles.SingleAsync(r => r.Code == RoleCodes.Evaluator);
         var suffix = Guid.NewGuid().ToString("N")[..8];
 
         Employee NewEmployee(string firstName, long? evaluatorId) => new()
@@ -127,6 +128,12 @@ public class EvaluationReassignmentIntegrationTests
         var newController = NewController("Petar");
         var otherController = NewController("Nikola");
         var newEvaluator = NewEmployee("Ana", null);
+        newEvaluator.User = new User
+        {
+            Email = $"ana-{suffix}@local.dev",
+            PasswordHash = "unused",
+            UserRoles = { new UserRole { RoleId = evaluatorRole.Id } },
+        };
         var employee = NewEmployee("Premeštanje", TestEmployeeIds.Evaluator);
         context.Employees.AddRange(newController, otherController, newEvaluator, employee);
         await context.SaveChangesAsync();

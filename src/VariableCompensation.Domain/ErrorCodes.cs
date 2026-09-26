@@ -112,5 +112,9 @@ public static class ErrorCodes
     public const string GoalWeightsIncomplete = "vn-0114";
     public const string GoalWeightInvalid = "vn-0115";
     public const string GoalWeightsSumInvalid = "vn-0116";
+    public const string EmployeeControlsEvaluators = "vn-0117";
+    public const string EvaluatorInactive = "vn-0118";
+    public const string ControllerInactive = "vn-0119";
+    public const string AccountEmployeeInactive = "vn-0120";
     public const string PlanIncomplete = "vn-0121";
 }

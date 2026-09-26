@@ -207,7 +207,7 @@ public sealed class EmployeeRepository : IEmployeeRepository
         var query = this.context.Employees
             .AsNoTracking()
             .Include(e => e.OrganizationUnit)
-            .Where(e => !this.context.EmployeeSalaries.Any(s => s.EmployeeId == e.Id && s.EffectiveTo == null))
+            .Where(e => e.IsActive && !this.context.EmployeeSalaries.Any(s => s.EmployeeId == e.Id && s.EffectiveTo == null))
             .AsQueryable();
 
         var term = EmployeeNameSearch.Normalize(search);

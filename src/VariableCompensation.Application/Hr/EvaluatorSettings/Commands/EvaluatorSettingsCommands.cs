@@ -58,19 +58,20 @@ public sealed class UpdateEvaluatorSettingsCommandHandler : IRequestHandler<Upda
             return Result.Failure<EvaluatorSettingsResponse>(version.Error);
         }
 
-        var controllerCheck = await Services.ControllerRoleCheck.EnsureCanControlAsync(
-            request.EmployeeId,
-            request.ControllerEmployeeId,
-            this.employeeRepository,
-            this.userRepository,
-            cancellationToken);
-        if (controllerCheck.IsFailure)
-        {
-            return Result.Failure<EvaluatorSettingsResponse>(controllerCheck.Error);
-        }
-
         if (entity.ControllerEmployeeId != request.ControllerEmployeeId)
         {
+            // Only a new choice is checked: the controller in place was checked when chosen.
+            var controllerCheck = await Services.ControllerRoleCheck.EnsureCanControlAsync(
+                request.EmployeeId,
+                request.ControllerEmployeeId,
+                this.employeeRepository,
+                this.userRepository,
+                cancellationToken);
+            if (controllerCheck.IsFailure)
+            {
+                return Result.Failure<EvaluatorSettingsResponse>(controllerCheck.Error);
+            }
+
             // Everything of this evaluator that still waits for a controller goes to the new one; the previous
             // controller no longer supervises the evaluator.
             var open = await this.evaluationRepository.GetUnapprovedForUpdateByEvaluatorAsync(
