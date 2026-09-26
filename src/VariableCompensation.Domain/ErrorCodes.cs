@@ -116,4 +116,5 @@ public static class ErrorCodes
     public const string EvaluatorInactive = "vn-0118";
     public const string ControllerInactive = "vn-0119";
     public const string AccountEmployeeInactive = "vn-0120";
+    public const string PlanIncomplete = "vn-0121";
 }

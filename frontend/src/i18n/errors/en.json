@@ -114,6 +114,7 @@
     "vn-0117": "This employee is the controller of evaluators. Give them another controller before deactivating.",
     "vn-0118": "The chosen evaluator is no longer active or has no active account. Choose another evaluator.",
     "vn-0119": "The chosen controller is no longer active or has no active account. Choose another controller.",
-    "vn-0120": "The employee this account belongs to is no longer active. Reactivate the employee first, then the account."
+    "vn-0120": "The employee this account belongs to is no longer active. Reactivate the employee first, then the account.",
+    "vn-0121": "The plan needs at least one goal, one condition and one criterion."
   }
 }

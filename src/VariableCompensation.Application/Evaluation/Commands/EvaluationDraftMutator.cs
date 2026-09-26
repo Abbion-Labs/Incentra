@@ -28,14 +28,17 @@ internal static class EvaluationDraftMutator
     /// <summary>
     /// Sets the goals while the plan is still being made. Once goals, conditions and criteria are set the plan is
     /// what was agreed with the employee: from then on only the rating and comment of each existing goal change.
+    /// <paramref name="planAgreed"/> is whether the plan was agreed before the edit began; an edit that sets several
+    /// parts of the plan passes it, so the part it sets first does not make the plan look agreed to the next.
     /// </summary>
     public static async Task<Result> ApplyGoalsAsync(
         EvaluationEntity entity,
         IReadOnlyList<EvaluationGoalItem> goals,
         IEvaluationLookupRepository lookupRepository,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool? planAgreed = null)
     {
-        if (EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
+        if (planAgreed ?? EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
         {
             return await RateAgreedGoalsAsync(entity, goals, lookupRepository, cancellationToken);
         }
@@ -166,12 +169,12 @@ internal static class EvaluationDraftMutator
 
     public static Result ApplyConditions(
         EvaluationEntity entity,
-        IReadOnlyList<EvaluationConditionItem> conditions)
+        IReadOnlyList<EvaluationConditionItem> conditions,
+        bool? planAgreed = null)
     {
-        var planningLock = EvaluationPlanningRules.EnsureConditionsPlanningEditable(entity);
-        if (planningLock.IsFailure)
+        if (planAgreed ?? EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
         {
-            return planningLock;
+            return Result.Failure(ErrorCodes.GoalsPlanningLocked);
         }
 
         entity.Conditions.Clear();
@@ -194,12 +197,12 @@ internal static class EvaluationDraftMutator
 
     public static Result ApplyCriteria(
         EvaluationEntity entity,
-        IReadOnlyList<EvaluationCriterionItem> criteria)
+        IReadOnlyList<EvaluationCriterionItem> criteria,
+        bool? planAgreed = null)
     {
-        var planningLock = EvaluationPlanningRules.EnsureCriteriaPlanningEditable(entity);
-        if (planningLock.IsFailure)
+        if (planAgreed ?? EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
         {
-            return planningLock;
+            return Result.Failure(ErrorCodes.GoalsPlanningLocked);
         }
 
         entity.Criteria.Clear();
