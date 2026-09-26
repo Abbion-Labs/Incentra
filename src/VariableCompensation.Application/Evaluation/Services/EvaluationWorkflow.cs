@@ -1,4 +1,5 @@
 using EvaluationEntity = VariableCompensation.Domain.Entities.Evaluation.Evaluation;
+using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Evaluation;
 using VariableCompensation.Domain.Enums;
 
@@ -25,7 +26,7 @@ internal static class EvaluationWorkflow
 
         if (allowed is null)
         {
-            error = $"Cannot {action} evaluation in status {current}.";
+            error = ErrorCodes.EvaluationActionNotAllowed;
             return false;
         }
 

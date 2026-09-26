@@ -16,6 +16,13 @@ public sealed class UploadEmployeeAvatarCommandHandler : IRequestHandler<UploadE
 {
     private const long MaxFileSizeBytes = 2 * 1024 * 1024;
 
+    private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    };
+
     private readonly IEmployeeRepository employeeRepository;
     private readonly IEmployeeAvatarStorage avatarStorage;
     private readonly ICurrentUserService currentUserService;
@@ -48,6 +55,11 @@ public sealed class UploadEmployeeAvatarCommandHandler : IRequestHandler<UploadE
             return Result.Failure<EmployeeResponse>(ErrorCodes.ImageTooLarge);
         }
 
+        if (!AllowedContentTypes.Contains(request.ContentType))
+        {
+            return Result.Failure<EmployeeResponse>(ErrorCodes.ImageTypeUnsupported);
+        }
+
         var employee = await this.employeeRepository.FindByIdForUpdateAsync(request.EmployeeId, cancellationToken);
         if (employee is null)
         {
@@ -75,7 +87,9 @@ public sealed class UploadEmployeeAvatarCommandHandler : IRequestHandler<UploadE
         }
         catch (InvalidOperationException ex)
         {
-            return Result.Failure<EmployeeResponse>(ex.Message);
+            // The storage's own message is for the log: it names the provider and its status codes.
+            this.logger.LogError(ex, "Avatar upload failed for employee {EmployeeId}", request.EmployeeId);
+            return Result.Failure<EmployeeResponse>(ErrorCodes.ImageUploadFailed);
         }
 
         employee.AvatarUrl = avatarUrl;

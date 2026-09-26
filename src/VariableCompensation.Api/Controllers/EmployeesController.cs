@@ -118,11 +118,11 @@ public sealed class EmployeesController : ControllerBase
 
     [HttpPost("{id:long}/avatar")]
     [RequestSizeLimit(2 * 1024 * 1024)]
-    public async Task<IActionResult> UploadAvatar(long id, IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadAvatar(long id, IFormFile? file, CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
+        if (file is null || file.Length == 0)
         {
-            return this.BadRequest(new { error = "Image file is required." });
+            return this.BadRequest(new { error = ErrorCodes.ImageRequired });
         }
 
         await using var stream = file.OpenReadStream();

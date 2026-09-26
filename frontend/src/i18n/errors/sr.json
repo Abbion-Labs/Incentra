@@ -114,6 +114,11 @@
     "vn-0117": "Zaposleni je kontrolor ocenjivačima. Dodelite im drugog kontrolora pre deaktivacije.",
     "vn-0118": "Izabrani ocenjivač više nije aktivan ili nema aktivan nalog. Izaberite drugog ocenjivača.",
     "vn-0119": "Izabrani kontrolor više nije aktivan ili nema aktivan nalog. Izaberite drugog kontrolora.",
-    "vn-0120": "Zaposleni kome nalog pripada više nije aktivan. Prvo aktivirajte zaposlenog, pa nalog."
+    "vn-0120": "Zaposleni kome nalog pripada više nije aktivan. Prvo aktivirajte zaposlenog, pa nalog.",
+    "vn-0122": "Slika mora biti u formatu JPEG, PNG ili WebP.",
+    "vn-0123": "Slika nije sačuvana. Pokušajte ponovo.",
+    "vn-0124": "Ova radnja više nije moguća za ocenu u trenutnom statusu. Osvežite stranicu.",
+    "vn-0125": "Analitika za izabrani prikaz nije dostupna.",
+    "vn-0126": "Zaposleni nema istoriju plata."
   }
 }
