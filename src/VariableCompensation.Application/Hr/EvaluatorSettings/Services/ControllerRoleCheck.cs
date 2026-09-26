@@ -26,10 +26,14 @@ public static class ControllerRoleCheck
 
         var user = await userRepository.FindByEmployeeIdAsync(controllerEmployeeId, cancellationToken);
         var isController = user?.UserRoles.Any(ur => ur.Role.Code == RoleCodes.Controller) ?? false;
+        if (!isController)
+        {
+            return Result.Failure(ErrorCodes.ControllerRoleRequired);
+        }
 
-        return isController
+        return await ActiveAssignee.CanSignInAsync(controllerEmployeeId, employeeRepository, userRepository, cancellationToken)
             ? Result.Success()
-            : Result.Failure(ErrorCodes.ControllerRoleRequired);
+            : Result.Failure(ErrorCodes.ControllerInactive);
     }
 
     /// <summary>
