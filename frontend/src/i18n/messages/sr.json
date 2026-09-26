@@ -108,19 +108,15 @@
   },
   "auth": {
     "welcome": "Dobrodošli",
-    "subtitle": "Prijavite se email adresom i lozinkom",
     "heroTagline": "Ocenjivanje i varijabilno nagrađivanje",
     "heroPointGoals": "Jasno postavljeni ciljevi i kriterijumi",
     "heroPointWorkflow": "Vođen proces od ocenjivača do kontrole",
     "heroPointPayout": "Obračun varijabile bez ručnih tabela",
     "loginFailed": "Prijava nije uspela.",
-    "demoAccounts": "Demo nalozi",
+    "showPassword": "Prikaži lozinku",
+    "hidePassword": "Sakrij lozinku",
+    "capsLockOn": "Caps Lock je uključen.",
     "placeholderEmail": "ime@firma.rs",
-    "admin": "Admin",
-    "evaluator": "Ocenjivač i kontrolor",
-    "controller": "Kontrolor",
-    "employee": "Zaposleni",
-    "payroll": "Plate",
     "noRoleAssigned": "Nalog nema dodeljenu ulogu za rad u sistemu. Obratite se administratoru."
   },
   "account": {

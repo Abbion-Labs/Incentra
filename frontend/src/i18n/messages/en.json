@@ -108,19 +108,15 @@
   },
   "auth": {
     "welcome": "Welcome",
-    "subtitle": "Sign in with your email and password",
     "heroTagline": "Evaluation and variable compensation",
     "heroPointGoals": "Clearly defined goals and criteria",
     "heroPointWorkflow": "Guided flow from evaluator to controller",
     "heroPointPayout": "Variable pay calculated without spreadsheets",
     "loginFailed": "Login failed.",
-    "demoAccounts": "Demo accounts",
+    "showPassword": "Show password",
+    "hidePassword": "Hide password",
+    "capsLockOn": "Caps Lock is on.",
     "placeholderEmail": "name@company.com",
-    "admin": "Admin",
-    "evaluator": "Evaluator and controller",
-    "controller": "Controller",
-    "employee": "Employee",
-    "payroll": "Payroll",
     "noRoleAssigned": "This account has no role assigned for system access. Contact your administrator."
   },
   "account": {
