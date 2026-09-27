@@ -16,4 +16,13 @@ COPY --from=build /app/publish .
 COPY deploy/vercel/backend-entrypoint.sh /usr/local/bin/backend-entrypoint
 RUN chmod +x /usr/local/bin/backend-entrypoint
 
+RUN { \
+      echo "[ContainerImageProfile] Uncompressed filesystem sizes (bytes)"; \
+      du -sb /app /usr/share/dotnet /usr/lib /usr/share 2>/dev/null; \
+      echo "[ContainerImageProfile] Total root filesystem size (bytes)"; \
+      du -sbx / 2>/dev/null; \
+      echo "[ContainerImageProfile] Largest application entries (bytes)"; \
+      du -ab /app 2>/dev/null | sort -nr | head -n 20; \
+    } > /container-image-profile.txt
+
 ENTRYPOINT ["/usr/local/bin/backend-entrypoint"]

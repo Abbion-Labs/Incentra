@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
 using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Domain.Entities.Lookup;
@@ -9,7 +10,13 @@ public static class DatabaseSeeder
 {
     public static async Task SeedAsync(AppDbContext context, ISensitiveDataEncryptionService encryption)
     {
+        var totalTimer = Stopwatch.StartNew();
+        var stageTimer = Stopwatch.StartNew();
+
         await context.Database.MigrateAsync();
+        Console.WriteLine($"[StartupProfile] DatabaseSeeder.MigrateAsync took {stageTimer.ElapsedMilliseconds} ms");
+
+        stageTimer.Restart();
 
         if (!await context.Roles.AnyAsync())
         {
@@ -108,7 +115,12 @@ public static class DatabaseSeeder
             await context.SaveChangesAsync();
         }
 
+        Console.WriteLine($"[StartupProfile] DatabaseSeeder reference-data checks took {stageTimer.ElapsedMilliseconds} ms");
+
+        stageTimer.Restart();
         await RealisticOrganizationSeeder.EnsureAsync(context, encryption);
+        Console.WriteLine($"[StartupProfile] RealisticOrganizationSeeder.EnsureAsync took {stageTimer.ElapsedMilliseconds} ms");
+        Console.WriteLine($"[StartupProfile] DatabaseSeeder total took {totalTimer.ElapsedMilliseconds} ms");
     }
 
     private static IReadOnlyList<MeasureType> CreateDefaultMeasureTypes() =>
