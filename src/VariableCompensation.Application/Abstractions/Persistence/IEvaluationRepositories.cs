@@ -15,6 +15,12 @@ public interface IEvaluationRepository
 
     Task<IReadOnlyList<EvaluationStatusHistory>> GetStatusHistoryAsync(long evaluationId, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Records that the controller opened the evaluation while it waits for review, unless that was already
+    /// recorded. Returns whether this call recorded it.
+    /// </summary>
+    Task<bool> MarkViewedByControllerAsync(long id, DateTime viewedAt, CancellationToken cancellationToken);
+
     Task<(IReadOnlyList<EvaluationEntity> Items, int TotalCount)> GetPagedAsync(
         int page,
         int pageSize,

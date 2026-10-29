@@ -30,7 +30,16 @@ public sealed class EvaluationRepository : IEvaluationRepository
             .AsNoTracking()
             .Where(h => h.EvaluationId == evaluationId)
             .OrderByDescending(h => h.ChangedAt)
+            .ThenByDescending(h => h.Id)
             .ToListAsync(cancellationToken);
+
+    public async Task<bool> MarkViewedByControllerAsync(long id, DateTime viewedAt, CancellationToken cancellationToken) =>
+        await this.context.Evaluations
+            .Where(e =>
+                e.Id == id &&
+                e.ControllerViewedAt == null &&
+                (e.Status == EvaluationStatus.Submitted || e.Status == EvaluationStatus.UnderReview))
+            .ExecuteUpdateAsync(setters => setters.SetProperty(e => e.ControllerViewedAt, viewedAt), cancellationToken) > 0;
 
     public async Task<(IReadOnlyList<Evaluation> Items, int TotalCount)> GetPagedAsync(
         int page,
@@ -49,10 +58,12 @@ public sealed class EvaluationRepository : IEvaluationRepository
         var query = BuildFilteredQuery(year, quarter, status, bucket, search, employeeId, evaluatorEmployeeId, controllerEmployeeId, organizationUnitId);
 
         var totalCount = await query.CountAsync(cancellationToken);
+        // The order has to be unique: the page is read in several split queries, and they must agree on its rows.
         var items = await IncludeListDetails(query)
             .OrderByDescending(e => e.Year)
             .ThenByDescending(e => e.Quarter)
             .ThenBy(e => e.Employee.LastName)
+            .ThenBy(e => e.Id)
             .Skip((page - 1) * pageSize)
             .Take(pageSize)
             .ToListAsync(cancellationToken);
@@ -71,23 +82,41 @@ public sealed class EvaluationRepository : IEvaluationRepository
         CancellationToken cancellationToken)
     {
         var baseQuery = BuildFilteredQuery(year, quarter, status: null, bucket: null, search, employeeId, evaluatorEmployeeId, controllerEmployeeId, organizationUnitId);
+        var planning = EvaluationBucketFilter.ApplyBucket(baseQuery, "planning");
+        var unrated = EvaluationBucketFilter.ApplyBucket(baseQuery, "unrated");
+        var returned = EvaluationBucketFilter.ApplyBucket(baseQuery, "returned");
+        var submitted = EvaluationBucketFilter.ApplyBucket(baseQuery, "submitted");
+        var approved = EvaluationBucketFilter.ApplyBucket(baseQuery, "approved");
+        var goalsComplete = EvaluationBucketFilter.ApplyBucket(baseQuery, "goalscomplete");
 
-        var planning = await EvaluationBucketFilter.ApplyBucket(baseQuery, "planning").CountAsync(cancellationToken);
-        var unrated = await EvaluationBucketFilter.ApplyBucket(baseQuery, "unrated").CountAsync(cancellationToken);
-        var returned = await EvaluationBucketFilter.ApplyBucket(baseQuery, "returned").CountAsync(cancellationToken);
-        var submitted = await EvaluationBucketFilter.ApplyBucket(baseQuery, "submitted").CountAsync(cancellationToken);
-        var approved = await EvaluationBucketFilter.ApplyBucket(baseQuery, "approved").CountAsync(cancellationToken);
-        var goalsComplete = await EvaluationBucketFilter.ApplyBucket(baseQuery, "goalscomplete").CountAsync(cancellationToken);
+        // All counts in one statement, as subqueries of a single row, instead of a round trip per tab.
+        var counts = await this.context.Evaluations
+            .Take(1)
+            .Select(_ => new
+            {
+                Planning = planning.Count(),
+                Unrated = unrated.Count(),
+                Returned = returned.Count(),
+                Submitted = submitted.Count(),
+                Approved = approved.Count(),
+                GoalsComplete = goalsComplete.Count(),
+            })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (counts is null)
+        {
+            return new EvaluationBucketCountsResponse();
+        }
 
         return new EvaluationBucketCountsResponse
         {
-            Planning = planning,
-            Unrated = unrated,
-            Returned = returned,
-            Submitted = submitted,
-            Approved = approved,
-            Pending = submitted,
-            GoalsComplete = goalsComplete,
+            Planning = counts.Planning,
+            Unrated = counts.Unrated,
+            Returned = counts.Returned,
+            Submitted = counts.Submitted,
+            Approved = counts.Approved,
+            Pending = counts.Submitted,
+            GoalsComplete = counts.GoalsComplete,
         };
     }
 
@@ -153,6 +182,8 @@ public sealed class EvaluationRepository : IEvaluationRepository
         return query;
     }
 
+    // Goals, measures, conditions and criteria are separate collections: loaded in one query, every combination of
+    // them would come back as a row (about 150 per evaluation), so each collection is read in a query of its own.
     private static IQueryable<Evaluation> IncludeListDetails(IQueryable<Evaluation> query) =>
         query
             .Include(e => e.Employee).ThenInclude(emp => emp.OrganizationUnit)
@@ -162,7 +193,8 @@ public sealed class EvaluationRepository : IEvaluationRepository
             .Include(e => e.Goals).ThenInclude(g => g.RatingLevel)
             .Include(e => e.Measures).ThenInclude(m => m.RatingLevel)
             .Include(e => e.Conditions)
-            .Include(e => e.Criteria);
+            .Include(e => e.Criteria)
+            .AsSplitQuery();
 
     public Task<bool> ExistsForEmployeeQuarterAsync(
         long employeeId,
@@ -194,6 +226,7 @@ public sealed class EvaluationRepository : IEvaluationRepository
             .Include(e => e.Measures).ThenInclude(m => m.RatingLevel)
             .Include(e => e.Conditions)
             .Include(e => e.Criteria)
+            .AsSplitQuery()
             .Where(e => e.EmployeeId == employeeId)
             .OrderByDescending(e => e.Year)
             .ThenByDescending(e => e.Quarter)
@@ -272,7 +305,8 @@ public sealed class EvaluationRepository : IEvaluationRepository
             .Include(e => e.Measures).ThenInclude(m => m.RatingLevel)
             .Include(e => e.Criteria)
             .Include(e => e.Conditions)
-            .Include(e => e.Training);
+            .Include(e => e.Training)
+            .AsSplitQuery();
 }
 
 public sealed class EvaluationLookupRepository : IEvaluationLookupRepository

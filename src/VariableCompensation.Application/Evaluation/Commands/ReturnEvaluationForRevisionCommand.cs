@@ -62,13 +62,15 @@ public sealed class ReturnEvaluationForRevisionCommandHandler : IRequestHandler<
             return Result.Failure<EvaluationDetailResponse>(reviewAccess.Error);
         }
 
+        var userId = this.currentUserService.UserId ?? 0;
+        EvaluationWorkflow.StartReviewIfSubmitted(entity, userId, this.currentUserService.ActiveRole);
+
         if (!EvaluationWorkflow.TryGetNextStatus(entity.Status, EvaluationWorkflowAction.ReturnForRevision, out var next, out var error))
         {
             return Result.Failure<EvaluationDetailResponse>(error!);
         }
 
         var from = entity.Status;
-        var userId = this.currentUserService.UserId ?? 0;
         entity.ControllerComment = request.RevisionComment.Trim();
         EvaluationWorkflow.ApplyTransition(
             entity, from, next, userId, this.currentUserService.ActiveRole, request.RevisionComment.Trim());

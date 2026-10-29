@@ -34,6 +34,24 @@ internal static class EvaluationWorkflow
         return true;
     }
 
+    /// <summary>
+    /// A controller's decision on an evaluation still waiting for review takes it into review first, as opening the
+    /// review would, so the decision is one request and the history still shows the review step.
+    /// </summary>
+    public static void StartReviewIfSubmitted(EvaluationEntity evaluation, long changedByUserId, string? changedByRoleCode)
+    {
+        if (evaluation.Status == EvaluationStatus.Submitted)
+        {
+            ApplyTransition(
+                evaluation,
+                EvaluationStatus.Submitted,
+                EvaluationStatus.UnderReview,
+                changedByUserId,
+                changedByRoleCode,
+                comment: null);
+        }
+    }
+
     public static void ApplyTransition(
         EvaluationEntity evaluation,
         EvaluationStatus from,
