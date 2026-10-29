@@ -195,23 +195,26 @@ describe('GoalsPlanningPage', () => {
     ]);
   });
 
-  it('shows which part of the plan is still missing', async () => {
+  it('says why the goals cannot be set while the plan is incomplete', async () => {
     renderPage((path) =>
       path === '/api/evaluations/5'
         ? { ...evaluation, criteria: [] }
         : undefined,
     );
 
-    const criteria = await screen.findByText(
-      'evaluation.planning.checkCriteria',
-    );
-    const goals = screen.getByText('evaluation.planning.checkGoals');
+    const save = await screen.findByRole('button', {
+      name: 'evaluation.setGoals',
+    });
+    expect(save).toHaveProperty('disabled', true);
+    expect(screen.getByText('evaluation.planning.incompleteHint')).toBeTruthy();
 
-    expect(criteria.closest('li')?.className).toContain('is-missing');
-    expect(goals.closest('li')?.className).toContain('is-done');
-    expect(
-      screen.getByRole('button', { name: 'evaluation.setGoals' }),
-    ).toHaveProperty('disabled', true);
+    fireEvent.change(
+      screen.getByPlaceholderText('evaluation.planning.criterionPlaceholder'),
+      { target: { value: 'Kriterijum' } },
+    );
+
+    await waitFor(() => expect(save).toHaveProperty('disabled', false));
+    expect(screen.queryByText('evaluation.planning.incompleteHint')).toBeNull();
   });
 
   it('shows the previous quarter plan and copies it without loading it again', async () => {

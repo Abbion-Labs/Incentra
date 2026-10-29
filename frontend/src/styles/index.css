@@ -6736,48 +6736,19 @@ input[type='search']::-webkit-search-cancel-button {
   font-size: var(--text-xs);
 }
 
-.goals-checklist {
-  display: grid;
-  gap: 0.45rem;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.goals-checklist__item {
+.goals-planning__actions {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-  font-variant-numeric: tabular-nums;
-}
-
-.goals-checklist__item svg {
-  flex-shrink: 0;
-}
-
-.goals-checklist__item.is-done svg {
-  color: var(--success);
-}
-
-.goals-checklist__item.is-missing {
-  color: var(--warning);
-  font-weight: 600;
-}
-
-.goals-planning__conversation {
-  display: grid;
+  flex-direction: column;
   gap: var(--space-sm);
   padding-top: var(--space-md);
   border-top: 1px solid var(--border);
 }
 
-.card .goals-planning__subtitle {
+.goals-planning__hint {
   margin: 0;
-  font-size: var(--text-sm);
-  font-weight: 700;
-  color: var(--text);
+  font-size: var(--text-xs);
+  line-height: 1.45;
+  color: var(--muted);
 }
 
 .goals-planning__submit {
@@ -6788,7 +6759,7 @@ input[type='search']::-webkit-search-cancel-button {
   display: flex;
   align-items: flex-start;
   gap: 0.4rem;
-  margin: calc(var(--space-sm) * -1) 0 0;
+  margin: 0;
   font-size: var(--text-xs);
   line-height: 1.45;
   color: var(--muted);

@@ -29,10 +29,7 @@ import { roleListPath } from '../../utils/evaluationApi';
 import { isStaleEvaluationError } from '../../utils/evaluationSave';
 import { previousQuarter } from '../../utils/status';
 import { GoalsPlanningEmployeeCard } from './components/GoalsPlanningEmployeeCard';
-import {
-  GoalsPlanningSidePanel,
-  type PlanningCheck,
-} from './components/GoalsPlanningSidePanel';
+import { GoalsPlanningSidePanel } from './components/GoalsPlanningSidePanel';
 import { GoalsReadOnlyOverview } from './components/GoalsReadOnlyOverview';
 import {
   PreviousPlanCard,
@@ -68,9 +65,6 @@ async function fetchPreviousPlan(
   ].some((item) => item.description.trim());
   return { summary, detail, hasPlan };
 }
-
-const countDescribed = (items: TextItemDraft[]) =>
-  items.filter((item) => item.description.trim()).length;
 
 export function GoalsPlanningPage() {
   const { formatMessage } = useIntl();
@@ -457,51 +451,6 @@ export function GoalsPlanningPage() {
     );
   }
 
-  const weights = checkGoalWeights(goals);
-  const goalCount = countDescribed(goals);
-  const conditionCount = countDescribed(conditions);
-  const criterionCount = countDescribed(criteria);
-  // Težine se računaju samo za ciljeve sa opisom, pa provera ima smisla tek
-  // kad postoji bar jedan takav cilj.
-  const checks: PlanningCheck[] = [
-    {
-      id: 'goals',
-      label: formatMessage(
-        { id: 'evaluation.planning.checkGoals' },
-        { count: goalCount },
-      ),
-      done: goalCount > 0,
-    },
-    ...(goalCount > 0
-      ? [
-          {
-            id: 'weights',
-            label: formatMessage(
-              { id: 'evaluation.planning.checkWeights' },
-              { total: weights.total },
-            ),
-            done: weights.valid,
-          },
-        ]
-      : []),
-    {
-      id: 'conditions',
-      label: formatMessage(
-        { id: 'evaluation.planning.checkConditions' },
-        { count: conditionCount },
-      ),
-      done: conditionCount > 0,
-    },
-    {
-      id: 'criteria',
-      label: formatMessage(
-        { id: 'evaluation.planning.checkCriteria' },
-        { count: criterionCount },
-      ),
-      done: criterionCount > 0,
-    },
-  ];
-
   const previousRating =
     previous && previousSummary?.descriptiveRatingName ? (
       <span className="goals-employee-card__previous">
@@ -572,7 +521,6 @@ export function GoalsPlanningPage() {
 
         <aside className="goals-planning__aside">
           <GoalsPlanningSidePanel
-            checks={checks}
             conversationAt={conversationAt}
             evaluatorComment={evaluatorComment}
             unsaved={canEditPlanning && isDirty}
@@ -581,7 +529,7 @@ export function GoalsPlanningPage() {
             lookupsLoading={lookupsLoading}
             canSubmit={
               hasValidPlanningDraft(goals, conditions, criteria) &&
-              weights.valid
+              checkGoalWeights(goals).valid
             }
             onConversationAtChange={handleConversationAtChange}
             onEvaluatorCommentChange={handleEvaluatorCommentChange}
