@@ -1,14 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using VariableCompensation.Application.Abstractions.Security;
 using VariableCompensation.Domain.Entities.Lookup;
 using VariableCompensation.Domain.Enums;
 using VariableCompensation.Infrastructure.Persistence;
 
 namespace VariableCompensation.Infrastructure.Persistence.Initialization;
 
-public sealed class DatabaseSeeder(
-    AppDbContext context,
-    ISensitiveDataEncryptionService encryption) : IDatabaseSeeder
+public sealed class DatabaseSeeder(AppDbContext context) : IDatabaseSeeder
 {
     public async Task SeedAsync()
     {
@@ -108,8 +105,6 @@ public sealed class DatabaseSeeder(
                 new EducationLevel { Name = "Master", SortOrder = 5, IsActive = true });
             await context.SaveChangesAsync();
         }
-
-        await RealisticOrganizationSeeder.EnsureAsync(context, encryption);
     }
 
     private static IReadOnlyList<MeasureType> CreateDefaultMeasureTypes() =>
