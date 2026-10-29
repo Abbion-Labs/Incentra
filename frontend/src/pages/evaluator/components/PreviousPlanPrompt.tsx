@@ -6,59 +6,7 @@ export type PreviousPlan =
   | { state: 'failed' }
   | { state: 'ready'; detail: EvaluationDetail | null; hasPlan: boolean };
 
-const countDescribed = (items: { description: string }[]) =>
-  items.filter((item) => item.description.trim()).length;
-
-interface PreviousPlanBannerProps {
-  quarter: number;
-  year: number;
-  detail: EvaluationDetail;
-  copying: boolean;
-  disabled: boolean;
-  onCopy: () => void;
-}
-
-/** Ponuda da se prazna forma popuni planom iz prethodnog kvartala. */
-export function PreviousPlanBanner({
-  quarter,
-  year,
-  detail,
-  copying,
-  disabled,
-  onCopy,
-}: PreviousPlanBannerProps) {
-  const { formatMessage } = useIntl();
-
-  return (
-    <div className="goals-previous-banner">
-      <HistoryIcon />
-      <span className="goals-previous-banner__text">
-        {formatMessage(
-          { id: 'evaluation.planning.previousPlanBanner' },
-          {
-            quarter,
-            year,
-            goals: countDescribed(detail.goals),
-            conditions: countDescribed(detail.conditions),
-            criteria: countDescribed(detail.criteria),
-          },
-        )}
-      </span>
-      <button
-        type="button"
-        className="btn btn-secondary btn-sm"
-        onClick={onCopy}
-        disabled={copying || disabled}
-      >
-        {copying
-          ? formatMessage({ id: 'common.loading' })
-          : formatMessage({ id: 'evaluation.planning.copyPreviousPlan' })}
-      </button>
-    </div>
-  );
-}
-
-interface CopyPreviousPlanLinkProps {
+interface CopyPreviousPlanButtonProps {
   quarter: number;
   year: number;
   copying: boolean;
@@ -66,20 +14,23 @@ interface CopyPreviousPlanLinkProps {
   onCopy: () => void;
 }
 
-/** Preuzimanje prethodnog plana kad forma već ima sadržaj: tihi link uz naslov. */
-export function CopyPreviousPlanLink({
+/**
+ * Preuzimanje plana iz prethodnog kvartala. Popunjava ciljeve, uslove i
+ * kriterijume, pa stoji uz zaposlenog i period, a ne u jednoj sekciji.
+ */
+export function CopyPreviousPlanButton({
   quarter,
   year,
   copying,
   disabled,
   onCopy,
-}: CopyPreviousPlanLinkProps) {
+}: CopyPreviousPlanButtonProps) {
   const { formatMessage } = useIntl();
 
   return (
     <button
       type="button"
-      className="goals-copy-link"
+      className="btn btn-secondary btn-sm goals-copy-button"
       onClick={onCopy}
       disabled={copying || disabled}
     >
@@ -98,8 +49,8 @@ function HistoryIcon() {
   return (
     <svg
       viewBox="0 0 24 24"
-      width="16"
-      height="16"
+      width="15"
+      height="15"
       fill="none"
       stroke="currentColor"
       strokeWidth="2"

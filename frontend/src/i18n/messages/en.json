@@ -307,11 +307,9 @@
       "criterionPlaceholder": "Criterion description...",
       "incompleteHint": "To set the goals, add at least one goal, condition and criterion, with weights that make 100%.",
       "lockNote": "Once set, the goals, conditions and criteria can no longer be changed.",
-      "copyPreviousPlan": "Use it",
       "previousRating": "Q{quarter}/{year}: {rating}",
       "weightsTotalLabel": "Total",
-      "copyPreviousPlanLink": "Use the plan from Q{quarter}/{year}",
-      "previousPlanBanner": "Plan from Q{quarter}/{year}: {goals, plural, one {# goal} other {# goals}}, {conditions, plural, one {# condition} other {# conditions}}, {criteria, plural, one {# criterion} other {# criteria}}"
+      "copyPreviousPlanLink": "Use the plan from Q{quarter}/{year}"
     }
   },
   "admin": {

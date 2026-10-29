@@ -6765,74 +6765,11 @@ input[type='search']::-webkit-search-cancel-button {
   margin-top: 0.1rem;
 }
 
-/* Akcija ostaje desno u ravni sa naslovom, a dugačak opis se prelama ispod. */
-.form-section--actions-top .form-section__header {
-  flex-wrap: nowrap;
-  align-items: flex-start;
-}
-
-.form-section--actions-top .form-section__heading {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-@container main (max-width: 640px) {
-  .form-section--actions-top .form-section__header {
-    flex-wrap: wrap;
-  }
-}
-
-/* Prošli plan: ponuda na vrhu praznih ciljeva i tihi link uz naslov. */
-.goals-previous-banner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm) 0.75rem;
-  margin: 0 0 var(--space-md);
-  padding: 0.6rem 0.75rem;
-  border-radius: var(--radius-sm);
-  background: var(--primary-soft);
-  color: var(--primary);
-  font-size: var(--text-sm);
-}
-
-.goals-previous-banner svg {
-  flex-shrink: 0;
-}
-
-.goals-previous-banner__text {
-  flex: 1 1 14rem;
-  min-width: 0;
-  font-weight: 500;
-}
-
-.goals-copy-link {
+/* Preuzimanje prošlog plana: dugme uz zaposlenog i period. */
+.goals-copy-button {
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0.35rem 0.6rem;
-  border: 0;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--primary);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-  transition: background var(--transition);
-}
-
-.goals-copy-link:hover:not(:disabled) {
-  background: var(--primary-soft);
-}
-
-.goals-copy-link:focus-visible {
-  outline: none;
-  box-shadow: var(--ring);
-}
-
-.goals-copy-link:disabled {
-  color: var(--muted);
-  cursor: not-allowed;
 }
 
 /* Kompaktno zaglavlje zaposlenog: sve u jednom redu. */

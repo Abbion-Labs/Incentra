@@ -32,8 +32,7 @@ import { GoalsPlanningEmployeeCard } from './components/GoalsPlanningEmployeeCar
 import { GoalsPlanningSidePanel } from './components/GoalsPlanningSidePanel';
 import { GoalsReadOnlyOverview } from './components/GoalsReadOnlyOverview';
 import {
-  CopyPreviousPlanLink,
-  PreviousPlanBanner,
+  CopyPreviousPlanButton,
   type PreviousPlan,
 } from './components/PreviousPlanPrompt';
 import { useIntl } from '../../i18n';
@@ -452,28 +451,34 @@ export function GoalsPlanningPage() {
     );
   }
 
-  const previousRating =
-    previous && previousSummary?.descriptiveRatingName ? (
-      <span className="goals-employee-card__previous">
-        {formatMessage(
-          { id: 'evaluation.planning.previousRating' },
-          { ...previous, rating: previousSummary.descriptiveRatingName },
-        )}
-      </span>
-    ) : undefined;
+  // Preuzimanje se nudi dok se plan učitava ili kad postoji; ako prethodni
+  // kvartal nema plan, dugmeta nema.
+  const canCopyPrevious =
+    previous != null &&
+    previousPlan != null &&
+    !(previousPlan.state === 'ready' && !previousPlan.hasPlan);
 
-  // Prazna forma nudi prošli plan na vrhu ciljeva; kad već ima sadržaja,
-  // preuzimanje ostaje kao link uz naslov (uz potvrdu pre prepisivanja).
-  const formEmpty = ![...goals, ...conditions, ...criteria].some((item) =>
-    item.description.trim(),
+  const headerBadges = (
+    <>
+      {previous && previousSummary?.descriptiveRatingName && (
+        <span className="goals-employee-card__previous">
+          {formatMessage(
+            { id: 'evaluation.planning.previousRating' },
+            { ...previous, rating: previousSummary.descriptiveRatingName },
+          )}
+        </span>
+      )}
+      {previous && canCopyPrevious && (
+        <CopyPreviousPlanButton
+          quarter={previous.quarter}
+          year={previous.year}
+          copying={copying}
+          disabled={saving || lookupsLoading}
+          onCopy={copyFromPreviousQuarter}
+        />
+      )}
+    </>
   );
-  const previousPlanReady =
-    previousPlan?.state === 'ready' && previousPlan.hasPlan
-      ? previousPlan.detail
-      : null;
-  const noPreviousPlan =
-    previousPlan?.state === 'ready' && !previousPlan.hasPlan;
-  const copyDisabled = saving || lookupsLoading;
 
   return (
     <AppLayout title={title}>
@@ -482,7 +487,7 @@ export function GoalsPlanningPage() {
         employee={employee}
         employeeAnalyticsPath={`/evaluator/employees/${evaluation.employeeId}`}
         compact
-        badges={previousRating}
+        badges={headerBadges}
       />
 
       <div className="goals-planning">
@@ -493,32 +498,7 @@ export function GoalsPlanningPage() {
               { id: 'evaluation.planning.goalsHint' },
               { min: MIN_GOAL_WEIGHT },
             )}
-            className="form-section--actions-top"
-            actions={
-              previous &&
-              previousPlan &&
-              !noPreviousPlan &&
-              !(formEmpty && previousPlanReady) ? (
-                <CopyPreviousPlanLink
-                  quarter={previous.quarter}
-                  year={previous.year}
-                  copying={copying}
-                  disabled={copyDisabled}
-                  onCopy={copyFromPreviousQuarter}
-                />
-              ) : undefined
-            }
           >
-            {previous && formEmpty && previousPlanReady && (
-              <PreviousPlanBanner
-                quarter={previous.quarter}
-                year={previous.year}
-                detail={previousPlanReady}
-                copying={copying}
-                disabled={copyDisabled}
-                onCopy={copyFromPreviousQuarter}
-              />
-            )}
             <GoalListEditor
               goals={goals}
               setGoals={handleGoalsChange}

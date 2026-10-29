@@ -307,11 +307,9 @@
       "criterionPlaceholder": "Opis kriterijuma...",
       "incompleteHint": "Za postavljanje su potrebni bar jedan cilj, uslov i kriterijum, a zbir težina mora biti 100%.",
       "lockNote": "Posle postavljanja ciljevi, uslovi i kriterijumi se više ne mogu menjati.",
-      "copyPreviousPlan": "Preuzmi",
       "previousRating": "Q{quarter}/{year}: {rating}",
       "weightsTotalLabel": "Ukupno",
-      "copyPreviousPlanLink": "Preuzmi plan iz Q{quarter}/{year}",
-      "previousPlanBanner": "Plan iz Q{quarter}/{year}: {goals, plural, one {# cilj} few {# cilja} other {# ciljeva}}, {conditions, plural, one {# uslov} few {# uslova} other {# uslova}}, {criteria, plural, one {# kriterijum} few {# kriterijuma} other {# kriterijuma}}"
+      "copyPreviousPlanLink": "Preuzmi plan iz Q{quarter}/{year}"
     }
   },
   "admin": {

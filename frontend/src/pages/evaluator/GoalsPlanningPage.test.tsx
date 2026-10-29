@@ -223,7 +223,7 @@ describe('GoalsPlanningPage', () => {
     expect(screen.queryByText('evaluation.planning.incompleteHint')).toBeNull();
   });
 
-  it('offers the previous quarter plan on an empty form and fills it in without loading it again', async () => {
+  it('fills an empty form with the previous quarter plan without loading it again', async () => {
     renderPage((path) => {
       if (path === '/api/evaluations/5') {
         return { ...evaluation, goals: [], conditions: [], criteria: [] };
@@ -235,15 +235,14 @@ describe('GoalsPlanningPage', () => {
     const confirm = vi.spyOn(window, 'confirm');
 
     expect(
-      await screen.findByText('evaluation.planning.previousPlanBanner'),
+      await screen.findByText('evaluation.planning.previousRating'),
     ).toBeTruthy();
-    expect(screen.getByText('evaluation.planning.previousRating')).toBeTruthy();
     const get = vi.mocked(api.get);
     const requests = get.mock.calls.length;
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'evaluation.planning.copyPreviousPlan',
+        name: 'evaluation.planning.copyPreviousPlanLink',
       }),
     );
 
@@ -253,16 +252,8 @@ describe('GoalsPlanningPage', () => {
     expect(screen.getByDisplayValue('Prošli cilj')).toBeTruthy();
     expect(screen.getByDisplayValue('Prošli uslov')).toBeTruthy();
     expect(get.mock.calls.length).toBe(requests);
+    // Prazna forma nema šta da izgubi, pa se ne traži potvrda.
     expect(confirm).not.toHaveBeenCalled();
-    // Kad forma ima sadržaj, ponuda se svodi na link uz naslov ciljeva.
-    expect(
-      screen.queryByText('evaluation.planning.previousPlanBanner'),
-    ).toBeNull();
-    expect(
-      screen.getByRole('button', {
-        name: 'evaluation.planning.copyPreviousPlanLink',
-      }),
-    ).toBeTruthy();
   });
 
   it('offers nothing to copy when the previous quarter has no plan', async () => {
@@ -280,9 +271,6 @@ describe('GoalsPlanningPage', () => {
     );
     await act(async () => {});
 
-    expect(
-      screen.queryByText('evaluation.planning.previousPlanBanner'),
-    ).toBeNull();
     expect(
       screen.queryByRole('button', {
         name: 'evaluation.planning.copyPreviousPlanLink',
