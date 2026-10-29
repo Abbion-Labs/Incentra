@@ -4,6 +4,7 @@ using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Evaluation.Models;
 using VariableCompensation.Application.Evaluation.Services;
+using VariableCompensation.Domain;
 using EvaluationEntity = VariableCompensation.Domain.Entities.Evaluation.Evaluation;
 
 namespace VariableCompensation.Application.Evaluation.Commands;
@@ -55,6 +56,14 @@ public sealed class SaveEvaluationPlanningDraftCommandHandler
         }
 
         entity = validation.Value;
+
+        // A plan is set as a whole: goals, conditions and criteria together.
+        if (request.Goals.Count == 0 || request.Conditions.Count == 0 || request.Criteria.Count == 0)
+        {
+            return Result.Failure<EvaluationDetailResponse>(ErrorCodes.PlanIncomplete);
+        }
+
+        var planAgreed = EvaluationPlanningRules.IsGoalsPlanningComplete(entity);
         EvaluationDraftMutator.ApplyHeader(
             entity,
             request.ConversationAt,
@@ -63,19 +72,19 @@ public sealed class SaveEvaluationPlanningDraftCommandHandler
             request.ConditionsFulfilled);
 
         var goalsResult = await EvaluationDraftMutator.ApplyGoalsAsync(
-            entity, request.Goals, this.lookupRepository, cancellationToken);
+            entity, request.Goals, this.lookupRepository, cancellationToken, planAgreed);
         if (goalsResult.IsFailure)
         {
             return Result.Failure<EvaluationDetailResponse>(goalsResult.Error);
         }
 
-        var conditionsResult = EvaluationDraftMutator.ApplyConditions(entity, request.Conditions);
+        var conditionsResult = EvaluationDraftMutator.ApplyConditions(entity, request.Conditions, planAgreed);
         if (conditionsResult.IsFailure)
         {
             return Result.Failure<EvaluationDetailResponse>(conditionsResult.Error);
         }
 
-        var criteriaResult = EvaluationDraftMutator.ApplyCriteria(entity, request.Criteria);
+        var criteriaResult = EvaluationDraftMutator.ApplyCriteria(entity, request.Criteria, planAgreed);
         if (criteriaResult.IsFailure)
         {
             return Result.Failure<EvaluationDetailResponse>(criteriaResult.Error);
@@ -158,21 +167,25 @@ public sealed class SaveEvaluationRatingDraftCommandHandler
 
         if (request.ConditionsFulfilled)
         {
-            var goals = request.Goals ?? Array.Empty<EvaluationGoalItem>();
-            var measures = request.Measures ?? Array.Empty<EvaluationMeasureItem>();
-
-            var goalsResult = await EvaluationDraftMutator.ApplyGoalsAsync(
-                entity, goals, this.lookupRepository, cancellationToken);
-            if (goalsResult.IsFailure)
+            // Left out means unchanged: an absent list must never wipe what is saved.
+            if (request.Goals is not null)
             {
-                return Result.Failure<EvaluationDetailResponse>(goalsResult.Error);
+                var goalsResult = await EvaluationDraftMutator.ApplyGoalsAsync(
+                    entity, request.Goals, this.lookupRepository, cancellationToken);
+                if (goalsResult.IsFailure)
+                {
+                    return Result.Failure<EvaluationDetailResponse>(goalsResult.Error);
+                }
             }
 
-            var measuresResult = await EvaluationDraftMutator.ApplyMeasuresAsync(
-                entity, measures, this.lookupRepository, cancellationToken);
-            if (measuresResult.IsFailure)
+            if (request.Measures is not null)
             {
-                return Result.Failure<EvaluationDetailResponse>(measuresResult.Error);
+                var measuresResult = await EvaluationDraftMutator.ApplyMeasuresAsync(
+                    entity, request.Measures, this.lookupRepository, cancellationToken);
+                if (measuresResult.IsFailure)
+                {
+                    return Result.Failure<EvaluationDetailResponse>(measuresResult.Error);
+                }
             }
 
             if (request.Training is not null)

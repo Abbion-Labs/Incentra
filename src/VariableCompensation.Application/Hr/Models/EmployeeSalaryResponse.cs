@@ -4,6 +4,9 @@ public sealed class EmployeeSalaryResponse
 {
     public long Id { get; init; }
 
+    /// <summary>Sent back with an edit; see <c>IVersioned</c>.</summary>
+    public int Version { get; init; }
+
     public long EmployeeId { get; init; }
 
     public string EmployeeFullName { get; init; } = string.Empty;
@@ -23,4 +26,13 @@ public sealed class EmployeeSalaryResponse
     public bool IsCurrent { get; init; }
 
     public DateTime UpdatedAt { get; init; }
+
+    /// <summary>
+    /// After a correction: the years whose variable compensation was calculated with the corrected salary and has to
+    /// be calculated again.
+    /// </summary>
+    public IReadOnlyList<short> CompensationYearsToRecalculate { get; init; } = [];
+
+    /// <summary>After a correction: the years whose compensation used the corrected salary but is already final.</summary>
+    public IReadOnlyList<short> FinalizedCompensationYears { get; init; } = [];
 }

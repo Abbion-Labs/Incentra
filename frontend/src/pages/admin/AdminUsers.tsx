@@ -10,9 +10,12 @@ import {
   userToForm,
   type UserFormValues,
 } from './components/AdminUserForm';
-import { AdminPageHeader } from './components/AdminPageHeader';
+import { ToolbarSearch } from '../../components/common/ToolbarSearch';
+import { TableIconButton } from '../../components/common/TableIconButton';
+import { controllerIdFromForm } from './evaluatorController';
 import { roleLabel } from '../../utils/status';
 import { useToast } from '../../hooks';
+import { isEditConflict } from '../../utils/editConflict';
 
 export function AdminUsers() {
   const { formatMessage } = useIntl();
@@ -23,6 +26,9 @@ export function AdminUsers() {
 
   const [formValues, setFormValues] = useState<UserFormValues>(emptyUserForm());
   const [editingUser, setEditingUser] = useState<AdminUser | null>(null);
+  // Forma za unos je skrivena dok se ne izabere dodavanje ili izmena.
+  const [formOpen, setFormOpen] = useState(false);
+  const [search, setSearch] = useState('');
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [configuredEvaluatorIds, setConfiguredEvaluatorIds] = useState<
     Set<number>
@@ -66,6 +72,12 @@ export function AdminUsers() {
     );
   }, [employees, users, editingUser]);
 
+  // Novi nalog se vezuje za aktivnog zaposlenog koji još nema nalog.
+  const employeeOptions = useMemo(
+    () => employees.filter((e) => e.userId == null),
+    [employees],
+  );
+
   const alreadyConfiguredEvaluator =
     editingUser?.employeeId != null &&
     configuredEvaluatorIds.has(editingUser.employeeId);
@@ -79,11 +91,41 @@ export function AdminUsers() {
     setFormValues(emptyUserForm());
   }
 
+  function openCreate() {
+    startCreate();
+    setFormOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    startCreate();
+    setFormOpen(false);
+  }
+
   function startEdit(user: AdminUser, e?: React.MouseEvent) {
     e?.stopPropagation();
     setEditingUser(user);
     setFormValues(userToForm(user));
+    setFormOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /** Nalog je izmenjen posle otvaranja forme: forma se puni njegovim novim stanjem. */
+  async function reopenAfterConflict(userId: number) {
+    toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+    try {
+      const fresh = (await api.get<AdminUser[]>('/api/users')).find(
+        (u) => u.id === userId,
+      );
+      if (fresh) {
+        startEdit(fresh);
+      } else {
+        closeForm();
+      }
+    } catch {
+      closeForm();
+    }
+    await load();
   }
 
   async function handleSubmit() {
@@ -94,9 +136,10 @@ export function AdminUsers() {
           email: formValues.email.trim(),
           isActive: formValues.isActive,
           roleCodes: formValues.roleCodes,
-          controllerEmployeeId: formValues.controllerEmployeeId
-            ? Number(formValues.controllerEmployeeId)
-            : null,
+          controllerEmployeeId: controllerIdFromForm(
+            formValues.controllerEmployeeId,
+          ),
+          version: editingUser.version,
         });
         if (formValues.password.trim()) {
           await api.put(`/api/users/${editingUser.id}/password`, {
@@ -109,12 +152,19 @@ export function AdminUsers() {
             { email: formValues.email.trim() },
           ),
         );
-        startCreate();
+        closeForm();
       } else {
+        const linksEmployee = ['EMPLOYEE', 'EVALUATOR', 'CONTROLLER'].some(
+          (code) => formValues.roleCodes.includes(code),
+        );
         await api.post('/api/auth/register', {
           email: formValues.email.trim(),
           password: formValues.password,
           roleCodes: formValues.roleCodes,
+          employeeId: linksEmployee ? Number(formValues.employeeId) : null,
+          controllerEmployeeId: controllerIdFromForm(
+            formValues.controllerEmployeeId,
+          ),
         });
         toast.success(
           formatMessage(
@@ -125,10 +175,14 @@ export function AdminUsers() {
             },
           ),
         );
-        startCreate();
+        closeForm();
       }
       await load();
     } catch (err) {
+      if (editingUser && isEditConflict(err)) {
+        await reopenAfterConflict(editingUser.id);
+        return;
+      }
       toast.error(
         err instanceof Error
           ? err.message
@@ -139,39 +193,57 @@ export function AdminUsers() {
     }
   }
 
+  // Pretraga po e-mailu i imenu povezanog zaposlenog, bez novog zahteva.
+  const query = search.trim().toLowerCase();
+  const visibleUsers = query
+    ? users.filter((user) =>
+        [user.email, user.employeeFullName ?? '']
+          .join(' ')
+          .toLowerCase()
+          .includes(query),
+      )
+    : users;
+
   return (
     <div className="admin-page">
-      <AdminPageHeader
-        actions={
-          editingUser ? (
+      {formOpen && (
+        <AdminUserForm
+          values={formValues}
+          editingUser={editingUser}
+          saving={saving}
+          controllerOptions={controllerOptions}
+          employeeOptions={employeeOptions}
+          alreadyConfiguredEvaluator={alreadyConfiguredEvaluator}
+          onChange={setFormValues}
+          onSubmit={handleSubmit}
+          onCancel={closeForm}
+        />
+      )}
+
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
+          <ToolbarSearch
+            id="users-search"
+            label={formatMessage({ id: 'common.search' })}
+            placeholder={formatMessage({ id: 'admin.users.searchPlaceholder' })}
+            value={search}
+            onChange={setSearch}
+          />
+          {!formOpen && (
             <button
               type="button"
-              className="btn btn-secondary"
-              onClick={startCreate}
+              className="btn btn-primary btn-sm"
+              onClick={openCreate}
             >
-              {formatMessage({ id: 'admin.users.newUser' })}
+              {formatMessage({ id: 'admin.users.addUser' })}
             </button>
-          ) : null
-        }
-      />
-
-      <AdminUserForm
-        values={formValues}
-        editingUser={editingUser}
-        saving={saving}
-        controllerOptions={controllerOptions}
-        alreadyConfiguredEvaluator={alreadyConfiguredEvaluator}
-        onChange={setFormValues}
-        onSubmit={handleSubmit}
-        onCancel={startCreate}
-      />
-
-      <div className="card">
+          )}
+        </div>
         {loading ? (
           <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
         ) : (
           <div className="table-wrap">
-            <table className="table table--hover table--clickable">
+            <table className="table table--hover table--clickable table--stack">
               <thead>
                 <tr>
                   <th className="col-text">
@@ -193,14 +265,14 @@ export function AdminUsers() {
                 </tr>
               </thead>
               <tbody>
-                {users.length === 0 ? (
+                {visibleUsers.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="empty">
                       {formatMessage({ id: 'admin.users.noUsers' })}
                     </td>
                   </tr>
                 ) : (
-                  users.map((user) => (
+                  visibleUsers.map((user) => (
                     <tr
                       key={user.id}
                       onClick={() => startEdit(user)}
@@ -212,28 +284,39 @@ export function AdminUsers() {
                         }
                       }}
                     >
-                      <td className="cell-primary col-text">{user.email}</td>
-                      <td className="col-text">
+                      <td className="cell-primary col-text stack-title">
+                        {user.email}
+                      </td>
+                      <td
+                        className="col-text"
+                        data-label={formatMessage({ id: 'admin.roles' })}
+                      >
                         {ROLE_ORDER.filter((role) => user.roles.includes(role))
                           .map((role) => roleLabel(role, formatMessage))
                           .join(', ')}
                       </td>
-                      <td className="col-text">
+                      <td
+                        className="col-text"
+                        data-label={formatMessage({
+                          id: 'admin.users.linkedEmployee',
+                        })}
+                      >
                         {user.employeeFullName ?? '—'}
                       </td>
-                      <td className="col-meta table-col--compact">
+                      <td
+                        className="col-meta table-col--compact"
+                        data-label={formatMessage({ id: 'admin.active' })}
+                      >
                         {user.isActive
                           ? formatMessage({ id: 'common.yes' })
                           : formatMessage({ id: 'common.no' })}
                       </td>
                       <td className="col-actions">
-                        <button
-                          type="button"
-                          className="btn btn-secondary btn-sm"
-                          onClick={(e) => startEdit(user, e)}
-                        >
-                          {formatMessage({ id: 'buttons.edit' })}
-                        </button>
+                        <TableIconButton
+                          icon="edit"
+                          label={formatMessage({ id: 'buttons.edit' })}
+                          onClick={() => startEdit(user)}
+                        />
                       </td>
                     </tr>
                   ))

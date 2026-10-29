@@ -48,24 +48,48 @@ const DESCRIPTIVE_RATING_CLASS_BY_CODE: Record<string, string> = {
   OUTSTANDING: 'badge-descriptive-outstanding',
 };
 
+// Divergentna skala za grafikone: ispod očekivanja topla, sredina siva, iznad
+// očekivanja plava (bezbedno za daltonizam; susedne ocene ΔE ≥ 8).
 const DESCRIPTIVE_RATING_CHART_COLOR_BY_CODE: Record<string, string> = {
-  DOES_NOT_MEET: '#dc2626',
-  MEETS: '#f97316',
-  GOOD: '#2563eb',
-  EXCEEDS: '#7c3aed',
-  OUTSTANDING: '#059669',
+  DOES_NOT_MEET: '#b2310e',
+  MEETS: '#ee8a61',
+  GOOD: '#d3d7dd',
+  EXCEEDS: '#5a98d8',
+  OUTSTANDING: '#1f5aa6',
 };
 
-function bandsFromRatings(ratings: DescriptiveRating[]) {
+interface RatingBand {
+  min: number;
+  max: number;
+  code: string;
+  name?: string;
+}
+
+function bandsFromRatings(ratings: DescriptiveRating[]): RatingBand[] {
   return ratings
-    .filter((r) => r.isActive && r.minAverage != null && r.maxAverage != null)
-    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .filter((r) => r.isActive && r.minAverage != null)
     .map((r) => ({
       min: r.minAverage!,
-      max: r.maxAverage!,
+      max: r.maxAverage ?? Number.POSITIVE_INFINITY,
       code: r.code,
       name: r.name,
     }));
+}
+
+/**
+ * Isto pravilo kao na serveru: opseg ide od svog minimuma do minimuma sledećeg,
+ * pa svaki prosek upada u tačno jedan. Maksimum važi samo za najviši opseg.
+ */
+function findBand(
+  bands: readonly RatingBand[],
+  average: number,
+): RatingBand | undefined {
+  const sorted = [...bands].sort((a, b) => a.min - b.min);
+  const reached = sorted.filter((item) => item.min <= average);
+  const band = reached[reached.length - 1];
+  if (!band) return undefined;
+  const isTopBand = band === sorted[sorted.length - 1];
+  return isTopBand && average > band.max ? undefined : band;
 }
 
 export function descriptiveRatingCodeFromName(
@@ -116,7 +140,7 @@ export function descriptiveRatingCodeFromAverage(
   ratings?: DescriptiveRating[],
 ): string | null {
   const bands = ratings?.length ? bandsFromRatings(ratings) : FALLBACK_BANDS;
-  const band = bands.find((item) => average >= item.min && average <= item.max);
+  const band = findBand(bands, average);
   return band?.code ?? null;
 }
 
@@ -125,9 +149,9 @@ export function descriptiveRatingNameFromAverage(
   ratings?: DescriptiveRating[],
 ): string | null {
   const bands = ratings?.length ? bandsFromRatings(ratings) : FALLBACK_BANDS;
-  const band = bands.find((item) => average >= item.min && average <= item.max);
+  const band = findBand(bands, average);
   if (!band) return null;
-  if ('name' in band && band.name) return band.name;
+  if (band.name) return band.name;
   return FALLBACK_NAME_BY_CODE[band.code] ?? null;
 }
 
@@ -147,13 +171,6 @@ export function descriptiveRatingChartColor(
   const code = resolveCodeForStyling(nameOrCode, ratings);
   if (!code) return '#94a3b8';
   return DESCRIPTIVE_RATING_CHART_COLOR_BY_CODE[code] ?? '#64748b';
-}
-
-export function descriptiveRatingColor(
-  nameOrCode: string | null | undefined,
-  ratings?: DescriptiveRating[],
-): string {
-  return descriptiveRatingChartColor(nameOrCode, ratings);
 }
 
 export function descriptiveRatingClass(

@@ -4,6 +4,9 @@ public sealed class CompensationParametersResponse
 {
     public long Id { get; init; }
 
+    /// <summary>Sent back with an edit; see <c>IVersioned</c>.</summary>
+    public int Version { get; init; }
+
     public long OrganizationUnitId { get; init; }
 
     public string OrganizationUnitName { get; init; } = string.Empty;
@@ -15,8 +18,6 @@ public sealed class CompensationParametersResponse
     public string Currency { get; init; } = "RSD";
 
     public decimal AcceptablePerformanceRating { get; init; }
-
-    public decimal UpperLimitCoefficient { get; init; }
 
     public decimal DependencyWeight { get; init; }
 

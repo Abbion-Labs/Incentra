@@ -43,7 +43,7 @@ public sealed class OrganizationUnitsController : ControllerBase
     public async Task<IActionResult> Update(long id, [FromBody] UpdateOrganizationUnitRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
-            new UpdateOrganizationUnitCommand(id, request.Name, request.Code, request.IsActive),
+            new UpdateOrganizationUnitCommand(id, request.Name, request.Code, request.IsActive, request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

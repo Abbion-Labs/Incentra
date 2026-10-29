@@ -58,7 +58,8 @@ public sealed class EmployeeSalariesController : ControllerBase
                 request.Points,
                 request.SalaryPerPoint,
                 request.EffectiveFrom,
-                request.Currency),
+                request.Currency,
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

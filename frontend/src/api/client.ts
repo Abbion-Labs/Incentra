@@ -1,57 +1,39 @@
 import { notifySessionExpired } from '../auth/session';
+import type { AuthResponse, UserProfile } from './types';
 
-const TOKEN_KEY = 'vc_access_token';
-const REFRESH_TOKEN_KEY = 'vc_refresh_token';
+const LEGACY_TOKEN_KEYS = ['vc_access_token', 'vc_refresh_token'];
 const LOCALE_KEY = 'vn-locale';
+const REFRESH_LOCK_NAME = 'vc-refresh-session';
 const UNEXPECTED_ERROR_CODE = 'vn-0089';
 const TRACE_ID_DISPLAY_LENGTH = 8;
 
+// The access token is kept in memory only, and the refresh token is an HttpOnly cookie the browser
+// sends on its own. Neither is readable by scripts running on the page.
+let accessToken: string | null = null;
+
+// Tokens stored by earlier versions of the app are useless now, and should not be left behind.
+// Can be dropped once every active user has loaded the app at least once after this change.
+try {
+  LEGACY_TOKEN_KEYS.forEach((key) => localStorage.removeItem(key));
+} catch {
+  // storage unavailable
+}
+
 export function getToken(): string | null {
-  return localStorage.getItem(TOKEN_KEY);
+  return accessToken;
 }
 
-export function getRefreshToken(): string | null {
-  return localStorage.getItem(REFRESH_TOKEN_KEY);
-}
-
-export function setToken(token: string): void {
-  localStorage.setItem(TOKEN_KEY, token);
-}
-
-export function setRefreshToken(token: string): void {
-  localStorage.setItem(REFRESH_TOKEN_KEY, token);
-}
-
-export function setAuthTokens(accessToken: string, refreshToken: string): void {
-  setToken(accessToken);
-  setRefreshToken(refreshToken);
+export function setAccessToken(token: string): void {
+  accessToken = token;
 }
 
 export function clearToken(): void {
-  localStorage.removeItem(TOKEN_KEY);
-  localStorage.removeItem(REFRESH_TOKEN_KEY);
+  accessToken = null;
 }
 
-export function revokeRefreshToken(): void {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return;
-  }
-
-  void fetch('/api/auth/logout', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ refreshToken }),
-    keepalive: true,
-  }).catch(() => undefined);
-}
-
-export async function ensureValidSession(): Promise<boolean> {
-  if (getToken()) {
-    return true;
-  }
-
-  return tryRefreshToken();
+export async function restoreSession(): Promise<UserProfile | null> {
+  const session = await refreshSession();
+  return session?.user ?? null;
 }
 
 export class ApiError extends Error {
@@ -66,41 +48,44 @@ export class ApiError extends Error {
   }
 }
 
-interface AuthResponse {
-  accessToken: string;
-  refreshToken: string;
+export function revokeRefreshToken(): void {
+  void fetch('/api/auth/logout', { method: 'POST', keepalive: true }).catch(
+    () => undefined,
+  );
 }
 
-let refreshPromise: Promise<boolean> | null = null;
+let refreshPromise: Promise<AuthResponse | null> | null = null;
 
-async function tryRefreshToken(): Promise<boolean> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    return false;
+async function requestNewSession(): Promise<AuthResponse | null> {
+  try {
+    const response = await fetch('/api/auth/refresh', { method: 'POST' });
+    if (!response.ok) {
+      return null;
+    }
+
+    const session = (await response.json()) as AuthResponse;
+    setAccessToken(session.accessToken);
+    return session;
+  } catch {
+    return null;
+  }
+}
+
+// The refresh token rotates on every use, so two tabs must not refresh at the same moment. The lock
+// makes them take turns; the second tab then uses the cookie the first one has just replaced.
+async function runExclusively<T>(task: () => Promise<T>): Promise<T> {
+  if (typeof navigator !== 'undefined' && navigator.locks) {
+    return (await navigator.locks.request(REFRESH_LOCK_NAME, task)) as T;
   }
 
+  return task();
+}
+
+function refreshSession(): Promise<AuthResponse | null> {
   if (!refreshPromise) {
-    refreshPromise = (async () => {
-      try {
-        const response = await fetch('/api/auth/refresh', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refreshToken }),
-        });
-
-        if (!response.ok) {
-          return false;
-        }
-
-        const data = (await response.json()) as AuthResponse;
-        setAuthTokens(data.accessToken, data.refreshToken);
-        return true;
-      } catch {
-        return false;
-      } finally {
-        refreshPromise = null;
-      }
-    })();
+    refreshPromise = runExclusively(requestNewSession).finally(() => {
+      refreshPromise = null;
+    });
   }
 
   return refreshPromise;
@@ -136,7 +121,7 @@ export async function apiFetch<T>(
     path !== '/api/auth/login' &&
     path !== '/api/auth/refresh'
   ) {
-    const refreshed = await tryRefreshToken();
+    const refreshed = await refreshSession();
     if (refreshed) {
       return apiFetch<T>(path, options, true);
     }

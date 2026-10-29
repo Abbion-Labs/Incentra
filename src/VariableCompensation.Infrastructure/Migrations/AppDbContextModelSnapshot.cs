@@ -95,7 +95,9 @@ namespace VariableCompensation.Infrastructure.Migrations
                         .HasColumnType("numeric(4,2)");
 
                     b.Property<bool>("AllowNegativeVariable")
-                        .HasColumnType("boolean");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("boolean")
+                        .HasDefaultValue(false);
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -129,9 +131,9 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("UpperLimitCoefficient")
-                        .HasPrecision(10, 4)
-                        .HasColumnType("numeric(10,4)");
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
 
                     b.Property<short>("Year")
                         .HasColumnType("smallint");
@@ -444,8 +446,8 @@ namespace VariableCompensation.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal?>("Weight")
-                        .HasPrecision(5, 4)
-                        .HasColumnType("numeric(5,4)");
+                        .HasPrecision(5, 2)
+                        .HasColumnType("numeric(5,2)");
 
                     b.HasKey("Id");
 
@@ -506,6 +508,10 @@ namespace VariableCompensation.Infrastructure.Migrations
 
                     b.Property<DateTime>("ChangedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ChangedByRoleCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
 
                     b.Property<long>("ChangedByUserId")
                         .HasColumnType("bigint");
@@ -624,6 +630,10 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("EducationLevelId");
@@ -686,9 +696,16 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<long?>("UpdatedByUserId")
                         .HasColumnType("bigint");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("EmployeeId");
+                    b.HasIndex("EmployeeId")
+                        .IsUnique()
+                        .HasDatabaseName("IX_employee_salaries_EmployeeId_current")
+                        .HasFilter("\"EffectiveTo\" IS NULL");
 
                     b.HasIndex("EmployeeId", "EffectiveFrom");
 
@@ -700,38 +717,18 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<long>("EmployeeId")
                         .HasColumnType("bigint");
 
-                    b.Property<long>("ControllerEmployeeId")
+                    b.Property<long?>("ControllerEmployeeId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<decimal>("PercentDoesNotMeet")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("PercentExceeds")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("PercentGood")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("PercentMeets")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("ThresholdDoesNotMeet")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("ThresholdExceeds")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("ThresholdGood")
-                        .HasColumnType("numeric");
-
-                    b.Property<decimal>("ThresholdMeets")
-                        .HasColumnType("numeric");
-
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
 
                     b.HasKey("EmployeeId");
 
@@ -748,6 +745,10 @@ namespace VariableCompensation.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("ActiveRoleCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -756,6 +757,9 @@ namespace VariableCompensation.Infrastructure.Migrations
 
                     b.Property<DateTime?>("RevokedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("SessionId")
+                        .HasColumnType("uuid");
 
                     b.Property<string>("TokenHash")
                         .IsRequired()
@@ -768,6 +772,11 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("SessionId");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
 
                     b.HasIndex("UserId");
 
@@ -801,6 +810,10 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("LastActiveRoleCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<DateTime?>("LastLoginAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -811,6 +824,10 @@ namespace VariableCompensation.Infrastructure.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -871,6 +888,10 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<int>("SortOrder")
                         .HasColumnType("integer");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Code")
@@ -904,6 +925,10 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
@@ -936,6 +961,10 @@ namespace VariableCompensation.Infrastructure.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -1003,6 +1032,10 @@ namespace VariableCompensation.Infrastructure.Migrations
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Version")
+                        .IsConcurrencyToken()
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -1307,8 +1340,7 @@ namespace VariableCompensation.Infrastructure.Migrations
                     b.HasOne("VariableCompensation.Domain.Entities.Hr.Employee", "Controller")
                         .WithMany()
                         .HasForeignKey("ControllerEmployeeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("VariableCompensation.Domain.Entities.Hr.Employee", "Employee")
                         .WithOne("EvaluatorSettings")

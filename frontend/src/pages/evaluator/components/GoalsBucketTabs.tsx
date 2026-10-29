@@ -4,6 +4,8 @@ import { goalsBucketLabels } from '../../../utils/goalsBuckets';
 
 import { useIntl } from '../../../i18n';
 
+import { StatusTabIcon } from '../../../components/evaluation/StatusTabIcon';
+
 const tabs: GoalsBucket[] = ['pending', 'set'];
 
 interface GoalsBucketTabsProps {
@@ -40,7 +42,11 @@ export function GoalsBucketTabs({
 
             onClick={() => onTabChange(tab)}
           >
-            {formatMessage({ id: goalsBucketLabels[tab] as never })}
+            <StatusTabIcon status={tab === 'pending' ? 'planning' : 'set'} />
+
+            <span className="tab__label">
+              {formatMessage({ id: goalsBucketLabels[tab] as never })}
+            </span>
 
             {count !== undefined && <span className="tab-count">{count}</span>}
           </button>

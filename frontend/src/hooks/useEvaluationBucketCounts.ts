@@ -1,7 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import type { EvaluationBucketCounts } from '../api/types';
-import { buildEvaluationBucketCountsPath } from '../utils/evaluationApi';
+import {
+  buildEvaluationBucketCountsPath,
+  type RoleListScope,
+} from '../utils/evaluationApi';
 
 const emptyCounts: EvaluationBucketCounts = {
   planning: 0,
@@ -17,6 +20,7 @@ const emptyCounts: EvaluationBucketCounts = {
 export function useEvaluationBucketCounts(
   queryKey: string,
   params: {
+    scope?: RoleListScope;
     year?: number | null;
     quarter?: number | null;
     search?: string;
@@ -49,7 +53,7 @@ export function useEvaluationBucketCounts(
     } finally {
       if (isLatest()) setLoading(false);
     }
-  }, [enabled, params.quarter, params.search, params.year]);
+  }, [enabled, params.quarter, params.scope, params.search, params.year]);
 
   useEffect(() => {
     void load();

@@ -12,6 +12,7 @@ import { useToast } from '../../hooks';
 import { CompensationDistributionChart } from './components/CompensationDistributionChart';
 import { CompensationEmployeeBarChart } from './components/CompensationEmployeeBarChart';
 import { useIntl } from '../../i18n';
+import { FilterChip } from '../../components/common/ToolbarSearch';
 
 const ALL_ORG_VALUE = 'all';
 
@@ -131,64 +132,50 @@ export function AdminCompensationAnalytics() {
   }
 
   return (
-    <div className="card compensation-analytics">
-      <div className="compensation-analytics__top">
-        <div className="form-grid admin-form__grid compensation-analytics__filters">
-          <div className="form-row">
-            <label htmlFor="analytics-org">
-              {formatMessage({ id: 'common.organizationUnit' })}
-            </label>
-            <select
-              id="analytics-org"
-              value={organizationUnitId}
-              onChange={(e) => setOrganizationUnitId(e.target.value)}
-            >
-              <option value={ALL_ORG_VALUE}>
-                {formatMessage({ id: 'common.allOrganization' })}
+    <div className="card card--flush data-panel compensation-analytics">
+      <div className="data-panel__toolbar">
+        <div className="filter-bar filter-bar--compact">
+          <FilterChip
+            id="analytics-org"
+            label={formatMessage({ id: 'evaluation.orgUnitShort' })}
+            value={organizationUnitId}
+            onChange={setOrganizationUnitId}
+          >
+            <option value={ALL_ORG_VALUE}>
+              {formatMessage({ id: 'common.allOrganization' })}
+            </option>
+            {orgUnits.map((unit) => (
+              <option key={unit.id} value={unit.id}>
+                {unit.name}
               </option>
-              {orgUnits.map((unit) => (
-                <option key={unit.id} value={unit.id}>
-                  {unit.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="analytics-year">
-              {formatMessage({ id: 'common.year' })}
-            </label>
-            <select
-              id="analytics-year"
-              value={year}
-              onChange={(e) => setYear(e.target.value)}
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-row">
-            <label htmlFor="analytics-chart">
-              {formatMessage({ id: 'common.chartType' })}
-            </label>
-            <select
-              id="analytics-chart"
-              value={chartType}
-              onChange={(e) =>
-                setChartType(e.target.value as CompensationAnalyticsChartType)
-              }
-            >
-              {COMPENSATION_CHART_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {formatMessage({ id: option.labelKey as never })}
-                </option>
-              ))}
-            </select>
-          </div>
+            ))}
+          </FilterChip>
+          <FilterChip
+            id="analytics-year"
+            label={formatMessage({ id: 'common.year' })}
+            value={year}
+            onChange={setYear}
+          >
+            {yearOptions.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </FilterChip>
+          <FilterChip
+            id="analytics-chart"
+            label={formatMessage({ id: 'common.chartType' })}
+            value={chartType}
+            onChange={(value) =>
+              setChartType(value as CompensationAnalyticsChartType)
+            }
+          >
+            {COMPENSATION_CHART_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {formatMessage({ id: option.labelKey as never })}
+              </option>
+            ))}
+          </FilterChip>
         </div>
       </div>
 
@@ -205,7 +192,7 @@ export function AdminCompensationAnalytics() {
             </p>
           </div>
         ) : (
-          <section className="compensation-analytics__chart card card--chart">
+          <section className="compensation-analytics__chart">
             {renderChart()}
           </section>
         )}

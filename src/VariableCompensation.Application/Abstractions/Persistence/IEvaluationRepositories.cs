@@ -53,6 +53,20 @@ public interface IEvaluationRepository
         long jobPositionId,
         CancellationToken cancellationToken);
 
+    /// <summary>Whether the employee has an evaluation that is not approved yet.</summary>
+    Task<bool> HasUnapprovedForEmployeeAsync(long employeeId, CancellationToken cancellationToken);
+
+    /// <summary>Tracked evaluations of the employee in <paramref name="status"/>, without their details.</summary>
+    Task<IReadOnlyList<EvaluationEntity>> GetForUpdateByEmployeeAsync(
+        long employeeId,
+        EvaluationStatus status,
+        CancellationToken cancellationToken);
+
+    /// <summary>Tracked evaluations rated by the evaluator that are not approved yet, without their details.</summary>
+    Task<IReadOnlyList<EvaluationEntity>> GetUnapprovedForUpdateByEvaluatorAsync(
+        long evaluatorEmployeeId,
+        CancellationToken cancellationToken);
+
     Task AddAsync(EvaluationEntity entity, CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);

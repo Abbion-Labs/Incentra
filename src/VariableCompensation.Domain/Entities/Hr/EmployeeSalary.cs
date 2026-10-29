@@ -1,8 +1,12 @@
+using VariableCompensation.Domain.Common;
+
 namespace VariableCompensation.Domain.Entities.Hr;
 
-public class EmployeeSalary
+public class EmployeeSalary : IVersioned
 {
     public long Id { get; set; }
+
+    public int Version { get; set; }
 
     public long EmployeeId { get; set; }
 

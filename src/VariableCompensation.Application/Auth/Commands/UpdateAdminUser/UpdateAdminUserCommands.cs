@@ -5,6 +5,7 @@ using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Auth;
 using VariableCompensation.Application.Auth.Commands.RegisterUser;
 using VariableCompensation.Application.Auth.Models;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Hr.EvaluatorSettings.Services;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Enums;
@@ -16,7 +17,8 @@ public sealed record UpdateAdminUserCommand(
     string Email,
     bool IsActive,
     IReadOnlyList<string> RoleCodes,
-    long? ControllerEmployeeId = null)
+    long? ControllerEmployeeId,
+    int? Version)
     : IRequest<Result<AdminUserListItemResponse>>;
 
 public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminUserCommand, Result<AdminUserListItemResponse>>
@@ -54,6 +56,12 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
             return Result.Failure<AdminUserListItemResponse>(ErrorCodes.UserNotFound);
         }
 
+        var version = EditVersion.Claim(user, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<AdminUserListItemResponse>(version.Error);
+        }
+
         if (await this.userRepository.EmailExistsAsync(email, request.UserId, cancellationToken))
         {
             return Result.Failure<AdminUserListItemResponse>(ErrorCodes.EmailAlreadyRegistered);
@@ -63,6 +71,34 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
         if (roleIdsResult.IsFailure)
         {
             return Result.Failure<AdminUserListItemResponse>(roleIdsResult.Error);
+        }
+
+        // Without an active administrator nobody can manage accounts any more, and nobody could restore one.
+        var isActiveAdministrator = user.IsActive && user.UserRoles.Any(ur => ur.Role.Code == RoleCodes.Admin);
+        var staysActiveAdministrator = request.IsActive
+            && request.RoleCodes.Any(code => string.Equals(code.Trim(), RoleCodes.Admin, StringComparison.OrdinalIgnoreCase));
+        if (isActiveAdministrator && !staysActiveAdministrator
+            && !await this.userRepository.HasOtherActiveUserInRoleAsync(RoleCodes.Admin, user.Id, cancellationToken))
+        {
+            return Result.Failure<AdminUserListItemResponse>(ErrorCodes.LastActiveAdministrator);
+        }
+
+        var activeChange = await this.EnsureActiveChangeAllowedAsync(user.Id, user.IsActive, request.IsActive, cancellationToken);
+        if (activeChange.IsFailure)
+        {
+            return Result.Failure<AdminUserListItemResponse>(activeChange.Error);
+        }
+
+        // A role that acts as an employee is only given to an account linked to one. Roles it already holds from
+        // before this rule are left alone.
+        var heldRoles = user.UserRoles.Select(ur => ur.Role.Code).ToList();
+        var addedRoles = request.RoleCodes
+            .Where(code => !heldRoles.Contains(code.Trim(), StringComparer.OrdinalIgnoreCase))
+            .ToList();
+        if (EmployeeLinkedRoles.AnyIn(addedRoles)
+            && await this.employeeRepository.FindByUserIdAsync(user.Id, cancellationToken) is null)
+        {
+            return Result.Failure<AdminUserListItemResponse>(ErrorCodes.EmployeeRequiredForRoles);
         }
 
         var controllerRoleId = await this.roleLookup.FindRoleIdByCodeAsync(RoleCodes.Controller, cancellationToken);
@@ -97,6 +133,7 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
         }
 
         var previousRoleIds = user.UserRoles.Select(ur => ur.RoleId).OrderBy(id => id).ToList();
+        var wasActive = user.IsActive;
         user.Email = email;
         user.IsActive = request.IsActive;
         user.UpdatedAt = DateTime.UtcNow;
@@ -104,7 +141,10 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
 
         var updatedRoleIds = roleIdsResult.Value.OrderBy(id => id).ToList();
         var rolesChanged = !previousRoleIds.SequenceEqual(updatedRoleIds);
-        if (rolesChanged)
+
+        // A deactivated account must not come back signed in if it is ever reactivated.
+        var deactivated = wasActive && !user.IsActive;
+        if (rolesChanged || deactivated)
         {
             await this.userRepository.RevokeAllRefreshTokensAsync(user.Id, cancellationToken);
         }
@@ -119,6 +159,42 @@ public sealed class UpdateAdminUserCommandHandler : IRequestHandler<UpdateAdminU
         }
 
         return Result.Success(await AdminUserMapper.MapAsync(reloaded, this.employeeRepository, cancellationToken));
+    }
+
+    /// <summary>
+    /// The account follows its employee. It does not open again while the employee is gone, and it does not close
+    /// while people still depend on it to be rated or reviewed, the same as deactivating the employee.
+    /// </summary>
+    private async Task<Result> EnsureActiveChangeAllowedAsync(
+        long userId,
+        bool isActive,
+        bool staysActive,
+        CancellationToken cancellationToken)
+    {
+        if (isActive == staysActive)
+        {
+            return Result.Success();
+        }
+
+        var employee = await this.employeeRepository.FindByUserIdAsync(userId, cancellationToken);
+        if (employee is null)
+        {
+            return Result.Success();
+        }
+
+        if (staysActive)
+        {
+            return employee.IsActive ? Result.Success() : Result.Failure(ErrorCodes.AccountEmployeeInactive);
+        }
+
+        if (await this.employeeRepository.HasSubordinatesAsync(employee.Id, cancellationToken))
+        {
+            return Result.Failure(ErrorCodes.EmployeeHasSubordinates);
+        }
+
+        return await this.evaluatorSettingsRepository.IsControllerForAnyEvaluatorAsync(employee.Id, cancellationToken)
+            ? Result.Failure(ErrorCodes.EmployeeControlsEvaluators)
+            : Result.Success();
     }
 }
 
@@ -170,6 +246,7 @@ internal static class AdminUserMapper
         return new AdminUserListItemResponse
         {
             Id = user.Id,
+            Version = user.Version,
             Email = user.Email,
             Roles = user.UserRoles.Select(ur => ur.Role.Code).OrderBy(code => code).ToList(),
             IsActive = user.IsActive,

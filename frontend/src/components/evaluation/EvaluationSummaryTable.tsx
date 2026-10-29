@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import type { KeyboardEvent } from 'react';
 import type { EvaluationSummary } from '../../api/types';
 import { useIntl } from '../../i18n';
@@ -12,41 +12,32 @@ import {
   summaryDescriptiveRatingName,
 } from '../../utils/scoring';
 import { isNewForController } from '../../utils/controllerBuckets';
+import { PersonName } from '../employee/PersonName';
 import { AverageDisplay } from './AverageDisplay';
 import { DescriptiveRatingBadge } from './DescriptiveRatingBadge';
 
 interface EvaluationSummaryTableProps {
   evaluations: EvaluationSummary[];
-  activeTab: string;
   detailPath: (id: number) => string;
   showEvaluator?: boolean;
   showNewBadge?: boolean;
-  pendingActionLabel?: string;
-  defaultActionLabel?: string;
-  pendingTabs?: string[];
   hasMore?: boolean;
   loadingMore?: boolean;
   onLoadMore?: () => void;
 }
 
+/** Tabela ocena: ceo red otvara ocenu (klik, Enter ili razmak). */
 export function EvaluationSummaryTable({
   evaluations,
-  activeTab,
   detailPath,
   showEvaluator = false,
   showNewBadge = false,
-  pendingActionLabel,
-  defaultActionLabel: _defaultActionLabel,
-  pendingTabs = ['unrated', 'returned', 'pending'],
   hasMore = false,
   loadingMore = false,
   onLoadMore,
 }: EvaluationSummaryTableProps) {
   const { formatMessage } = useIntl();
   const navigate = useNavigate();
-  const resolvedPendingActionLabel =
-    pendingActionLabel ?? formatMessage({ id: 'evaluation.rateAndSubmit' });
-  const isPendingTab = pendingTabs.includes(activeTab);
 
   function openEvaluation(id: number) {
     navigate(detailPath(id));
@@ -56,7 +47,6 @@ export function EvaluationSummaryTable({
     event: KeyboardEvent<HTMLTableRowElement>,
     id: number,
   ) {
-    if (isPendingTab) return;
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       openEvaluation(id);
@@ -67,9 +57,7 @@ export function EvaluationSummaryTable({
     <>
       <div className="table-panel">
         <div className="table-wrap table-wrap--infinite">
-          <table
-            className={`table table--hover table--evaluations${isPendingTab ? ' table--evaluations--with-actions' : ' table--clickable'}`}
-          >
+          <table className="table table--hover table--stack table--evaluations table--clickable">
             <thead>
               <tr>
                 <th className="col-text">
@@ -89,66 +77,63 @@ export function EvaluationSummaryTable({
                 <th className="col-meta">
                   {formatMessage({ id: 'evaluation.descriptiveLabel' })}
                 </th>
-                {isPendingTab && <th className="col-actions"></th>}
               </tr>
             </thead>
             <tbody>
-              {evaluations.map((ev) => (
-                <tr
-                  key={ev.id}
-                  onClick={
-                    isPendingTab ? undefined : () => openEvaluation(ev.id)
-                  }
-                  onKeyDown={
-                    isPendingTab
-                      ? undefined
-                      : (event) => handleRowKeyDown(event, ev.id)
-                  }
-                  tabIndex={isPendingTab ? undefined : 0}
-                  role={isPendingTab ? undefined : 'link'}
-                >
-                  <td className="cell-primary col-text">
-                    {ev.employeeFullName}
-                    {showNewBadge && isNewForController(ev) && (
-                      <span
-                        className="badge badge-new"
-                        style={{ marginLeft: '0.5rem' }}
+              {evaluations.map((ev) => {
+                const isNew = showNewBadge && isNewForController(ev);
+                return (
+                  <tr
+                    key={ev.id}
+                    className={isNew ? 'table-row--new' : undefined}
+                    onClick={() => openEvaluation(ev.id)}
+                    onKeyDown={(event) => handleRowKeyDown(event, ev.id)}
+                    tabIndex={0}
+                    role="link"
+                  >
+                    <td className="cell-primary col-text stack-title">
+                      <PersonName
+                        fullName={ev.employeeFullName}
+                        highlightLabel={
+                          isNew
+                            ? formatMessage({ id: 'evaluation.newEvaluation' })
+                            : undefined
+                        }
+                      />
+                    </td>
+                    {showEvaluator && (
+                      <td
+                        className="cell-muted col-text"
+                        data-label={formatMessage({ id: 'admin.evaluators' })}
                       >
-                        {formatMessage({ id: 'evaluation.new' })}
-                      </span>
+                        {ev.evaluatorFullName}
+                      </td>
                     )}
-                  </td>
-                  {showEvaluator && (
-                    <td className="cell-muted col-text">
-                      {ev.evaluatorFullName}
+                    <td
+                      className="cell-muted col-meta"
+                      data-label={formatMessage({ id: 'evaluation.period' })}
+                    >
+                      Q{ev.quarter}/{ev.year}
                     </td>
-                  )}
-                  <td className="cell-muted col-meta">
-                    Q{ev.quarter}/{ev.year}
-                  </td>
-                  <td className="col-num">
-                    <AverageDisplay value={formatSummaryAverage(ev)} />
-                  </td>
-                  <td className="col-meta">
-                    <DescriptiveRatingBadge
-                      name={summaryDescriptiveRatingName(ev)}
-                    />
-                  </td>
-                  {isPendingTab && (
-                    <td className="col-actions">
-                      <Link
-                        to={detailPath(ev.id)}
-                        className="btn btn-sm btn-primary"
-                        onClick={(event) => event.stopPropagation()}
-                      >
-                        {activeTab === 'returned'
-                          ? formatMessage({ id: 'evaluation.revise' })
-                          : resolvedPendingActionLabel}
-                      </Link>
+                    <td
+                      className="col-num"
+                      data-label={formatMessage({ id: 'evaluation.average' })}
+                    >
+                      <AverageDisplay value={formatSummaryAverage(ev)} />
                     </td>
-                  )}
-                </tr>
-              ))}
+                    <td
+                      className="col-meta"
+                      data-label={formatMessage({
+                        id: 'evaluation.descriptiveLabel',
+                      })}
+                    >
+                      <DescriptiveRatingBadge
+                        name={summaryDescriptiveRatingName(ev)}
+                      />
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           {onLoadMore && (
@@ -171,6 +156,7 @@ export function EvaluationSummaryTableCard({
   children,
   emptyStateMap,
   initialLoading = true,
+  toolbar,
 }: {
   loading: boolean;
   empty: boolean;
@@ -178,6 +164,8 @@ export function EvaluationSummaryTableCard({
   children: React.ReactNode;
   emptyStateMap?: Record<string, { title: string; description: string }>;
   initialLoading?: boolean;
+  /** Traka sa tabovima i filterima na vrhu kartice, iznad tabele. */
+  toolbar?: React.ReactNode;
 }) {
   const { formatMessage } = useIntl();
   const emptyCopy =
@@ -188,7 +176,10 @@ export function EvaluationSummaryTableCard({
         : null;
 
   return (
-    <div className="card card--flush card--table-fill">
+    <div
+      className={`card card--flush card--table-fill${toolbar ? ' data-panel' : ''}`}
+    >
+      {toolbar && <div className="data-panel__toolbar">{toolbar}</div>}
       {loading && initialLoading ? (
         <TableSkeleton rows={4} columns={5} />
       ) : empty ? (

@@ -36,7 +36,7 @@ public sealed class EducationLevelsController : ControllerBase
     public async Task<IActionResult> Update(long id, [FromBody] UpdateEducationLevelRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
-            new UpdateEducationLevelCommand(id, request.Name, request.SortOrder, request.IsActive),
+            new UpdateEducationLevelCommand(id, request.Name, request.SortOrder, request.IsActive, request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

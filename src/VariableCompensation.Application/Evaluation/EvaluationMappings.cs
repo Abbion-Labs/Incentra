@@ -134,6 +134,7 @@ internal static class EvaluationMappings
             FromStatus = entity.FromStatus,
             ToStatus = entity.ToStatus,
             ChangedByUserId = entity.ChangedByUserId,
+            ChangedByRoleCode = entity.ChangedByRoleCode,
             Comment = entity.Comment,
             ChangedAt = entity.ChangedAt
         };
@@ -151,6 +152,7 @@ internal static class EvaluationMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             Code = entity.Code,
             Name = entity.Name,
             MinAverage = entity.MinAverage,

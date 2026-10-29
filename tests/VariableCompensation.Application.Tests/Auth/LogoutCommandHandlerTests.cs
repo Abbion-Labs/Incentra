@@ -35,6 +35,40 @@ public class LogoutCommandHandlerTests
     }
 
     [Fact]
+    public async Task Handle_SignsOutTheWholeSession_ButNotTheUsersOtherSessions()
+    {
+        var sessionId = Guid.NewGuid();
+        var presented = new RefreshToken
+        {
+            UserId = 1,
+            SessionId = sessionId,
+            TokenHash = LoginCommandHandler.HashToken("plain-token"),
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+        };
+        var sameSession = new RefreshToken
+        {
+            UserId = 1,
+            SessionId = sessionId,
+            TokenHash = "issued-to-another-tab",
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+        };
+        var otherDevice = new RefreshToken
+        {
+            UserId = 1,
+            SessionId = Guid.NewGuid(),
+            TokenHash = "other-device",
+            ExpiresAt = DateTime.UtcNow.AddDays(7),
+        };
+        this.userRepository.RefreshTokens.AddRange([presented, sameSession, otherDevice]);
+
+        await this.handler.Handle(new LogoutCommand("plain-token"), CancellationToken.None);
+
+        presented.RevokedAt.Should().NotBeNull();
+        sameSession.RevokedAt.Should().NotBeNull();
+        otherDevice.RevokedAt.Should().BeNull();
+    }
+
+    [Fact]
     public async Task Handle_AlreadyRevokedToken_KeepsOriginalRevocationTime()
     {
         var revokedAt = DateTime.UtcNow.AddHours(-2);

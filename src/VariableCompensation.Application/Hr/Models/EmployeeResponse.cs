@@ -4,6 +4,9 @@ public sealed class EmployeeResponse
 {
     public long Id { get; init; }
 
+    /// <summary>Sent back with an edit; see <c>IVersioned</c>.</summary>
+    public int Version { get; init; }
+
     public string FirstName { get; init; } = string.Empty;
 
     public string LastName { get; init; } = string.Empty;

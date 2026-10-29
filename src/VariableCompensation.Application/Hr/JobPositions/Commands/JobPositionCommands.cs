@@ -1,6 +1,7 @@
 using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Hr.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Lookup;
@@ -35,7 +36,7 @@ public sealed class CreateJobPositionCommandHandler : IRequestHandler<CreateJobP
     }
 }
 
-public sealed record UpdateJobPositionCommand(long Id, string Name, int SortOrder, bool IsActive) : IRequest<Result<JobPositionResponse>>;
+public sealed record UpdateJobPositionCommand(long Id, string Name, int SortOrder, bool IsActive, int? Version) : IRequest<Result<JobPositionResponse>>;
 
 public sealed class UpdateJobPositionCommandHandler : IRequestHandler<UpdateJobPositionCommand, Result<JobPositionResponse>>
 {
@@ -49,6 +50,12 @@ public sealed class UpdateJobPositionCommandHandler : IRequestHandler<UpdateJobP
         if (entity is null)
         {
             return Result.Failure<JobPositionResponse>(ErrorCodes.JobPositionNotFound);
+        }
+
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<JobPositionResponse>(version.Error);
         }
 
         var name = request.Name.Trim();

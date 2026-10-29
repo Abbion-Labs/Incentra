@@ -25,6 +25,11 @@ const DEMO_ACCOUNTS = [
     password: 'Control123!',
   },
   {
+    labelKey: 'auth.employee',
+    email: 'zaposleni@local.dev',
+    password: 'Zaposleni123!',
+  },
+  {
     labelKey: 'auth.payroll',
     email: 'payroll@local.dev',
     password: 'Payroll123!',

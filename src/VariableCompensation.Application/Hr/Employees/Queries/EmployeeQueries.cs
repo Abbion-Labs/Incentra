@@ -42,9 +42,13 @@ public sealed class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery
         var page = request.Page < 1 ? 1 : request.Page;
         var pageSize = request.PageSize is < 1 or > 100 ? 20 : request.PageSize;
 
-        if (!this.currentUserService.IsAdmin &&
-            !this.currentUserService.IsInRole(RoleCodes.Evaluator) &&
-            !this.currentUserService.IsInRole(RoleCodes.Controller))
+        // The session works in one role, and the token carries only that role. An
+        // admin session sees everyone, an evaluator or controller session sees
+        // their own people, and any other session only its own record.
+        var sessionRole = this.currentUserService.IsAdmin ? null : this.currentUserService.ActiveRole;
+        var scopedRole = sessionRole is RoleCodes.Evaluator or RoleCodes.Controller ? sessionRole : null;
+
+        if (!this.currentUserService.IsAdmin && scopedRole is null)
         {
             var ownEmployeeId = await this.currentEmployeeContext.GetEmployeeIdAsync(cancellationToken);
             var own = ownEmployeeId is null
@@ -62,17 +66,17 @@ public sealed class GetEmployeesQueryHandler : IRequestHandler<GetEmployeesQuery
 
         var evaluatorEmployeeId = request.EvaluatorEmployeeId;
         long? controllerEmployeeId = null;
-        if (!this.currentUserService.IsAdmin &&
-            this.currentUserService.IsInRole(RoleCodes.Evaluator))
+        if (scopedRole is not null)
         {
             var currentId = await this.currentEmployeeContext.GetEmployeeIdAsync(cancellationToken);
-            evaluatorEmployeeId = currentId ?? -1;
-        }
-        else if (!this.currentUserService.IsAdmin &&
-                 this.currentUserService.IsInRole(RoleCodes.Controller))
-        {
-            var currentId = await this.currentEmployeeContext.GetEmployeeIdAsync(cancellationToken);
-            controllerEmployeeId = currentId ?? -1;
+            if (scopedRole == RoleCodes.Evaluator)
+            {
+                evaluatorEmployeeId = currentId ?? -1;
+            }
+            else
+            {
+                controllerEmployeeId = currentId ?? -1;
+            }
         }
 
         var (items, totalCount) = await this.repository.GetPagedAsync(

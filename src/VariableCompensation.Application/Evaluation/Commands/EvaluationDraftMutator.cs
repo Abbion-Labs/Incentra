@@ -9,6 +9,9 @@ namespace VariableCompensation.Application.Evaluation.Commands;
 
 internal static class EvaluationDraftMutator
 {
+    /// <summary>A goal worth less than this would not move the average.</summary>
+    public const int MinGoalWeightPercent = 5;
+
     public static void ApplyHeader(
         EvaluationEntity entity,
         DateTime? conversationAt,
@@ -22,16 +25,22 @@ internal static class EvaluationDraftMutator
         entity.ConditionsFulfilled = conditionsFulfilled;
     }
 
+    /// <summary>
+    /// Sets the goals while the plan is still being made. Once goals, conditions and criteria are set the plan is
+    /// what was agreed with the employee: from then on only the rating and comment of each existing goal change.
+    /// <paramref name="planAgreed"/> is whether the plan was agreed before the edit began; an edit that sets several
+    /// parts of the plan passes it, so the part it sets first does not make the plan look agreed to the next.
+    /// </summary>
     public static async Task<Result> ApplyGoalsAsync(
         EvaluationEntity entity,
         IReadOnlyList<EvaluationGoalItem> goals,
         IEvaluationLookupRepository lookupRepository,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken,
+        bool? planAgreed = null)
     {
-        var planningLock = EvaluationPlanningRules.EnsureGoalsPlanningEditable(entity, goals);
-        if (planningLock.IsFailure)
+        if (planAgreed ?? EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
         {
-            return planningLock;
+            return await RateAgreedGoalsAsync(entity, goals, lookupRepository, cancellationToken);
         }
 
         var ratingLevels = await lookupRepository.GetRatingLevelsAsync(cancellationToken);
@@ -55,6 +64,12 @@ internal static class EvaluationDraftMutator
             }
         }
 
+        var weights = ValidateWeights(goals);
+        if (weights.IsFailure)
+        {
+            return weights;
+        }
+
         entity.Goals.Clear();
         foreach (var item in goals.OrderBy(g => g.SortOrder))
         {
@@ -71,14 +86,95 @@ internal static class EvaluationDraftMutator
         return Result.Success();
     }
 
+    /// <summary>
+    /// The weight of a goal is the share of the goals average it carries, in whole percent. Either every goal has
+    /// one and together they make 100, or none has, and the goals count equally.
+    /// </summary>
+    private static Result ValidateWeights(IReadOnlyList<EvaluationGoalItem> goals)
+    {
+        if (goals.All(g => g.Weight is null))
+        {
+            return Result.Success();
+        }
+
+        if (goals.Any(g => g.Weight is null))
+        {
+            return Result.Failure(ErrorCodes.GoalWeightsIncomplete);
+        }
+
+        if (goals.Any(g => g.Weight!.Value % 1 != 0
+            || g.Weight.Value < MinGoalWeightPercent
+            || g.Weight.Value > 100))
+        {
+            return Result.Failure($"{ErrorCodes.GoalWeightInvalid}?min={MinGoalWeightPercent}");
+        }
+
+        var total = goals.Sum(g => g.Weight!.Value);
+        return total == 100
+            ? Result.Success()
+            : Result.Failure($"{ErrorCodes.GoalWeightsSumInvalid}?total={total:0}");
+    }
+
+    /// <summary>
+    /// Rates the agreed goals. Every goal has to be sent, by its id, with its text and weight unchanged; adding,
+    /// removing or rewording a goal is refused.
+    /// </summary>
+    private static async Task<Result> RateAgreedGoalsAsync(
+        EvaluationEntity entity,
+        IReadOnlyList<EvaluationGoalItem> goals,
+        IEvaluationLookupRepository lookupRepository,
+        CancellationToken cancellationToken)
+    {
+        var agreed = entity.Goals.ToDictionary(g => g.Id);
+        var sentIds = goals.Select(g => g.Id).ToList();
+        if (goals.Count != agreed.Count
+            || sentIds.Any(id => id is null || !agreed.ContainsKey(id.Value))
+            || sentIds.Distinct().Count() != sentIds.Count)
+        {
+            return Result.Failure(ErrorCodes.GoalsPlanningLocked);
+        }
+
+        var ratingLevels = await lookupRepository.GetRatingLevelsAsync(cancellationToken);
+        var notRatedLevel = ratingLevels.FirstOrDefault(r => r.Value == RatingLevelRules.NotRatedValue);
+        if (notRatedLevel is null)
+        {
+            return Result.Failure(ErrorCodes.NotRatedLevelMissing);
+        }
+
+        foreach (var item in goals)
+        {
+            var goal = agreed[item.Id!.Value];
+            if (!string.Equals(item.Description.Trim(), goal.Description, StringComparison.Ordinal)
+                || item.Weight != goal.Weight)
+            {
+                return Result.Failure(ErrorCodes.GoalsPlanningLocked);
+            }
+
+            if (item.RatingLevelId is not null &&
+                !await lookupRepository.RatingLevelExistsAsync(item.RatingLevelId.Value, cancellationToken))
+            {
+                return Result.Failure($"{ErrorCodes.RatingLevelNotFound}?id={item.RatingLevelId}");
+            }
+        }
+
+        foreach (var item in goals)
+        {
+            var goal = agreed[item.Id!.Value];
+            goal.RatingLevelId = item.RatingLevelId ?? notRatedLevel.Id;
+            goal.Comment = item.Comment;
+        }
+
+        return Result.Success();
+    }
+
     public static Result ApplyConditions(
         EvaluationEntity entity,
-        IReadOnlyList<EvaluationConditionItem> conditions)
+        IReadOnlyList<EvaluationConditionItem> conditions,
+        bool? planAgreed = null)
     {
-        var planningLock = EvaluationPlanningRules.EnsureConditionsPlanningEditable(entity);
-        if (planningLock.IsFailure)
+        if (planAgreed ?? EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
         {
-            return planningLock;
+            return Result.Failure(ErrorCodes.GoalsPlanningLocked);
         }
 
         entity.Conditions.Clear();
@@ -101,12 +197,12 @@ internal static class EvaluationDraftMutator
 
     public static Result ApplyCriteria(
         EvaluationEntity entity,
-        IReadOnlyList<EvaluationCriterionItem> criteria)
+        IReadOnlyList<EvaluationCriterionItem> criteria,
+        bool? planAgreed = null)
     {
-        var planningLock = EvaluationPlanningRules.EnsureCriteriaPlanningEditable(entity);
-        if (planningLock.IsFailure)
+        if (planAgreed ?? EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
         {
-            return planningLock;
+            return Result.Failure(ErrorCodes.GoalsPlanningLocked);
         }
 
         entity.Criteria.Clear();

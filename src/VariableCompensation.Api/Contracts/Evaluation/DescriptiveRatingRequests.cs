@@ -17,6 +17,9 @@ public sealed class CreateDescriptiveRatingRequest
 
 public sealed class UpdateDescriptiveRatingRequest
 {
+    /// <summary>The version the edit was made from. Required: an edit from an outdated copy is refused.</summary>
+    public int? Version { get; init; }
+
     public string Code { get; init; } = string.Empty;
 
     public string Name { get; init; } = string.Empty;

@@ -36,7 +36,7 @@ public sealed class JobPositionsController : ControllerBase
     public async Task<IActionResult> Update(long id, [FromBody] UpdateJobPositionRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
-            new UpdateJobPositionCommand(id, request.Name, request.SortOrder, request.IsActive),
+            new UpdateJobPositionCommand(id, request.Name, request.SortOrder, request.IsActive, request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

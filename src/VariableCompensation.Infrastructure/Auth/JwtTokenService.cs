@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -10,6 +11,8 @@ namespace VariableCompensation.Infrastructure.Auth;
 
 public sealed class JwtTokenService : IJwtTokenService
 {
+    private const int RefreshTokenBytes = 32;
+
     private readonly JwtSettings settings;
 
     public JwtTokenService(IOptions<JwtSettings> settings)
@@ -17,14 +20,17 @@ public sealed class JwtTokenService : IJwtTokenService
         this.settings = settings.Value;
     }
 
-    public string GenerateAccessToken(User user, IEnumerable<string> roles)
+    public TimeSpan RefreshTokenReuseGracePeriod => TimeSpan.FromSeconds(this.settings.RefreshTokenReuseGraceSeconds);
+
+    public string GenerateAccessToken(User user, IEnumerable<string> roles, Guid sessionId)
     {
         var claims = new List<Claim>
         {
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email),
             new(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
+            new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+            new(JwtRegisteredClaimNames.Sid, sessionId.ToString())
         };
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
@@ -43,7 +49,7 @@ public sealed class JwtTokenService : IJwtTokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public string GenerateRefreshToken() => Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+    public string GenerateRefreshToken() => Base64UrlEncoder.Encode(RandomNumberGenerator.GetBytes(RefreshTokenBytes));
 
     public DateTime GetAccessTokenExpiry() => DateTime.UtcNow.AddMinutes(this.settings.AccessTokenMinutes);
 

@@ -32,6 +32,25 @@
     }
   },
   {
+    "name": "average_between_band_bounds",
+    "goals": [
+      { "ratingLevelId": 4, "weight": 0.33 },
+      { "ratingLevelId": 5, "weight": 0.33 },
+      { "ratingLevelId": 4, "weight": 0.34 }
+    ],
+    "measures": [
+      { "ratingLevelId": 4 },
+      { "ratingLevelId": 5 },
+      { "ratingLevelId": 5 }
+    ],
+    "expected": {
+      "goalsAverage": 3.33,
+      "measuresAverage": 3.6667,
+      "overallAverage": 3.4984,
+      "descriptiveRatingCode": "GOOD"
+    }
+  },
+  {
     "name": "goals_without_measures_incomplete",
     "goals": [
       { "ratingLevelId": 4, "weight": 1 }

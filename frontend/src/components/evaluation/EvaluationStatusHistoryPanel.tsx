@@ -1,6 +1,6 @@
 import type { EvaluationStatusHistoryEntry } from '../../api/types';
 import { useIntl } from '../../i18n';
-import { statusLabel } from '../../utils/status';
+import { roleLabel, statusLabel } from '../../utils/status';
 import { formatDateTime } from '../../utils/formatLocale';
 
 interface EvaluationStatusHistoryPanelProps {
@@ -42,6 +42,11 @@ export function EvaluationStatusHistoryPanel({
             <time dateTime={entry.changedAt}>
               {formatDateTime(entry.changedAt)}
             </time>
+            {entry.changedByRoleCode && (
+              <span className="evaluation-status-history__role">
+                {roleLabel(entry.changedByRoleCode, formatMessage)}
+              </span>
+            )}
           </div>
           <p className="evaluation-status-history__transition">
             {entry.fromStatus

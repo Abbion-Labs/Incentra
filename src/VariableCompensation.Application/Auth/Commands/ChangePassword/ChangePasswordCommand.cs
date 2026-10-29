@@ -50,7 +50,17 @@ public sealed class ChangePasswordCommandHandler : IRequestHandler<ChangePasswor
         user.PasswordHash = this.passwordHasher.Hash(request.NewPassword);
         user.UpdatedAt = DateTime.UtcNow;
 
-        await this.userRepository.RevokeAllRefreshTokensAsync(user.Id, cancellationToken);
+        // Every other device is signed out. This one stays signed in: it has just proven the current password,
+        // and ending its session would log the user out shortly after a successful change.
+        if (this.currentUserService.SessionId is { } sessionId)
+        {
+            await this.userRepository.RevokeOtherSessionsAsync(user.Id, sessionId, cancellationToken);
+        }
+        else
+        {
+            await this.userRepository.RevokeAllRefreshTokensAsync(user.Id, cancellationToken);
+        }
+
         await this.userRepository.SaveChangesAsync(cancellationToken);
         return Result.Success();
     }

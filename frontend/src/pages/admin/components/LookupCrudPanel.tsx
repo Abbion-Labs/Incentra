@@ -7,6 +7,10 @@ import type {
 } from '../../../api/types';
 import { useToast } from '../../../hooks';
 import { useIntl } from '../../../i18n';
+import { isEditConflict } from '../../../utils/editConflict';
+import { TEXT_LIMITS } from '../../../utils/textLimits';
+import { TableIconButton } from '../../../components/common/TableIconButton';
+import { FormSection } from '../../../components/forms/FormSection';
 
 type LookupKind = 'org' | 'position' | 'education';
 type LookupItem = OrganizationUnit | JobPosition | EducationLevel;
@@ -23,14 +27,17 @@ const CONFIG = {
   org: {
     titleKey: 'admin.lookups.orgUnits',
     endpoint: '/api/organization-units',
+    maxNameLength: TEXT_LIMITS.organizationUnitName,
   },
   position: {
     titleKey: 'admin.lookups.jobPositions',
     endpoint: '/api/job-positions',
+    maxNameLength: TEXT_LIMITS.lookupName,
   },
   education: {
     titleKey: 'admin.lookups.educationLevels',
     endpoint: '/api/education-levels',
+    maxNameLength: TEXT_LIMITS.lookupName,
   },
 } as const;
 
@@ -50,9 +57,13 @@ export function LookupCrudPanel({
   const toast = useToast();
   const config = CONFIG[kind];
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Verzija stavke sa kojom je forma otvorena; šalje se uz izmenu.
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [name, setName] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Polje za naziv se prikazuje tek kad se stavka dodaje ili menja.
+  const [formOpen, setFormOpen] = useState(false);
 
   const rows: LookupItem[] =
     kind === 'org'
@@ -63,14 +74,23 @@ export function LookupCrudPanel({
 
   function resetForm() {
     setEditingId(null);
+    setEditingVersion(null);
     setName('');
     setIsActive(true);
+    setFormOpen(false);
+  }
+
+  function openCreate() {
+    resetForm();
+    setFormOpen(true);
   }
 
   function startEdit(item: LookupItem) {
     setEditingId(item.id);
+    setEditingVersion(item.version);
     setName(item.name);
     setIsActive(item.isActive);
+    setFormOpen(true);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -81,10 +101,15 @@ export function LookupCrudPanel({
 
       if (editingId) {
         if (kind === 'org') {
+          const existing = rows.find(
+            (item) => item.id === editingId,
+          ) as OrganizationUnit;
           await api.put(`${config.endpoint}/${editingId}`, {
             name: trimmedName,
-            code: null,
+            // Šifra se ovde ne uređuje, pa ostaje kakva jeste.
+            code: existing.code,
             isActive,
+            version: editingVersion,
           });
         } else {
           const existing = rows.find((item) => item.id === editingId) as
@@ -93,6 +118,7 @@ export function LookupCrudPanel({
             name: trimmedName,
             sortOrder: existing.sortOrder,
             isActive,
+            version: editingVersion,
           });
         }
         toast.success(formatMessage({ id: 'alerts.changesSaved' }));
@@ -111,6 +137,12 @@ export function LookupCrudPanel({
       resetForm();
       await onReload();
     } catch (err) {
+      if (isEditConflict(err)) {
+        toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+        resetForm();
+        await onReload();
+        return;
+      }
       toast.error(
         err instanceof Error
           ? err.message
@@ -122,47 +154,63 @@ export function LookupCrudPanel({
   }
 
   return (
-    <div className="card admin-lookup-panel">
-      <form className="admin-lookup-form" onSubmit={handleSubmit}>
-        <div className="form-row">
-          <label htmlFor={`${kind}-name`}>
-            {formatMessage({ id: 'common.name' })}
-          </label>
-          <input
-            id={`${kind}-name`}
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            required
-          />
-        </div>
-        {editingId && (
-          <div className="form-row">
-            <label htmlFor={`${kind}-active`}>
-              {formatMessage({ id: 'common.active' })}
-            </label>
-            <select
-              id={`${kind}-active`}
-              value={isActive ? '1' : '0'}
-              onChange={(e) => setIsActive(e.target.value === '1')}
-            >
-              <option value="1">{formatMessage({ id: 'common.yes' })}</option>
-              <option value="0">{formatMessage({ id: 'common.no' })}</option>
-            </select>
-          </div>
-        )}
-        <div className="actions admin-lookup-form__actions">
+    <FormSection
+      title={formatMessage({ id: config.titleKey })}
+      className="admin-lookup-panel"
+      actions={
+        formOpen ? undefined : (
           <button
-            type="submit"
-            className="btn btn-primary btn-sm"
-            disabled={saving}
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={openCreate}
           >
-            {saving
-              ? formatMessage({ id: 'buttons.saving' })
-              : editingId
-                ? formatMessage({ id: 'buttons.save' })
-                : formatMessage({ id: 'buttons.add' })}
+            {formatMessage({ id: 'buttons.add' })}
           </button>
+        )
+      }
+    >
+      {formOpen && (
+        <form className="admin-lookup-form" onSubmit={handleSubmit}>
+          <div className="form-row">
+            <label htmlFor={`${kind}-name`}>
+              {formatMessage({ id: 'common.name' })}
+            </label>
+            <input
+              id={`${kind}-name`}
+              value={name}
+              maxLength={config.maxNameLength}
+              onChange={(e) => setName(e.target.value)}
+              autoFocus
+              required
+            />
+          </div>
           {editingId && (
+            <div className="form-row">
+              <label htmlFor={`${kind}-active`}>
+                {formatMessage({ id: 'common.active' })}
+              </label>
+              <select
+                id={`${kind}-active`}
+                value={isActive ? '1' : '0'}
+                onChange={(e) => setIsActive(e.target.value === '1')}
+              >
+                <option value="1">{formatMessage({ id: 'common.yes' })}</option>
+                <option value="0">{formatMessage({ id: 'common.no' })}</option>
+              </select>
+            </div>
+          )}
+          <div className="actions admin-lookup-form__actions">
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm"
+              disabled={saving}
+            >
+              {saving
+                ? formatMessage({ id: 'buttons.saving' })
+                : editingId
+                  ? formatMessage({ id: 'buttons.save' })
+                  : formatMessage({ id: 'buttons.add' })}
+            </button>
             <button
               type="button"
               className="btn btn-secondary btn-sm"
@@ -170,9 +218,9 @@ export function LookupCrudPanel({
             >
               {formatMessage({ id: 'buttons.cancel' })}
             </button>
-          )}
-        </div>
-      </form>
+          </div>
+        </form>
+      )}
       <div className="table-wrap">
         <table className="table table--hover admin-lookup-table">
           <thead>
@@ -199,19 +247,17 @@ export function LookupCrudPanel({
                     : formatMessage({ id: 'common.no' })}
                 </td>
                 <td className="col-actions">
-                  <button
-                    type="button"
-                    className="btn btn-secondary btn-sm"
+                  <TableIconButton
+                    icon="edit"
+                    label={formatMessage({ id: 'buttons.edit' })}
                     onClick={() => startEdit(item)}
-                  >
-                    {formatMessage({ id: 'buttons.edit' })}
-                  </button>
+                  />
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-    </div>
+    </FormSection>
   );
 }

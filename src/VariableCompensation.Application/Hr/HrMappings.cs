@@ -11,6 +11,7 @@ internal static class HrMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             Name = entity.Name,
             Code = entity.Code,
             IsActive = entity.IsActive
@@ -20,6 +21,7 @@ internal static class HrMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             Name = entity.Name,
             SortOrder = entity.SortOrder,
             IsActive = entity.IsActive
@@ -29,6 +31,7 @@ internal static class HrMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             Name = entity.Name,
             SortOrder = entity.SortOrder,
             IsActive = entity.IsActive
@@ -38,6 +41,7 @@ internal static class HrMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             FirstName = entity.FirstName,
             LastName = entity.LastName,
             FullName = entity.FullName,
@@ -72,16 +76,9 @@ internal static class HrMappings
         new()
         {
             EmployeeId = entity.EmployeeId,
+            Version = entity.Version,
             EmployeeFullName = entity.Employee.FullName,
             ControllerEmployeeId = entity.ControllerEmployeeId,
-            ControllerFullName = entity.Controller.FullName,
-            ThresholdDoesNotMeet = entity.ThresholdDoesNotMeet,
-            ThresholdMeets = entity.ThresholdMeets,
-            ThresholdGood = entity.ThresholdGood,
-            ThresholdExceeds = entity.ThresholdExceeds,
-            PercentDoesNotMeet = entity.PercentDoesNotMeet,
-            PercentMeets = entity.PercentMeets,
-            PercentGood = entity.PercentGood,
-            PercentExceeds = entity.PercentExceeds
+            ControllerFullName = entity.Controller?.FullName
         };
 }

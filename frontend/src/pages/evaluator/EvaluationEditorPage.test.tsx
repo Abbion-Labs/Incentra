@@ -10,7 +10,7 @@ import {
 import { IntlProvider } from 'react-intl';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { api } from '../../api/client';
+import { ApiError, api } from '../../api/client';
 import type { EvaluationDetail } from '../../api/types';
 import { ToastProvider } from '../../components/common/Toast';
 import { stubMatchMedia } from '../../test/browserStubs';
@@ -19,6 +19,12 @@ import { EvaluationEditorPage } from './EvaluationEditorPage';
 
 vi.mock('../../components/AppLayout', () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
+}));
+
+const auth = vi.hoisted(() => ({ activeRole: 'EVALUATOR' as string | null }));
+
+vi.mock('../../auth/AuthContext', () => ({
+  useAuth: () => ({ activeRole: auth.activeRole }),
 }));
 
 // Uslovi nisu ispunjeni + komentar: ocena se može poslati bez ocenjivanja mera.
@@ -30,6 +36,7 @@ const evaluation = {
   quarter: 3,
   status: 'Draft',
   version: 4,
+  controllerEmployeeId: 3,
   goalsPlanningComplete: true,
   goalCount: 1,
   conditionsFulfilled: false,
@@ -60,9 +67,9 @@ const evaluation = {
   training: null,
 } as unknown as EvaluationDetail;
 
-function renderEditor() {
+function renderEditor(detail: EvaluationDetail = evaluation) {
   mockApiGetDeferred((path) => {
-    if (path === '/api/evaluations/5') return evaluation;
+    if (path === '/api/evaluations/5') return detail;
     if (path.startsWith('/api/lookups/')) return [];
     if (path.endsWith('/status-history')) return [];
     return undefined;
@@ -83,6 +90,7 @@ function renderEditor() {
 describe('EvaluationEditorPage', () => {
   beforeEach(() => {
     stubMatchMedia();
+    auth.activeRole = 'EVALUATOR';
   });
 
   afterEach(() => {
@@ -96,12 +104,14 @@ describe('EvaluationEditorPage', () => {
       .spyOn(api, 'put')
       .mockReturnValue(new Promise(() => undefined));
 
-    fireEvent.click(
-      await screen.findByRole('button', {
-        name: 'buttons.submitToController',
-      }),
-    );
-    const dialog = screen.getByRole('dialog');
+    const submit = await screen.findByRole('button', {
+      name: 'buttons.submitToController',
+    });
+    // Dugme se iscrta pre nego što se ocena potpuno učita; klik na još
+    // onemogućeno dugme ne otvara dijalog.
+    await waitFor(() => expect(submit).toHaveProperty('disabled', false));
+    fireEvent.click(submit);
+    const dialog = await screen.findByRole('dialog');
     const confirm = within(dialog).getByRole('button', {
       name: 'buttons.submit',
     });
@@ -115,6 +125,31 @@ describe('EvaluationEditorPage', () => {
     expect(put).toHaveBeenCalledTimes(1);
     expect(confirm).toHaveProperty('disabled', true);
     expect(confirm.textContent).toBe('buttons.submitting');
+  });
+
+  it('finishes the evaluation for an evaluator without a controller', async () => {
+    renderEditor({ ...evaluation, controllerEmployeeId: null });
+
+    expect(
+      await screen.findByRole('button', { name: 'buttons.submitFinal' }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('button', { name: 'buttons.submitToController' }),
+    ).toBeNull();
+  });
+
+  it('shows the draft read-only to an admin', async () => {
+    auth.activeRole = 'ADMIN';
+    renderEditor();
+
+    await screen.findByText('Cilj');
+    expect(screen.queryByRole('button', { name: 'buttons.save' })).toBeNull();
+    expect(
+      screen.queryByRole('button', { name: 'buttons.submitToController' }),
+    ).toBeNull();
+    expect(
+      screen.queryByLabelText('evaluation.conditionsNotMetCommentLabel'),
+    ).toBeNull();
   });
 
   it('locks the rating fields while the evaluation is saving', async () => {
@@ -143,5 +178,42 @@ describe('EvaluationEditorPage', () => {
         .getByLabelText('evaluation.conditionsNotMetCommentLabel')
         .matches(':disabled'),
     ).toBe(false);
+  });
+
+  it('saves with the version the page was loaded with', async () => {
+    renderEditor();
+    const put = vi.spyOn(api, 'put').mockResolvedValue(evaluation);
+
+    await screen.findByLabelText('evaluation.conditionsNotMetCommentLabel');
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.save' }));
+
+    await waitFor(() => expect(put).toHaveBeenCalled());
+    expect(put.mock.calls[0][1]).toMatchObject({ version: 4 });
+    // Ocena se pre čuvanja ne učitava ponovo, jer bi to prikrilo tuđu izmenu.
+    const evaluationLoads = vi
+      .mocked(api.get)
+      .mock.calls.filter(([path]) => path === '/api/evaluations/5');
+    expect(evaluationLoads).toHaveLength(1);
+  });
+
+  it('shows the new state when someone else saved in the meantime', async () => {
+    renderEditor();
+    vi.spyOn(api, 'put').mockRejectedValue(
+      new ApiError('vn-0024', 400, 'vn-0024', 'vn-0024'),
+    );
+
+    await screen.findByLabelText('evaluation.conditionsNotMetCommentLabel');
+    fireEvent.click(screen.getByRole('button', { name: 'buttons.save' }));
+
+    expect(
+      await screen.findByText('errors.evaluationChangedMeanwhile'),
+    ).toBeTruthy();
+    await waitFor(() =>
+      expect(
+        vi
+          .mocked(api.get)
+          .mock.calls.filter(([path]) => path === '/api/evaluations/5'),
+      ).toHaveLength(2),
+    );
   });
 });

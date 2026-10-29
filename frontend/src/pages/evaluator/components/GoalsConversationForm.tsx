@@ -1,3 +1,4 @@
+import { FormSection } from '../../../components/forms/FormSection';
 import { useIntl } from '../../../i18n';
 
 interface GoalsConversationFormProps {
@@ -27,7 +28,7 @@ export function GoalsConversationForm({
   const { formatMessage } = useIntl();
 
   return (
-    <div className="card goals-conversation-form">
+    <FormSection title={formatMessage({ id: 'evaluation.conversation' })}>
       <div className="form-grid form-grid--2">
         <div className="form-row">
           <label>{formatMessage({ id: 'evaluation.conversationNote' })}</label>
@@ -58,6 +59,6 @@ export function GoalsConversationForm({
             : formatMessage({ id: 'evaluation.setGoals' })}
         </button>
       </div>
-    </div>
+    </FormSection>
   );
 }

@@ -14,10 +14,6 @@ export function findNotRatedLevelId(levels: RatingLevel[]): number | undefined {
   return levels.find(isNotRated)?.id;
 }
 
-export function ratingValueOptionLabel(level: RatingLevel): string {
-  return isNotRated(level) ? '/' : String(level.value);
-}
-
 export function ratingOptionLabel(level: RatingLevel): string {
   return isNotRated(level) ? '/' : `${level.value} — ${level.label}`;
 }
@@ -207,6 +203,21 @@ export function calculateOverallAverage(
   );
 }
 
+const AVERAGE_SCALE = 10_000;
+
+/**
+ * Na četiri decimale, polovinu ka parnoj cifri, kao `Math.Round` na serveru. Tako
+ * prosek i opisna ocena pre čuvanja odgovaraju onome što server sačuva; prikaz ih
+ * ionako zaokružuje na dve.
+ */
 function roundAverage(value: number): number {
-  return Math.round(value * 100) / 100;
+  const scaled = value * AVERAGE_SCALE;
+  const floor = Math.floor(scaled);
+  const isHalf = Math.abs(scaled - floor - 0.5) < 1e-6;
+  const rounded = isHalf
+    ? floor % 2 === 0
+      ? floor
+      : floor + 1
+    : Math.round(scaled);
+  return rounded / AVERAGE_SCALE;
 }

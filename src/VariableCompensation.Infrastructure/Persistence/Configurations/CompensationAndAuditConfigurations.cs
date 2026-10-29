@@ -13,7 +13,6 @@ internal sealed class VariableCompensationParametersConfiguration : IEntityTypeC
         builder.Property(x => x.MonetaryPool).HasPrecision(18, 2);
         builder.Property(x => x.Currency).HasMaxLength(3).IsRequired();
         builder.Property(x => x.AcceptablePerformanceRating).HasPrecision(4, 2);
-        builder.Property(x => x.UpperLimitCoefficient).HasPrecision(10, 4);
         builder.Property(x => x.DependencyWeight).HasPrecision(10, 4);
         builder.Property(x => x.Exponent).HasPrecision(10, 4);
         builder.Property(x => x.AllowNegativeVariable).HasDefaultValue(false);

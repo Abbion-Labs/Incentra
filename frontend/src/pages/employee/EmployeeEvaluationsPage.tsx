@@ -70,30 +70,37 @@ export function EmployeeEvaluationsPage() {
 
   return (
     <AppLayout title={formatMessage({ id: 'navigation.employeeEvaluations' })}>
-      <div className="card card--filter">
-        <PeriodFilters
-          year={year}
-          quarter={quarter}
-          onYearChange={setYear}
-          onQuarterChange={setQuarter}
-          showAllQuartersOption
-          search={searchInput}
-          onSearchChange={setSearchInput}
-          searchLabel={formatMessage({ id: 'evaluation.search' })}
-          searchPlaceholder={formatMessage({
-            id: 'evaluation.searchPlaceholder',
-          })}
-        />
-      </div>
-
-      <EvaluationBucketTabs
-        activeTab={activeTab}
-        onTabChange={(tab) => setActiveTab(tab as EvaluationBucket)}
-        tabs={evaluationBucketTabs}
-        counts={tabCounts}
-      />
-
-      <div className="card card--flush card--table-fill">
+      <div className="card card--flush card--table-fill data-panel">
+        <div className="data-panel__toolbar">
+          <EvaluationBucketTabs
+            activeTab={activeTab}
+            onTabChange={(tab) => setActiveTab(tab as EvaluationBucket)}
+            tabs={evaluationBucketTabs}
+            counts={tabCounts}
+          />
+          <PeriodFilters
+            compact
+            year={year}
+            quarter={quarter}
+            onYearChange={setYear}
+            onQuarterChange={setQuarter}
+            showAllQuartersOption
+            search={searchInput}
+            onSearchChange={setSearchInput}
+            searchLabel={formatMessage({ id: 'evaluation.search' })}
+            searchPlaceholder={formatMessage({
+              id: 'evaluation.searchPlaceholder',
+            })}
+            canReset={
+              searchInput !== '' || year !== currentYear || quarter !== null
+            }
+            onReset={() => {
+              setSearchInput('');
+              setYear(currentYear);
+              setQuarter(null);
+            }}
+          />
+        </div>
         {loading ? (
           <TableSkeleton rows={4} columns={4} />
         ) : evaluations.length === 0 ? (

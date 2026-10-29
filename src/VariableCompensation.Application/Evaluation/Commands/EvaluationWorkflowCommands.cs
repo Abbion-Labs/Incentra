@@ -65,6 +65,12 @@ public sealed class SubmitEvaluationCommandHandler : IRequestHandler<SubmitEvalu
             return Result.Failure<EvaluationDetailResponse>(ErrorCodes.SubmitRequiresGoal);
         }
 
+        // An evaluation is rated against the plan agreed with the employee, so there is nothing to submit without one.
+        if (!EvaluationPlanningRules.IsGoalsPlanningComplete(entity))
+        {
+            return Result.Failure<EvaluationDetailResponse>(ErrorCodes.PlanIncomplete);
+        }
+
         if (entity.ConditionsFulfilled)
         {
             if (entity.Measures.Count == 0)
@@ -92,19 +98,32 @@ public sealed class SubmitEvaluationCommandHandler : IRequestHandler<SubmitEvalu
         this.scoringService.Recalculate(entity, ratingLevels, descriptiveRatings);
 
         var userId = this.currentUserService.UserId ?? 0;
-        EvaluationWorkflow.ApplyTransition(entity, entity.Status, next, userId, null);
+        EvaluationWorkflow.ApplyTransition(
+            entity, entity.Status, next, userId, this.currentUserService.ActiveRole, null);
         entity.ControllerViewedAt = null;
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
+        // An evaluator without a controller is at the top: nobody reviews them, so submitting is the final word.
+        var needsReview = entity.ControllerEmployeeId is not null;
+        if (!needsReview)
+        {
+            entity.ExcludedFromCompensation = !entity.ConditionsFulfilled;
+            EvaluationWorkflow.ApplyTransition(
+                entity, EvaluationStatus.Submitted, EvaluationStatus.Approved, userId, this.currentUserService.ActiveRole, null);
+        }
+
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);
 
-        try
+        if (needsReview)
         {
-            await this.notificationService.NotifySubmittedForReviewAsync(entity.Id, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            this.logger.LogError(ex, "Failed to send submission notification for evaluation {EvaluationId}", entity.Id);
+            try
+            {
+                await this.notificationService.NotifySubmittedForReviewAsync(entity.Id, cancellationToken);
+            }
+            catch (Exception ex)
+            {
+                this.logger.LogError(ex, "Failed to send submission notification for evaluation {EvaluationId}", entity.Id);
+            }
         }
 
         var updated = await this.evaluationRepository.FindByIdAsync(entity.Id, cancellationToken);
@@ -171,7 +190,8 @@ public sealed class StartReviewEvaluationCommandHandler : IRequestHandler<StartR
 
         var from = entity.Status;
         var userId = this.currentUserService.UserId ?? 0;
-        EvaluationWorkflow.ApplyTransition(entity, from, next, userId, comment);
+        EvaluationWorkflow.ApplyTransition(
+            entity, from, next, userId, this.currentUserService.ActiveRole, comment);
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);
@@ -233,7 +253,8 @@ public sealed class ApproveEvaluationCommandHandler : IRequestHandler<ApproveEva
         var userId = this.currentUserService.UserId ?? 0;
         entity.ControllerComment = request.ControllerComment;
         entity.ExcludedFromCompensation = !entity.ConditionsFulfilled;
-        EvaluationWorkflow.ApplyTransition(entity, from, next, userId, request.ControllerComment);
+        EvaluationWorkflow.ApplyTransition(
+            entity, from, next, userId, this.currentUserService.ActiveRole, request.ControllerComment);
         entity.UpdatedByUserId = this.currentUserService.UserId;
 
         await this.evaluationRepository.SaveChangesAsync(cancellationToken);

@@ -1,5 +1,13 @@
 import { useState } from 'react';
 import type { OverallStatsComparison } from '../../../api/types';
+import { ChartTooltip } from '../../../components/charts/ChartTooltip';
+import {
+  BAR_GAP,
+  CHART,
+  MAX_BAR_WIDTH,
+  barPath,
+} from '../../../components/charts/chartTheme';
+import { useElementWidth } from '../../../components/charts/useElementWidth';
 import { useIntl } from '../../../i18n';
 
 interface OverallStatsChartProps {
@@ -7,50 +15,47 @@ interface OverallStatsChartProps {
   year: number;
 }
 
-const METRIC_KEYS = [
-  { key: 'average' as const, labelKey: 'charts.average', isVariance: false },
-  { key: 'median' as const, labelKey: 'charts.median', isVariance: false },
-  { key: 'variance' as const, labelKey: 'charts.variance', isVariance: true },
+type Period = 'selectedYear' | 'allYears';
+
+const PERIODS: Period[] = ['selectedYear', 'allYears'];
+const PERIOD_COLOR: Record<Period, string> = {
+  selectedYear: CHART.primary,
+  allYears: CHART.muted,
+};
+// Prosek i medijana su na skali ocena (1–5); varijansa ima drugu skalu, pa se
+// ne crta na istoj osi nego se prikazuje kao broj ispod grafikona.
+const METRICS = [
+  { key: 'average' as const, labelKey: 'charts.average' },
+  { key: 'median' as const, labelKey: 'charts.median' },
 ];
 
-const PERIOD_COLORS = {
-  selectedYear: '#1e4d8c',
-  allYears: '#64748b',
-} as const;
+const HEIGHT = 240;
+const PADDING = { top: 28, right: 12, bottom: 36, left: 32 };
+const MAX_RATING = 5;
 
-interface TooltipState {
-  label: string;
-  value: number;
-  period: string;
+interface HoverState {
+  metricIndex: number;
   x: number;
   y: number;
 }
 
-function formatValue(
-  isVariance: boolean,
-  value: number | null | undefined,
-): string {
-  if (value == null) return '—';
-  return isVariance ? value.toFixed(3) : value.toFixed(2);
-}
-
-function varianceTicks(maxVariance: number): number[] {
-  const max = Math.max(maxVariance, 0.001);
-  const step = max <= 0.2 ? 0.05 : max <= 0.5 ? 0.1 : 0.2;
-  const ticks: number[] = [];
-  for (let value = 0; value <= max + step / 2; value += step) {
-    ticks.push(Number(value.toFixed(3)));
-  }
-  return ticks.length > 0 ? ticks : [0, max];
+function formatValue(value: number | null | undefined, digits = 2): string {
+  return value == null ? '—' : value.toFixed(digits);
 }
 
 export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
   const { formatMessage } = useIntl();
-  const [tooltip, setTooltip] = useState<TooltipState | null>(null);
+  const { ref, width, nodeRef } = useElementWidth<HTMLDivElement>();
+  const [hover, setHover] = useState<HoverState | null>(null);
 
-  const hasData = METRIC_KEYS.some((metric) =>
-    (['selectedYear', 'allYears'] as const).some(
-      (period) => stats[period][metric.key] != null,
+  const periodLabel = (period: Period) =>
+    period === 'selectedYear'
+      ? formatMessage({ id: 'charts.selectedYear' }, { year })
+      : formatMessage({ id: 'charts.allYearsPeriod' });
+
+  const hasData = PERIODS.some((period) =>
+    [...METRICS.map((m) => m.key), 'variance' as const].some(
+      (key) => stats[period][key] != null,
     ),
   );
 
@@ -62,232 +67,169 @@ export function OverallStatsChart({ stats, year }: OverallStatsChartProps) {
     );
   }
 
-  const maxRating = Math.max(
-    5,
-    ...METRIC_KEYS.filter((metric) => !metric.isVariance).flatMap((metric) =>
-      (['selectedYear', 'allYears'] as const).map(
-        (period) => stats[period][metric.key] ?? 0,
-      ),
-    ),
-  );
-
-  const maxVariance =
-    Math.max(
-      0.001,
-      ...(['selectedYear', 'allYears'] as const).map(
-        (period) => stats[period].variance ?? 0,
-      ),
-    ) * 1.1;
-
-  const width = 640;
-  const height = 280;
-  const padding = { top: 24, right: 48, bottom: 44, left: 40 };
-  const chartWidth = width - padding.left - padding.right;
-  const chartHeight = height - padding.top - padding.bottom;
-  const groupWidth = chartWidth / METRIC_KEYS.length;
-  const barWidth = Math.min(22, (groupWidth - 24) / 2);
-  const varianceAxisTicks = varianceTicks(maxVariance);
-
-  function periodLabel(periodKey: 'selectedYear' | 'allYears') {
-    return periodKey === 'selectedYear'
-      ? formatMessage({ id: 'charts.selectedYear' }, { year })
-      : formatMessage({ id: 'charts.allYearsPeriod' });
-  }
-
-  function barHeight(value: number, metric: (typeof METRIC_KEYS)[number]) {
-    if (metric.isVariance) {
-      return (value / maxVariance) * chartHeight;
-    }
-    return (value / maxRating) * chartHeight;
-  }
-
-  function showTooltip(
-    event: React.MouseEvent<SVGRectElement>,
-    label: string,
-    value: number,
-    period: string,
-  ) {
-    const wrap = event.currentTarget.closest('.analytics-chart__canvas-wrap');
-    if (!wrap) return;
-    const rect = wrap.getBoundingClientRect();
-    setTooltip({
-      label,
-      value,
-      period,
-      x: event.clientX - rect.left,
-      y: event.clientY - rect.top,
-    });
-  }
+  const plotWidth = Math.max(width - PADDING.left - PADDING.right, 120);
+  const plotHeight = HEIGHT - PADDING.top - PADDING.bottom;
+  const groupWidth = plotWidth / METRICS.length;
+  const barWidth = Math.min(MAX_BAR_WIDTH, (groupWidth - 32) / 2);
+  const yFor = (value: number) =>
+    PADDING.top + plotHeight - (value / MAX_RATING) * plotHeight;
 
   return (
-    <div className="analytics-chart">
-      <div className="analytics-chart__canvas-wrap">
-        {tooltip && (
-          <div
-            className="analytics-chart__tooltip"
-            style={{ left: tooltip.x, top: tooltip.y }}
-            role="tooltip"
-          >
-            <span className="analytics-chart__tooltip-period">
-              {tooltip.period}
-            </span>
-            <strong>
-              {tooltip.label}:{' '}
-              {formatValue(
-                tooltip.label === formatMessage({ id: 'charts.variance' }),
-                tooltip.value,
-              )}
-            </strong>
-          </div>
-        )}
+    <div className="analytics-chart chart-block">
+      {/* Legenda iznad grafikona: prvo se vidi šta boje znače. */}
+      <ul className="chart-legend chart-legend--top">
+        {PERIODS.map((period) => (
+          <li key={period}>
+            <span
+              className="chart-legend__swatch"
+              style={{ background: PERIOD_COLOR[period] }}
+              aria-hidden
+            />
+            {periodLabel(period)}
+          </li>
+        ))}
+      </ul>
 
+      <div className="chart-canvas" ref={ref}>
+        {hover && (
+          <ChartTooltip
+            title={formatMessage({
+              id: METRICS[hover.metricIndex].labelKey as never,
+            })}
+            rows={PERIODS.map((period) => ({
+              label: periodLabel(period),
+              value: formatValue(stats[period][METRICS[hover.metricIndex].key]),
+              color: PERIOD_COLOR[period],
+            }))}
+            x={hover.x}
+            y={hover.y}
+            containerWidth={width}
+          />
+        )}
         <svg
-          viewBox={`0 0 ${width} ${height}`}
-          className="analytics-chart__svg"
+          width={width}
+          height={HEIGHT}
+          className="chart-svg"
           role="img"
           aria-label={formatMessage(
             { id: 'charts.statsComparisonAria' },
             { year },
           )}
         >
-          {[1, 2, 3, 4, 5].map((tick) => {
-            const y =
-              padding.top + chartHeight - (tick / maxRating) * chartHeight;
-            return (
-              <g key={`rating-${tick}`}>
-                <line
-                  x1={padding.left}
-                  y1={y}
-                  x2={width - padding.right}
-                  y2={y}
-                  stroke="#e2e8f0"
-                />
-                <text
-                  x={padding.left - 8}
-                  y={y + 4}
-                  textAnchor="end"
-                  fontSize="11"
-                  fill="#64748b"
-                >
-                  {tick}
-                </text>
-              </g>
-            );
-          })}
+          {[0, 1, 2, 3, 4, 5].map((tick) => (
+            <g key={tick}>
+              <line
+                x1={PADDING.left}
+                x2={width - PADDING.right}
+                y1={yFor(tick)}
+                y2={yFor(tick)}
+                stroke={CHART.grid}
+              />
+              <text
+                x={PADDING.left - 8}
+                y={yFor(tick) + 4}
+                textAnchor="end"
+                className="chart-axis-text"
+              >
+                {tick}
+              </text>
+            </g>
+          ))}
 
-          {varianceAxisTicks.map((tick) => {
-            const y =
-              padding.top + chartHeight - (tick / maxVariance) * chartHeight;
-            return (
-              <g key={`variance-${tick}`}>
-                <text
-                  x={width - padding.right + 8}
-                  y={y + 4}
-                  textAnchor="start"
-                  fontSize="10"
-                  fill="#7c3aed"
-                >
-                  {tick.toFixed(2)}
-                </text>
-              </g>
-            );
-          })}
-
-          <line
-            x1={padding.left + groupWidth * 2}
-            y1={padding.top}
-            x2={padding.left + groupWidth * 2}
-            y2={padding.top + chartHeight}
-            stroke="#e2e8f0"
-            strokeDasharray="4 4"
-          />
-
-          {METRIC_KEYS.map((metric, index) => {
-            const metricLabel = formatMessage({ id: metric.labelKey as never });
-            const groupX = padding.left + index * groupWidth + groupWidth / 2;
+          {METRICS.map((metric, metricIndex) => {
+            const groupLeft = PADDING.left + metricIndex * groupWidth;
+            const groupCenter = groupLeft + groupWidth / 2;
+            const isHovered = hover?.metricIndex === metricIndex;
             return (
               <g key={metric.key}>
-                {(['selectedYear', 'allYears'] as const).map(
-                  (period, periodIndex) => {
-                    const value = stats[period][metric.key];
-                    if (value == null) return null;
-                    const heightPx = barHeight(value, metric);
-                    const x =
-                      groupX - barWidth - 2 + periodIndex * (barWidth + 4);
-                    const y = padding.top + chartHeight - heightPx;
-                    return (
-                      <rect
-                        key={period}
-                        x={x}
-                        y={y}
-                        width={barWidth}
-                        height={heightPx}
-                        rx={3}
-                        fill={PERIOD_COLORS[period]}
-                        opacity={period === 'selectedYear' ? 1 : 0.75}
-                        onMouseEnter={(event) =>
-                          showTooltip(
-                            event,
-                            metricLabel,
-                            value,
-                            periodLabel(period),
-                          )
-                        }
-                        onMouseMove={(event) =>
-                          showTooltip(
-                            event,
-                            metricLabel,
-                            value,
-                            periodLabel(period),
-                          )
-                        }
-                        onMouseLeave={() => setTooltip(null)}
-                      />
-                    );
-                  },
+                {isHovered && (
+                  <rect
+                    x={groupLeft + 8}
+                    y={PADDING.top}
+                    width={groupWidth - 16}
+                    height={plotHeight}
+                    rx={6}
+                    fill={CHART.highlight}
+                  />
                 )}
+                {PERIODS.map((period, periodIndex) => {
+                  const value = stats[period][metric.key];
+                  if (value == null) return null;
+                  const x =
+                    groupCenter -
+                    barWidth -
+                    BAR_GAP / 2 +
+                    periodIndex * (barWidth + BAR_GAP);
+                  const y = yFor(value);
+                  return (
+                    <g key={period}>
+                      <path
+                        d={barPath(
+                          x,
+                          y,
+                          barWidth,
+                          PADDING.top + plotHeight - y,
+                        )}
+                        fill={PERIOD_COLOR[period]}
+                      />
+                      {period === 'selectedYear' && (
+                        <text
+                          x={x + barWidth / 2}
+                          y={y - 6}
+                          textAnchor="middle"
+                          className="chart-value-text"
+                        >
+                          {formatValue(value)}
+                        </text>
+                      )}
+                    </g>
+                  );
+                })}
                 <text
-                  x={groupX}
-                  y={height - 14}
+                  x={groupCenter}
+                  y={HEIGHT - 12}
                   textAnchor="middle"
-                  fontSize="11"
-                  fill="#475569"
+                  className="chart-category-text"
                 >
-                  {metricLabel}
+                  {formatMessage({ id: metric.labelKey as never })}
                 </text>
+                <rect
+                  x={groupLeft}
+                  y={PADDING.top}
+                  width={groupWidth}
+                  height={plotHeight}
+                  fill="transparent"
+                  onMouseMove={(event) => {
+                    const box = nodeRef.current?.getBoundingClientRect();
+                    if (!box) return;
+                    setHover({
+                      metricIndex,
+                      x: event.clientX - box.left,
+                      y: event.clientY - box.top,
+                    });
+                  }}
+                  onMouseLeave={() => setHover(null)}
+                />
               </g>
             );
           })}
         </svg>
       </div>
 
-      <div className="analytics-chart__footer">
-        <ul className="analytics-chart__legend analytics-chart__legend--inline">
-          <li>
+      <dl className="chart-stats">
+        <dt>{formatMessage({ id: 'charts.variance' })}</dt>
+        {PERIODS.map((period) => (
+          <dd key={period}>
             <span
-              className="analytics-chart__legend-swatch"
-              style={{ background: '#1e4d8c' }}
+              className="chart-legend__swatch"
+              style={{ background: PERIOD_COLOR[period] }}
+              aria-hidden
             />
-            <span>
-              {formatMessage({ id: 'charts.selectedYear' }, { year })}
-            </span>
-          </li>
-          <li>
-            <span
-              className="analytics-chart__legend-swatch"
-              style={{ background: '#64748b' }}
-            />
-            <span>{formatMessage({ id: 'charts.allYearsPeriod' })}</span>
-          </li>
-          <li>
-            <span
-              className="analytics-chart__legend-swatch"
-              style={{ background: '#7c3aed' }}
-            />
-            <span>{formatMessage({ id: 'charts.varianceRightAxis' })}</span>
-          </li>
-        </ul>
-      </div>
+            <strong>{formatValue(stats[period].variance, 3)}</strong>
+            <span>{periodLabel(period)}</span>
+          </dd>
+        ))}
+      </dl>
     </div>
   );
 }

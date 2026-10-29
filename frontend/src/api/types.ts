@@ -2,6 +2,8 @@ export interface UserProfile {
   id: number;
   email: string;
   roles: string[];
+  /** Uloga u kojoj sesija radi; token nosi samo nju. */
+  activeRole: string | null;
   employeeId: number | null;
   employeeFullName: string | null;
   employeeFirstName: string | null;
@@ -12,7 +14,6 @@ export interface UserProfile {
 
 export interface AuthResponse {
   accessToken: string;
-  refreshToken: string;
   user: UserProfile;
 }
 
@@ -37,6 +38,8 @@ export interface EvaluationBucketCounts {
 
 export interface Employee {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   firstName: string;
   lastName: string;
   fullName: string;
@@ -102,6 +105,8 @@ export interface EvaluationStatusHistoryEntry {
   fromStatus: string | null;
   toStatus: string;
   changedByUserId: number;
+  /** Uloga u kojoj je korisnik radio kada je promenio status. */
+  changedByRoleCode: string | null;
   comment: string | null;
   changedAt: string;
 }
@@ -166,6 +171,8 @@ export interface MeasureType {
 
 export interface OrganizationUnit {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   name: string;
   code: string | null;
   isActive: boolean;
@@ -173,13 +180,14 @@ export interface OrganizationUnit {
 
 export interface CompensationParameters {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   organizationUnitId: number;
   organizationUnitName: string;
   year: number;
   monetaryPool: number;
   currency: string;
   acceptablePerformanceRating: number;
-  upperLimitCoefficient: number;
   dependencyWeight: number;
   exponent: number;
   allowNegativeVariable: boolean;
@@ -243,6 +251,8 @@ export interface CompensationAnalytics {
 
 export interface JobPosition {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   name: string;
   sortOrder: number;
   isActive: boolean;
@@ -250,6 +260,8 @@ export interface JobPosition {
 
 export interface EducationLevel {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   name: string;
   sortOrder: number;
   isActive: boolean;
@@ -257,6 +269,8 @@ export interface EducationLevel {
 
 export interface DescriptiveRating {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   code: string;
   name: string;
   minAverage: number | null;
@@ -268,17 +282,12 @@ export interface DescriptiveRating {
 
 export interface EvaluatorSettings {
   employeeId: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   employeeFullName: string;
-  controllerEmployeeId: number;
-  controllerFullName: string;
-  thresholdDoesNotMeet: number;
-  thresholdMeets: number;
-  thresholdGood: number;
-  thresholdExceeds: number;
-  percentDoesNotMeet: number;
-  percentMeets: number;
-  percentGood: number;
-  percentExceeds: number;
+  /** Null kada ocenjivač nema kontrolora i njegove ocene se ne kontrolišu. */
+  controllerEmployeeId: number | null;
+  controllerFullName: string | null;
 }
 
 export interface EmployeeQuarterBenchmark {
@@ -339,6 +348,8 @@ export interface ControllerEvaluatorSummary {
 
 export interface AdminUser {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   email: string;
   roles: string[];
   isActive: boolean;
@@ -348,6 +359,8 @@ export interface AdminUser {
 
 export interface EmployeeSalary {
   id: number;
+  /** Šalje se nazad uz izmenu; izmena sa zastarele kopije se odbija. */
+  version: number;
   employeeId: number;
   employeeFullName: string;
   organizationUnitName: string;
@@ -358,6 +371,10 @@ export interface EmployeeSalary {
   effectiveTo: string | null;
   isCurrent: boolean;
   updatedAt: string;
+  /** Posle ispravke: godine čiji obračun varijabile treba ponoviti. */
+  compensationYearsToRecalculate?: number[];
+  /** Posle ispravke: godine čiji je obračun već konačan. */
+  finalizedCompensationYears?: number[];
 }
 
 export interface EmployeeSalaryOption {

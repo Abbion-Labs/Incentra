@@ -9,6 +9,12 @@ public interface ICompensationRepository
 {
     Task<VariableCompensationParameters?> FindParametersByIdAsync(long id, CancellationToken cancellationToken);
 
+    /// <summary>The years from <paramref name="fromYear"/> on with compensation results for the employee, and whether they are final.</summary>
+    Task<IReadOnlyList<(short Year, bool IsFinal)>> GetResultYearsForEmployeeAsync(
+        long employeeId,
+        short fromYear,
+        CancellationToken cancellationToken);
+
     Task<VariableCompensationParameters?> FindParametersByIdForUpdateAsync(long id, CancellationToken cancellationToken);
 
     Task<IReadOnlyList<VariableCompensationParameters>> GetParametersAsync(
@@ -67,7 +73,11 @@ public interface ICompensationRepository
 
     Task AddResultAsync(VariableCompensationResult entity, CancellationToken cancellationToken);
 
-    Task RemoveResultAsync(VariableCompensationResult entity, CancellationToken cancellationToken);
+    /// <summary>
+    /// Removes every result of <paramref name="parametersId"/> that is not final. Staged for the next save, so a
+    /// recalculation replaces the previous one as a whole.
+    /// </summary>
+    Task RemoveDraftResultsAsync(long parametersId, CancellationToken cancellationToken);
 
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

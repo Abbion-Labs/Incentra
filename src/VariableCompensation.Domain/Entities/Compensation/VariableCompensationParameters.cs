@@ -1,8 +1,12 @@
+using VariableCompensation.Domain.Common;
+
 namespace VariableCompensation.Domain.Entities.Compensation;
 
-public class VariableCompensationParameters
+public class VariableCompensationParameters : IVersioned
 {
     public long Id { get; set; }
+
+    public int Version { get; set; }
 
     public long OrganizationUnitId { get; set; }
 
@@ -15,8 +19,6 @@ public class VariableCompensationParameters
     public string Currency { get; set; } = "RSD";
 
     public decimal AcceptablePerformanceRating { get; set; } = 2.5m;
-
-    public decimal UpperLimitCoefficient { get; set; }
 
     public decimal DependencyWeight { get; set; }
 

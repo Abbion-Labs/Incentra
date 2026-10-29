@@ -9,18 +9,27 @@ import type {
 } from '../../api/types';
 import { LoadingEmpty } from '../../components/common/LoadingEmpty';
 import { FormSection } from '../../components/forms/FormSection';
+import {
+  GoalListEditor,
+  GoalWeightsTotal,
+} from '../../components/forms/GoalListEditor';
 import { TextListEditor } from '../../components/forms/TextListEditor';
 import { AppLayout } from '../../components/AppLayout';
+import { useAuth } from '../../auth/AuthContext';
 import { useLookups, useToast, useUnsavedChangesGuard } from '../../hooks';
 import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import {
+  checkGoalWeights,
   defaultConversationDatetime,
   hasValidPlanningDraft,
   isGoalsPlanningComplete,
+  toGoalDrafts,
   toTextDrafts,
+  type GoalDraft,
   type TextItemDraft,
 } from '../../utils/goalsPlanning';
-import { fetchLatestEvaluation } from '../../utils/evaluationSave';
+import { roleListPath } from '../../utils/evaluationApi';
+import { isStaleEvaluationError } from '../../utils/evaluationSave';
 import { previousQuarter } from '../../utils/status';
 import { CopyFromPreviousQuarterButton } from './components/CopyFromPreviousQuarterButton';
 import { GoalsConversationForm } from './components/GoalsConversationForm';
@@ -41,14 +50,16 @@ export function GoalsPlanningPage() {
   const [saving, setSaving] = useState(false);
   const [copying, setCopying] = useState(false);
 
-  const [goals, setGoals] = useState<TextItemDraft[]>([]);
+  const [goals, setGoals] = useState<GoalDraft[]>([]);
   const [conditions, setConditions] = useState<TextItemDraft[]>([]);
   const [criteria, setCriteria] = useState<TextItemDraft[]>([]);
   const [conversationAt, setConversationAt] = useState('');
   const [evaluatorComment, setEvaluatorComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
 
-  const editable = evaluation?.status === 'Draft';
+  const { activeRole } = useAuth();
+  // Nacrt menja samo ocenjivač; admin ga samo gleda.
+  const editable = evaluation?.status === 'Draft' && activeRole === 'EVALUATOR';
   const goalsLocked = evaluation ? isGoalsPlanningComplete(evaluation) : false;
   const canEditPlanning = editable && !goalsLocked;
 
@@ -78,14 +89,7 @@ export function GoalsPlanningPage() {
           : defaultConversationDatetime(),
       );
       setEvaluatorComment(data.evaluatorComment ?? '');
-      setGoals(
-        data.goals.length > 0
-          ? data.goals.map((g) => ({
-              description: g.description,
-              sortOrder: g.sortOrder,
-            }))
-          : [{ description: '', sortOrder: 0 }],
-      );
+      setGoals(toGoalDrafts(data.goals));
       setConditions(
         data.conditions.length > 0
           ? data.conditions.map((c) => ({
@@ -119,7 +123,7 @@ export function GoalsPlanningPage() {
   }, [load]);
 
   const handleGoalsChange = useCallback(
-    (items: TextItemDraft[]) => {
+    (items: GoalDraft[]) => {
       setGoals(items);
       markDirty();
     },
@@ -163,8 +167,6 @@ export function GoalsPlanningPage() {
 
     setSaving(true);
     try {
-      const server = await fetchLatestEvaluation(evaluation.id);
-
       const validGoals = goals.filter((g) => g.description.trim());
       const validConditions = conditions.filter((c) => c.description.trim());
       const validCriteria = criteria.filter((c) => c.description.trim());
@@ -172,18 +174,20 @@ export function GoalsPlanningPage() {
       const current = await api.put<EvaluationDetail>(
         `/api/evaluations/${evaluation.id}/planning-draft`,
         {
-          version: server.version,
+          // Verzija sa kojom je stranica učitana: tuđa izmena u međuvremenu
+          // se ne pregazi, server javlja konflikt.
+          version: evaluation.version,
           conversationAt: new Date(
             conversationAt || defaultConversationDatetime(),
           ).toISOString(),
           evaluatorComment: evaluatorComment || null,
-          conditionsNotMetComment: server.conditionsNotMetComment ?? null,
-          conditionsFulfilled: server.conditionsFulfilled !== false,
+          conditionsNotMetComment: evaluation.conditionsNotMetComment ?? null,
+          conditionsFulfilled: evaluation.conditionsFulfilled !== false,
           goals: validGoals.map((g, i) => ({
             description: g.description.trim(),
             ratingLevelId: null,
             comment: null,
-            weight: null,
+            weight: g.weight,
             sortOrder: g.sortOrder ?? i,
           })),
           conditions: validConditions.map((c, i) => ({
@@ -201,12 +205,14 @@ export function GoalsPlanningPage() {
       setIsDirty(false);
       return true;
     } catch (e) {
-      try {
-        const latest = await fetchLatestEvaluation(evaluation.id);
-        setEvaluation(latest);
-      } catch {
-        // ignore sync failure
+      if (isStaleEvaluationError(e)) {
+        toast.warning(
+          formatMessage({ id: 'errors.evaluationChangedMeanwhile' }),
+        );
+        await load();
+        return false;
       }
+      // Izmene ostaju u formi, da ih korisnik ne izgubi zbog greške.
       toast.error(
         e instanceof Error
           ? e.message
@@ -224,6 +230,7 @@ export function GoalsPlanningPage() {
     evaluation,
     evaluatorComment,
     formatMessage,
+    load,
     goals,
     toast,
   ]);
@@ -233,6 +240,11 @@ export function GoalsPlanningPage() {
 
     if (!hasValidPlanningDraft(goals, conditions, criteria)) {
       toast.warning(formatMessage({ id: 'errors.goalsPlanningIncomplete' }));
+      return false;
+    }
+
+    if (!checkGoalWeights(goals).valid) {
+      toast.warning(formatMessage({ id: 'errors.goalWeightsInvalid' }));
       return false;
     }
 
@@ -268,7 +280,7 @@ export function GoalsPlanningPage() {
     setCopying(true);
     try {
       const list = await api.get<PagedResult<EvaluationSummary>>(
-        `/api/evaluations?pageSize=5&year=${year}&quarter=${quarter}&employeeId=${evaluation.employeeId}`,
+        `${roleListPath('evaluations', 'evaluator')}?pageSize=5&year=${year}&quarter=${quarter}&employeeId=${evaluation.employeeId}`,
       );
       const previous = list.items[0];
       if (!previous) {
@@ -297,7 +309,7 @@ export function GoalsPlanningPage() {
         return;
       }
 
-      setGoals(toTextDrafts(detail.goals));
+      setGoals(toGoalDrafts(detail.goals));
       setConditions(toTextDrafts(detail.conditions));
       setCriteria(toTextDrafts(detail.criteria));
       markDirty();
@@ -371,7 +383,7 @@ export function GoalsPlanningPage() {
           </div>
           <GoalsReadOnlyOverview evaluation={evaluation} />
           {editable && (
-            <div className="card">
+            <div className="card card--actions">
               <Link
                 to={`/evaluator/evaluations/${evaluation.id}`}
                 className="btn btn-primary"
@@ -385,12 +397,12 @@ export function GoalsPlanningPage() {
         <div className="form-page">
           <FormSection
             title={formatMessage({ id: 'evaluation.goalsTitle' })}
-            hint={formatMessage({ id: 'evaluation.goalsPlanningHint' })}
             actions={copyButton}
+            meta={<GoalWeightsTotal goals={goals} />}
           >
-            <TextListEditor
-              items={goals}
-              setItems={handleGoalsChange}
+            <GoalListEditor
+              goals={goals}
+              setGoals={handleGoalsChange}
               placeholder={formatMessage({
                 id: 'evaluation.goalDescriptionPlaceholder',
               })}
@@ -401,8 +413,6 @@ export function GoalsPlanningPage() {
           <div className="form-section-grid">
             <FormSection
               title={formatMessage({ id: 'evaluation.conditionsTitle' })}
-              hint={formatMessage({ id: 'evaluation.conditionsHint' })}
-              variant="secondary"
             >
               <TextListEditor
                 items={conditions}
@@ -416,8 +426,6 @@ export function GoalsPlanningPage() {
 
             <FormSection
               title={formatMessage({ id: 'evaluation.criteriaTitle' })}
-              hint={formatMessage({ id: 'evaluation.criteriaHint' })}
-              variant="secondary"
             >
               <TextListEditor
                 items={criteria}
@@ -436,7 +444,10 @@ export function GoalsPlanningPage() {
             saving={saving}
             copying={copying}
             lookupsLoading={lookupsLoading}
-            canSubmit={hasValidPlanningDraft(goals, conditions, criteria)}
+            canSubmit={
+              hasValidPlanningDraft(goals, conditions, criteria) &&
+              checkGoalWeights(goals).valid
+            }
             onConversationAtChange={handleConversationAtChange}
             onEvaluatorCommentChange={handleEvaluatorCommentChange}
             onSave={handleSave}

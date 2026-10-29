@@ -6,7 +6,6 @@ import type {
   EvaluationDetail,
 } from '../../api/types';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
-import { PageBackLink } from '../../components/common/PageBackLink';
 import { AppLayout } from '../../components/AppLayout';
 import { EmployeeAvatar } from '../../components/employee/EmployeeAvatar';
 import { useToast } from '../../hooks';
@@ -117,10 +116,11 @@ export function ControllerEmployeePage() {
   if (!benchmarks) {
     return (
       <AppLayout title={formatMessage({ id: 'admin.employees' })}>
-        <PageBackLink
-          to="/controller"
-          label={formatMessage({ id: 'buttons.backToList' })}
-        />
+        <div className="card card--muted">
+          <p className="empty-inline">
+            {formatMessage({ id: 'errors.loadFailed' })}
+          </p>
+        </div>
       </AppLayout>
     );
   }
@@ -129,11 +129,6 @@ export function ControllerEmployeePage() {
 
   return (
     <AppLayout title={employee.fullName}>
-      <PageBackLink
-        to="/controller"
-        label={formatMessage({ id: 'controller.backToEmployees' })}
-      />
-
       <div className="employee-profile-layout">
         <aside className="employee-profile-layout__sidebar">
           <div className="card employee-card">

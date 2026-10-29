@@ -27,7 +27,7 @@ public sealed class UsersController : ControllerBase
     public async Task<IActionResult> Update(long id, [FromBody] UpdateAdminUserRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
-            new UpdateAdminUserCommand(id, request.Email, request.IsActive, request.RoleCodes, request.ControllerEmployeeId),
+            new UpdateAdminUserCommand(id, request.Email, request.IsActive, request.RoleCodes, request.ControllerEmployeeId, request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

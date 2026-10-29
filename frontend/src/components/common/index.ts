@@ -8,4 +8,5 @@ export {
 export { LoadingEmpty } from './LoadingEmpty';
 export { PageBackLink } from './PageBackLink';
 export { PageHeader, PeriodPill } from './PageHeader';
+export { PageIntro } from './PageIntro';
 export { ToastProvider, useToast } from './Toast';

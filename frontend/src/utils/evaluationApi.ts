@@ -1,9 +1,24 @@
 import type { EvaluationBucketCounts } from '../api/types';
 
+/**
+ * Ocenjivač i kontrolor imaju svoje liste ocena i zaposlenih, pa backend zna u
+ * kojoj ulozi korisnik gleda i kada ima obe. Bez `scope` ide se na zajedničku
+ * listu: adminu daje sve, a korisniku sa više uloga sama bira jednu.
+ */
+export type RoleListScope = 'evaluator' | 'controller';
+
+export function roleListPath(
+  resource: 'evaluations' | 'employees',
+  scope?: RoleListScope,
+): string {
+  return scope ? `/api/${scope}/${resource}` : `/api/${resource}`;
+}
+
 export function buildEvaluationsPagePath(
   page: number,
   pageSize: number,
   params: {
+    scope?: RoleListScope;
     year?: number | null;
     quarter?: number | null;
     bucket?: string;
@@ -25,10 +40,11 @@ export function buildEvaluationsPagePath(
   if (params.employeeId != null)
     query.set('employeeId', String(params.employeeId));
 
-  return `/api/evaluations?${query}`;
+  return `${roleListPath('evaluations', params.scope)}?${query}`;
 }
 
 export function buildEvaluationBucketCountsPath(params: {
+  scope?: RoleListScope;
   year?: number | null;
   quarter?: number | null;
   search?: string;
@@ -38,9 +54,8 @@ export function buildEvaluationBucketCountsPath(params: {
   if (params.quarter != null) query.set('quarter', String(params.quarter));
   if (params.search?.trim()) query.set('search', params.search.trim());
   const suffix = query.toString();
-  return suffix
-    ? `/api/evaluations/bucket-counts?${suffix}`
-    : '/api/evaluations/bucket-counts';
+  const path = `${roleListPath('evaluations', params.scope)}/bucket-counts`;
+  return suffix ? `${path}?${suffix}` : path;
 }
 
 export function mapEvaluatorBucketCounts(counts: EvaluationBucketCounts) {

@@ -116,15 +116,7 @@ public sealed class EvaluationScoringService
 
         var average = evaluation.OverallAverage.Value;
 
-        evaluation.DescriptiveRatingId = descriptiveRatings
-
-            .Where(d => d.MinAverage <= average && d.MaxAverage >= average)
-
-            .OrderBy(d => d.SortOrder)
-
-            .FirstOrDefault()
-
-            ?.Id;
+        evaluation.DescriptiveRatingId = DescriptiveRatingBands.Resolve(descriptiveRatings, average)?.Id;
 
     }
 

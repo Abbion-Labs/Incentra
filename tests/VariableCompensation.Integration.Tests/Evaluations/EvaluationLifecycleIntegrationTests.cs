@@ -45,11 +45,12 @@ public class EvaluationLifecycleIntegrationTests
             version,
             goals = new[]
             {
-                new { description = "Povećati produktivnost", ratingLevelId = ratedLevelId, weight = 1m, sortOrder = 1 },
+                new { description = "Povećati produktivnost", ratingLevelId = ratedLevelId, weight = 100m, sortOrder = 1 },
             },
         });
         goalsResponse.StatusCode.Should().Be(HttpStatusCode.OK);
         version = (await goalsResponse.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("version").GetInt32();
+        version = await CompletePlanAsync(evaluatorClient, evaluationId, version);
 
         var measuresResponse = await evaluatorClient.PutAsJsonAsync($"/api/evaluations/{evaluationId}/measures", new
         {
@@ -106,14 +107,34 @@ public class EvaluationLifecycleIntegrationTests
         await evaluatorClient.PutAsJsonAsync($"/api/evaluations/{evaluationId}/goals", new
         {
             version,
-            goals = new[] { new { description = "Cilj", ratingLevelId = ratedLevelId, weight = 1m, sortOrder = 1 } },
+            goals = new[] { new { description = "Cilj", ratingLevelId = ratedLevelId, weight = 100m, sortOrder = 1 } },
         });
-        version++;
+        version = await CompletePlanAsync(evaluatorClient, evaluationId, version + 1);
 
         var submitResponse = await evaluatorClient.PostAsJsonAsync($"/api/evaluations/{evaluationId}/submit", new { version });
         submitResponse.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var body = await submitResponse.Content.ReadAsStringAsync();
         body.Should().Contain("vn-0026");
+    }
+
+    /// <summary>Adds the conditions and criteria that complete the plan, and returns the version after them.</summary>
+    private static async Task<int> CompletePlanAsync(HttpClient client, long evaluationId, int version)
+    {
+        var conditions = await client.PutAsJsonAsync($"/api/evaluations/{evaluationId}/conditions", new
+        {
+            version,
+            conditions = new[] { new { description = "Uslov", sortOrder = 1 } },
+        });
+        conditions.StatusCode.Should().Be(HttpStatusCode.OK, await conditions.Content.ReadAsStringAsync());
+        version = (await conditions.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("version").GetInt32();
+
+        var criteria = await client.PutAsJsonAsync($"/api/evaluations/{evaluationId}/criteria", new
+        {
+            version,
+            criteria = new[] { new { description = "Kriterijum", sortOrder = 1 } },
+        });
+        criteria.StatusCode.Should().Be(HttpStatusCode.OK, await criteria.Content.ReadAsStringAsync());
+        return (await criteria.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("version").GetInt32();
     }
 
     private async Task<HttpClient> CreateClientAsync(string email, string password)

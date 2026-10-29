@@ -6,9 +6,11 @@ import type {
   AdminUser,
   EducationLevel,
   Employee,
+  EvaluationSummary,
   EvaluatorSettings,
   JobPosition,
   OrganizationUnit,
+  PagedResult,
 } from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
@@ -18,12 +20,17 @@ import {
   employeeToForm,
   type EmployeeFormValues,
 } from './components/AdminEmployeeForm';
-import { AdminPageHeader } from './components/AdminPageHeader';
 import {
   adminEmployeeProfileState,
   adminEvaluatorAnalyticsState,
 } from './adminNavigation';
 import { useIntl } from '../../i18n';
+import {
+  FilterChip,
+  ToolbarSearch,
+} from '../../components/common/ToolbarSearch';
+import { TableIconButton } from '../../components/common/TableIconButton';
+import { isEditConflict } from '../../utils/editConflict';
 
 function buildEmployeePayload(
   values: EmployeeFormValues,
@@ -65,6 +72,10 @@ export function AdminEmployees() {
   const [formValues, setFormValues] =
     useState<EmployeeFormValues>(emptyEmployeeForm());
   const [editingId, setEditingId] = useState<number | null>(null);
+  // Forma za unos je skrivena dok se ne izabere dodavanje ili izmena.
+  const [formOpen, setFormOpen] = useState(false);
+  // Verzija zapisa sa kojom je forma otvorena; šalje se uz izmenu.
+  const [editingVersion, setEditingVersion] = useState<number | null>(null);
   const [linkedUserId, setLinkedUserId] = useState('');
 
   const listQueryKey = `${debouncedSearch}|${filterOrgId}|${filterActive}`;
@@ -149,16 +160,80 @@ export function AdminEmployees() {
 
   function startCreate() {
     setEditingId(null);
+    setEditingVersion(null);
     setFormValues(emptyEmployeeForm());
     setLinkedUserId('');
+  }
+
+  function openCreate() {
+    startCreate();
+    setFormOpen(true);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function closeForm() {
+    startCreate();
+    setFormOpen(false);
   }
 
   function startEdit(employee: Employee, e?: React.MouseEvent) {
     e?.stopPropagation();
     setEditingId(employee.id);
+    setEditingVersion(employee.version);
     setFormValues(employeeToForm(employee));
     setLinkedUserId(employee.userId ? String(employee.userId) : '');
+    setFormOpen(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  /**
+   * Nacrti ocena prelaze na novog ocenjivača čim se sačuva, a poslate ocene tek
+   * kada ih kontrolor vrati na doradu. Admin to vidi pre čuvanja.
+   */
+  async function confirmEvaluatorChange(employeeId: number): Promise<boolean> {
+    const current = employees.find((e) => e.id === employeeId);
+    const nextEvaluatorId = formValues.evaluatorEmployeeId
+      ? Number(formValues.evaluatorEmployeeId)
+      : null;
+    if (
+      !current ||
+      nextEvaluatorId === null ||
+      nextEvaluatorId === (current.evaluatorEmployeeId ?? null)
+    ) {
+      return true;
+    }
+
+    const countEvaluations = async (filter: string) =>
+      (
+        await api.get<PagedResult<EvaluationSummary>>(
+          `/api/evaluations?employeeId=${employeeId}&pageSize=1&${filter}`,
+        )
+      ).totalCount;
+    const [drafts, submitted] = await Promise.all([
+      countEvaluations('status=Draft'),
+      countEvaluations('bucket=submitted'),
+    ]);
+    if (drafts === 0 && submitted === 0) {
+      return true;
+    }
+
+    return window.confirm(
+      formatMessage(
+        { id: 'admin.employeeForm.reassignConfirm' },
+        { drafts, submitted },
+      ),
+    );
+  }
+
+  /** Zapis je izmenjen posle otvaranja forme: forma se puni njegovim novim stanjem. */
+  async function reopenAfterConflict(employeeId: number) {
+    toast.warning(formatMessage({ id: 'errors.recordChangedMeanwhile' }));
+    try {
+      startEdit(await api.get<Employee>(`/api/employees/${employeeId}`));
+    } catch {
+      closeForm();
+    }
+    await reload();
   }
 
   async function handleSubmit() {
@@ -170,25 +245,35 @@ export function AdminEmployees() {
     setSaving(true);
     try {
       if (editingId) {
+        if (!(await confirmEvaluatorChange(editingId))) {
+          return;
+        }
         const payload = buildEmployeePayload(formValues, true);
-        await api.put(`/api/employees/${editingId}`, payload);
-        const currentUserId =
-          employees.find((e) => e.id === editingId)?.userId ?? null;
+        const updated = await api.put<Employee>(`/api/employees/${editingId}`, {
+          ...payload,
+          version: editingVersion,
+        });
         const nextUserId = linkedUserId ? Number(linkedUserId) : null;
-        if (nextUserId !== currentUserId) {
+        if (nextUserId !== updated.userId) {
           await api.put(`/api/employees/${editingId}/user`, {
             userId: nextUserId,
+            version: updated.version,
           });
         }
         toast.success(formatMessage({ id: 'alerts.employeeUpdated' }));
+        closeForm();
       } else {
         const payload = buildEmployeePayload(formValues, false);
         await api.post('/api/employees', payload);
         toast.success(formatMessage({ id: 'alerts.employeeAdded' }));
-        startCreate();
+        closeForm();
       }
       await Promise.all([reload(), loadLookups()]);
     } catch (e) {
+      if (editingId && isEditConflict(e)) {
+        await reopenAfterConflict(editingId);
+        return;
+      }
       toast.error(
         e instanceof Error
           ? e.message
@@ -206,57 +291,42 @@ export function AdminEmployees() {
 
   return (
     <div className="admin-page">
-      <AdminPageHeader
-        actions={
-          editingId ? (
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={startCreate}
-            >
-              {formatMessage({ id: 'admin.employeeForm.newEmployee' })}
-            </button>
-          ) : null
-        }
-      />
+      {formOpen && (
+        <AdminEmployeeForm
+          values={formValues}
+          orgUnits={orgUnits}
+          positions={positions}
+          educationLevels={educationLevels}
+          evaluators={formEvaluators}
+          users={users}
+          linkedUserId={linkedUserId}
+          savedUserId={
+            employees.find((employee) => employee.id === editingId)?.userId ??
+            null
+          }
+          editingId={editingId}
+          saving={saving}
+          onChange={setFormValues}
+          onLinkedUserChange={setLinkedUserId}
+          onSubmit={handleSubmit}
+          onCancel={closeForm}
+        />
+      )}
 
-      <AdminEmployeeForm
-        values={formValues}
-        orgUnits={orgUnits}
-        positions={positions}
-        educationLevels={educationLevels}
-        evaluators={formEvaluators}
-        users={users}
-        linkedUserId={linkedUserId}
-        editingId={editingId}
-        saving={saving}
-        onChange={setFormValues}
-        onLinkedUserChange={setLinkedUserId}
-        onSubmit={handleSubmit}
-        onCancel={startCreate}
-      />
-
-      <div className="card">
-        <div className="filter-bar admin-filters">
-          <div className="form-row filter-bar-search">
-            <label htmlFor="emp-search">
-              {formatMessage({ id: 'evaluation.search' })}
-            </label>
-            <input
-              id="emp-search"
-              value={search}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
-            />
-          </div>
-          <div className="form-row">
-            <label htmlFor="emp-filter-org">
-              {formatMessage({ id: 'evaluation.orgUnitShort' })}
-            </label>
-            <select
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
+          <ToolbarSearch
+            id="emp-search"
+            label={formatMessage({ id: 'evaluation.search' })}
+            placeholder={formatMessage({ id: 'admin.searchNamePlaceholder' })}
+            value={search}
+            onChange={setSearchInput}
+          >
+            <FilterChip
               id="emp-filter-org"
+              label={formatMessage({ id: 'evaluation.orgUnitShort' })}
               value={filterOrgId}
-              onChange={(e) => setFilterOrgId(e.target.value)}
+              onChange={setFilterOrgId}
             >
               <option value="">{formatMessage({ id: 'common.all' })}</option>
               {orgUnits.map((o) => (
@@ -264,16 +334,12 @@ export function AdminEmployees() {
                   {o.name}
                 </option>
               ))}
-            </select>
-          </div>
-          <div className="form-row">
-            <label htmlFor="emp-filter-active">
-              {formatMessage({ id: 'evaluation.status' })}
-            </label>
-            <select
+            </FilterChip>
+            <FilterChip
               id="emp-filter-active"
+              label={formatMessage({ id: 'evaluation.status' })}
               value={filterActive}
-              onChange={(e) => setFilterActive(e.target.value)}
+              onChange={setFilterActive}
             >
               <option value="">
                 {formatMessage({ id: 'evaluation.all' })}
@@ -284,8 +350,17 @@ export function AdminEmployees() {
               <option value="false">
                 {formatMessage({ id: 'admin.inactivePlural' })}
               </option>
-            </select>
-          </div>
+            </FilterChip>
+          </ToolbarSearch>
+          {!formOpen && (
+            <button
+              type="button"
+              className="btn btn-primary btn-sm"
+              onClick={openCreate}
+            >
+              {formatMessage({ id: 'admin.employeeForm.addEmployee' })}
+            </button>
+          )}
         </div>
 
         {loading ? (
@@ -293,7 +368,7 @@ export function AdminEmployees() {
         ) : (
           <>
             <div className="table-wrap">
-              <table className="table table--hover table--clickable">
+              <table className="table table--hover table--clickable table--stack">
                 <thead>
                   <tr>
                     <th className="col-text">
@@ -340,14 +415,27 @@ export function AdminEmployees() {
                           }
                         }}
                       >
-                        <td className="cell-primary col-text">
+                        <td className="cell-primary col-text stack-title">
                           {employee.fullName}
                         </td>
-                        <td className="col-text">
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({
+                            id: 'evaluation.orgUnitShort',
+                          })}
+                        >
                           {employee.organizationUnitName}
                         </td>
-                        <td className="col-text">{employee.jobPositionName}</td>
-                        <td className="col-text">
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({ id: 'common.position' })}
+                        >
+                          {employee.jobPositionName}
+                        </td>
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({ id: 'admin.evaluators' })}
+                        >
                           {employee.evaluatorEmployeeId &&
                           employee.evaluatorFullName ? (
                             <button
@@ -366,25 +454,29 @@ export function AdminEmployees() {
                             '—'
                           )}
                         </td>
-                        <td className="col-text">
+                        <td
+                          className="col-text"
+                          data-label={formatMessage({ id: 'common.account' })}
+                        >
                           {employee.userId
                             ? (users.find((u) => u.id === employee.userId)
                                 ?.email ?? `#${employee.userId}`)
                             : '—'}
                         </td>
-                        <td className="col-meta table-col--compact">
+                        <td
+                          className="col-meta table-col--compact"
+                          data-label={formatMessage({ id: 'common.active' })}
+                        >
                           {employee.isActive
                             ? formatMessage({ id: 'common.yes' })
                             : formatMessage({ id: 'common.no' })}
                         </td>
                         <td className="col-actions">
-                          <button
-                            type="button"
-                            className="btn btn-secondary btn-sm"
-                            onClick={(e) => startEdit(employee, e)}
-                          >
-                            {formatMessage({ id: 'buttons.edit' })}
-                          </button>
+                          <TableIconButton
+                            icon="edit"
+                            label={formatMessage({ id: 'buttons.edit' })}
+                            onClick={() => startEdit(employee)}
+                          />
                         </td>
                       </tr>
                     ))

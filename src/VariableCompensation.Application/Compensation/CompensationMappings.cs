@@ -10,13 +10,13 @@ internal static class CompensationMappings
         new()
         {
             Id = entity.Id,
+            Version = entity.Version,
             OrganizationUnitId = entity.OrganizationUnitId,
             OrganizationUnitName = entity.OrganizationUnit?.Name ?? string.Empty,
             Year = entity.Year,
             MonetaryPool = entity.MonetaryPool,
             Currency = entity.Currency,
             AcceptablePerformanceRating = entity.AcceptablePerformanceRating,
-            UpperLimitCoefficient = entity.UpperLimitCoefficient,
             DependencyWeight = entity.DependencyWeight,
             Exponent = entity.Exponent,
             AllowNegativeVariable = entity.AllowNegativeVariable,

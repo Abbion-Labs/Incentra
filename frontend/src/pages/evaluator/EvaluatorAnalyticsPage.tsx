@@ -19,7 +19,7 @@ export function EvaluatorAnalyticsPage() {
     setLoading(true);
     try {
       const data = await api.get<EvaluatorAnalytics>(
-        `/api/analytics/evaluator?year=${year}`,
+        `/api/evaluator/analytics?year=${year}`,
       );
       setAnalytics(data);
     } catch (e) {

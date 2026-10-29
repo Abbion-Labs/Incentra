@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { Employee } from '../../../api/types';
 
-import { EmployeeAvatar } from '../../../components/employee/EmployeeAvatar';
+import { PersonName } from '../../../components/employee/PersonName';
 
 import { EmptyState } from '../../../components/common/EmptyState';
 
@@ -38,7 +38,7 @@ export function EmployeeListTable({
   const { formatMessage } = useIntl();
 
   if (loading) {
-    return <TableSkeleton rows={6} columns={5} />;
+    return <TableSkeleton rows={6} columns={4} />;
   }
 
   if (employees.length === 0) {
@@ -61,7 +61,7 @@ export function EmployeeListTable({
 
   return (
     <div className="table-wrap">
-      <table className="table table--hover table--clickable">
+      <table className="table table--hover table--clickable table--stack table--employees">
         <thead>
           <tr>
             <th className="col-text">
@@ -76,10 +76,6 @@ export function EmployeeListTable({
               {formatMessage({ id: 'evaluation.jobPosition' })}
             </th>
 
-            <th className="col-text">
-              {formatMessage({ id: 'common.education' })}
-            </th>
-
             <th className="col-meta">
               {formatMessage({ id: 'evaluation.status' })}
             </th>
@@ -91,28 +87,37 @@ export function EmployeeListTable({
             <tr
               key={emp.id}
               onClick={() => navigate(profilePath(emp.id))}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  navigate(profilePath(emp.id));
+                }
+              }}
               tabIndex={0}
+              role="link"
             >
-              <td className="cell-primary col-text">
-                <span className="employee-list-name">
-                  <EmployeeAvatar employee={emp} size="sm" />
-
-                  <span>{emp.fullName}</span>
-                </span>
+              <td className="cell-primary col-text stack-title">
+                <PersonName fullName={emp.fullName} avatarUrl={emp.avatarUrl} />
               </td>
 
-              <td className="cell-muted col-text">
+              <td
+                className="cell-muted col-text"
+                data-label={formatMessage({ id: 'evaluation.orgUnitShort' })}
+              >
                 {emp.organizationUnitName}
               </td>
 
-              <td className="cell-muted col-text">{emp.jobPositionName}</td>
-
-              <td className="cell-muted col-text">
-                {emp.educationLevelName ??
-                  formatMessage({ id: 'common.emptyValue' })}
+              <td
+                className="cell-muted col-text"
+                data-label={formatMessage({ id: 'evaluation.jobPosition' })}
+              >
+                {emp.jobPositionName}
               </td>
 
-              <td className="col-meta">
+              <td
+                className="col-meta"
+                data-label={formatMessage({ id: 'evaluation.status' })}
+              >
                 <span
                   className={`badge ${emp.isActive ? 'badge-approved' : 'badge-draft'}`}
                 >

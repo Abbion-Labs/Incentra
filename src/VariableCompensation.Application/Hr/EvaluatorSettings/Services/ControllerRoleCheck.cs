@@ -26,10 +26,52 @@ public static class ControllerRoleCheck
 
         var user = await userRepository.FindByEmployeeIdAsync(controllerEmployeeId, cancellationToken);
         var isController = user?.UserRoles.Any(ur => ur.Role.Code == RoleCodes.Controller) ?? false;
+        if (!isController)
+        {
+            return Result.Failure(ErrorCodes.ControllerRoleRequired);
+        }
 
-        return isController
+        return await ActiveAssignee.CanSignInAsync(controllerEmployeeId, employeeRepository, userRepository, cancellationToken)
             ? Result.Success()
-            : Result.Failure(ErrorCodes.ControllerRoleRequired);
+            : Result.Failure(ErrorCodes.ControllerInactive);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="controllerEmployeeId"/> may review <paramref name="evaluatorEmployeeId"/>. No
+    /// controller is allowed: the evaluator's evaluations are then approved on submission. Nobody may review
+    /// their own evaluations, neither as the evaluator's own controller nor as someone the evaluator rates.
+    /// </summary>
+    public static async Task<Result> EnsureCanControlAsync(
+        long evaluatorEmployeeId,
+        long? controllerEmployeeId,
+        IEmployeeRepository employeeRepository,
+        IUserRepository userRepository,
+        CancellationToken cancellationToken)
+    {
+        if (controllerEmployeeId is null)
+        {
+            return Result.Success();
+        }
+
+        if (controllerEmployeeId == evaluatorEmployeeId)
+        {
+            return Result.Failure(ErrorCodes.EvaluatorOwnController);
+        }
+
+        var isController = await EnsureIsAControllerAsync(
+            controllerEmployeeId.Value,
+            employeeRepository,
+            userRepository,
+            cancellationToken);
+        if (isController.IsFailure)
+        {
+            return isController;
+        }
+
+        var controller = await employeeRepository.FindByIdWithEvaluatorAsync(controllerEmployeeId.Value, cancellationToken);
+        return controller?.EvaluatorEmployeeId == evaluatorEmployeeId
+            ? Result.Failure(ErrorCodes.ControllerRatedByEvaluator)
+            : Result.Success();
     }
 
     /// <summary>

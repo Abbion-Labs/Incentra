@@ -4,25 +4,13 @@ public sealed class EvaluatorSettingsResponse
 {
     public long EmployeeId { get; init; }
 
+    /// <summary>Sent back with an edit; see <c>IVersioned</c>.</summary>
+    public int Version { get; init; }
+
     public string EmployeeFullName { get; init; } = string.Empty;
 
-    public long ControllerEmployeeId { get; init; }
+    /// <summary>Null when the evaluator has no controller and their evaluations need no review.</summary>
+    public long? ControllerEmployeeId { get; init; }
 
-    public string ControllerFullName { get; init; } = string.Empty;
-
-    public decimal ThresholdDoesNotMeet { get; init; }
-
-    public decimal ThresholdMeets { get; init; }
-
-    public decimal ThresholdGood { get; init; }
-
-    public decimal ThresholdExceeds { get; init; }
-
-    public decimal PercentDoesNotMeet { get; init; }
-
-    public decimal PercentMeets { get; init; }
-
-    public decimal PercentGood { get; init; }
-
-    public decimal PercentExceeds { get; init; }
+    public string? ControllerFullName { get; init; }
 }

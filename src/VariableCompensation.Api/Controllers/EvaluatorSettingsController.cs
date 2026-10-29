@@ -56,14 +56,7 @@ public sealed class EvaluatorSettingsController : ControllerBase
             new UpdateEvaluatorSettingsCommand(
                 employeeId,
                 request.ControllerEmployeeId,
-                request.ThresholdDoesNotMeet,
-                request.ThresholdMeets,
-                request.ThresholdGood,
-                request.ThresholdExceeds,
-                request.PercentDoesNotMeet,
-                request.PercentMeets,
-                request.PercentGood,
-                request.PercentExceeds),
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });

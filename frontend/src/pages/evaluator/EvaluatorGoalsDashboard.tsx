@@ -17,6 +17,7 @@ import {
   currentYear,
 } from '../../components/PeriodFilters';
 
+import { useAuth } from '../../auth/AuthContext';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
 
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
@@ -24,7 +25,10 @@ import { useIntl } from '../../i18n';
 
 import { type GoalsBucket } from '../../utils/goalsBuckets';
 
-import { buildEvaluationsPagePath } from '../../utils/evaluationApi';
+import {
+  buildEvaluationsPagePath,
+  roleListPath,
+} from '../../utils/evaluationApi';
 
 import { GoalsBucketTabs } from './components/GoalsBucketTabs';
 
@@ -46,6 +50,9 @@ export function EvaluatorGoalsDashboard() {
   const [activeTab, setActiveTab] = useState<GoalsBucket>(initialTab);
 
   const [creatingFor, setCreatingFor] = useState<number | null>(null);
+  // Ocene pravi samo ocenjivač; admin ovde samo gleda.
+  const { activeRole } = useAuth();
+  const canPlan = activeRole === 'EVALUATOR';
 
   const [year, setYear] = useState(currentYear);
 
@@ -60,6 +67,7 @@ export function EvaluatorGoalsDashboard() {
   const countsQueryKey = `${year}|${quarter}|${search}`;
 
   const { counts } = useEvaluationBucketCounts(countsQueryKey, {
+    scope: 'evaluator',
     year,
     quarter,
     search,
@@ -102,7 +110,7 @@ export function EvaluatorGoalsDashboard() {
         params.set('search', search.trim());
       }
 
-      return `/api/employees?${params}`;
+      return `${roleListPath('employees', 'evaluator')}?${params}`;
     },
   });
 
@@ -126,6 +134,7 @@ export function EvaluatorGoalsDashboard() {
 
     fetchPage: (page, pageSize) =>
       buildEvaluationsPagePath(page, pageSize, {
+        scope: 'evaluator',
         year,
 
         quarter,
@@ -161,7 +170,12 @@ export function EvaluatorGoalsDashboard() {
 
     try {
       const result = await api.get<PagedResult<EvaluationSummary>>(
-        buildEvaluationsPagePath(1, 1, { year, quarter, employeeId }),
+        buildEvaluationsPagePath(1, 1, {
+          scope: 'evaluator',
+          year,
+          quarter,
+          employeeId,
+        }),
       );
 
       const existing = result.items?.[0];
@@ -199,29 +213,42 @@ export function EvaluatorGoalsDashboard() {
 
   const loading = activeTab === 'pending' ? loadingEmployees : loadingSet;
 
-  return (
-    <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
-      <div className="card card--filter">
-        <PeriodFilters
-          year={year}
-          quarter={quarter}
-          onYearChange={setYear}
-          onQuarterChange={(q) => {
-            if (q != null) setQuarter(q as 1 | 2 | 3 | 4);
-          }}
-          search={searchInput}
-          onSearchChange={setSearchInput}
-        />
-      </div>
-
+  const toolbar = (
+    <div className="data-panel__toolbar">
       <GoalsBucketTabs
         activeTab={activeTab}
         onTabChange={handleTabChange}
         counts={tabCounts}
       />
+      <PeriodFilters
+        compact
+        year={year}
+        quarter={quarter}
+        onYearChange={setYear}
+        onQuarterChange={(q) => {
+          if (q != null) setQuarter(q as 1 | 2 | 3 | 4);
+        }}
+        search={searchInput}
+        onSearchChange={setSearchInput}
+        canReset={
+          searchInput !== '' ||
+          year !== currentYear ||
+          quarter !== currentQuarter
+        }
+        onReset={() => {
+          setSearchInput('');
+          setYear(currentYear);
+          setQuarter(currentQuarter);
+        }}
+      />
+    </div>
+  );
 
+  return (
+    <AppLayout title={formatMessage({ id: 'evaluation.goalsTitle' })}>
       {activeTab === 'pending' ? (
-        <div className="card card--flush card--table-fill">
+        <div className="card card--flush card--table-fill data-panel">
+          {toolbar}
           {loading ? (
             <TableSkeleton rows={4} columns={4} />
           ) : (
@@ -231,10 +258,7 @@ export function EvaluatorGoalsDashboard() {
                   employees={pendingEmployees}
                   creatingFor={creatingFor}
                   search={search}
-                  onStartPlanning={startPlanning}
-                  evaluationLabel={() =>
-                    formatMessage({ id: 'evaluation.setGoals' })
-                  }
+                  onStartPlanning={canPlan ? startPlanning : undefined}
                 />
 
                 <InfiniteScrollSentinel
@@ -247,7 +271,8 @@ export function EvaluatorGoalsDashboard() {
           )}
         </div>
       ) : (
-        <div className="card card--flush card--table-fill">
+        <div className="card card--flush card--table-fill data-panel">
+          {toolbar}
           {loading ? (
             <TableSkeleton rows={4} columns={4} />
           ) : (

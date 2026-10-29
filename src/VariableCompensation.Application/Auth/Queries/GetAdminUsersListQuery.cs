@@ -31,6 +31,7 @@ public sealed class GetAdminUsersListQueryHandler : IRequestHandler<GetAdminUser
                 return new AdminUserListItemResponse
                 {
                     Id = user.Id,
+                    Version = user.Version,
                     Email = user.Email,
                     Roles = user.UserRoles.Select(ur => ur.Role.Code).OrderBy(code => code).ToList(),
                     IsActive = user.IsActive,

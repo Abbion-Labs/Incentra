@@ -35,7 +35,6 @@ function parameters(id: number, orgId: number): CompensationParameters {
     monetaryPool: 987654,
     currency: 'RSD',
     acceptablePerformanceRating: 3,
-    upperLimitCoefficient: 0.25,
     dependencyWeight: 1,
     exponent: 1,
     allowNegativeVariable: false,
@@ -67,7 +66,7 @@ function renderPage(immediate: Record<string, unknown> = {}) {
 }
 
 function selectOrg(orgId: number) {
-  fireEvent.change(screen.getByLabelText('common.organizationUnit'), {
+  fireEvent.change(screen.getByLabelText('evaluation.orgUnitShort'), {
     target: { value: String(orgId) },
   });
 }
@@ -131,7 +130,7 @@ describe('AdminCompensation', () => {
 
     fireEvent.click(save);
 
-    expect(screen.getByLabelText('common.organizationUnit')).toHaveProperty(
+    expect(screen.getByLabelText('evaluation.orgUnitShort')).toHaveProperty(
       'disabled',
       true,
     );

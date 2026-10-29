@@ -1,8 +1,12 @@
+using VariableCompensation.Domain.Common;
+
 namespace VariableCompensation.Domain.Entities.Identity;
 
-public class User
+public class User : IVersioned
 {
     public long Id { get; set; }
+
+    public int Version { get; set; }
 
     public string Email { get; set; } = string.Empty;
 
@@ -15,6 +19,12 @@ public class User
     public DateTime? EmailVerifiedAt { get; set; }
 
     public DateTime? LastLoginAt { get; set; }
+
+    /// <summary>
+    /// The role this account last worked in. Signing in starts in it again, on
+    /// any device, as long as the user still holds it.
+    /// </summary>
+    public string? LastActiveRoleCode { get; set; }
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 

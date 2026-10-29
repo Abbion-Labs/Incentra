@@ -17,6 +17,10 @@ public sealed class EvaluationAccessService
         this.currentEmployeeContext = currentEmployeeContext;
     }
 
+    /// <summary>
+    /// Narrows an evaluation list to what the user may see in the role their
+    /// session works in. The token carries only that role.
+    /// </summary>
     public async Task<(long? EmployeeId, long? EvaluatorEmployeeId, long? ControllerEmployeeId)> ResolveListFiltersAsync(
         long? employeeId,
         long? evaluatorEmployeeId,
@@ -34,22 +38,13 @@ public sealed class EvaluationAccessService
             return (-1, -1, -1);
         }
 
-        if (this.currentUserService.IsInRole(RoleCodes.Employee))
+        return this.currentUserService.ActiveRole switch
         {
-            return (currentEmployeeId, null, null);
-        }
-
-        if (this.currentUserService.IsInRole(RoleCodes.Evaluator))
-        {
-            return (employeeId, currentEmployeeId, null);
-        }
-
-        if (this.currentUserService.IsInRole(RoleCodes.Controller))
-        {
-            return (employeeId, evaluatorEmployeeId, currentEmployeeId);
-        }
-
-        return (-1, -1, -1);
+            RoleCodes.Employee => (currentEmployeeId, null, null),
+            RoleCodes.Evaluator => (employeeId, currentEmployeeId, null),
+            RoleCodes.Controller => (employeeId, evaluatorEmployeeId, currentEmployeeId),
+            _ => (-1, -1, -1),
+        };
     }
 
     public async Task<Result> EnsureCanViewAsync(EvaluationEntity evaluation, CancellationToken cancellationToken)
@@ -75,13 +70,12 @@ public sealed class EvaluationAccessService
         return Result.Failure(ErrorCodes.EvaluationAccessDenied);
     }
 
+    /// <summary>
+    /// Only the assigned evaluator works on a draft. An administrator can look at evaluations but takes no part
+    /// in rating or reviewing them.
+    /// </summary>
     public async Task<Result> EnsureCanEditDraftAsync(EvaluationEntity evaluation, CancellationToken cancellationToken)
     {
-        if (this.currentUserService.IsAdmin)
-        {
-            return Result.Success();
-        }
-
         if (!this.currentUserService.IsInRole(RoleCodes.Evaluator))
         {
             return Result.Failure(ErrorCodes.EvaluatorOnlyEditDraft);
@@ -104,13 +98,9 @@ public sealed class EvaluationAccessService
     public Task<Result> EnsureCanSubmitAsync(EvaluationEntity evaluation, CancellationToken cancellationToken) =>
         this.EnsureCanEditDraftAsync(evaluation, cancellationToken);
 
+    /// <summary>Only the assigned controller reviews, and never an evaluation of their own.</summary>
     public async Task<Result> EnsureCanReviewAsync(EvaluationEntity evaluation, CancellationToken cancellationToken)
     {
-        if (this.currentUserService.IsAdmin)
-        {
-            return Result.Success();
-        }
-
         if (!this.currentUserService.IsInRole(RoleCodes.Controller))
         {
             return Result.Failure(ErrorCodes.ControllerOnlyReview);
@@ -127,16 +117,16 @@ public sealed class EvaluationAccessService
             return Result.Failure(ErrorCodes.ControllerOnlyOwnAssigned);
         }
 
+        if (evaluation.EmployeeId == currentEmployeeId)
+        {
+            return Result.Failure(ErrorCodes.ControllerOwnEvaluation);
+        }
+
         return Result.Success();
     }
 
     public async Task<Result> EnsureCanCreateForEmployeeAsync(long employeeEvaluatorId, CancellationToken cancellationToken)
     {
-        if (this.currentUserService.IsAdmin)
-        {
-            return Result.Success();
-        }
-
         if (!this.currentUserService.IsInRole(RoleCodes.Evaluator))
         {
             return Result.Failure(ErrorCodes.EvaluatorOnlyCreate);

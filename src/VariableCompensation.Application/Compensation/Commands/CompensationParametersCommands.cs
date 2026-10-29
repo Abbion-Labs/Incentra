@@ -2,6 +2,7 @@ using CSharpFunctionalExtensions;
 using MediatR;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Application.Common;
 using VariableCompensation.Application.Compensation.Models;
 using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Compensation;
@@ -14,7 +15,6 @@ public sealed record CreateCompensationParametersCommand(
     decimal MonetaryPool,
     string Currency,
     decimal AcceptablePerformanceRating,
-    decimal UpperLimitCoefficient,
     decimal DependencyWeight,
     decimal Exponent,
     bool AllowNegativeVariable) : IRequest<Result<CompensationParametersResponse>>;
@@ -41,7 +41,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
             request.MonetaryPool,
             request.Currency,
             request.AcceptablePerformanceRating,
-            request.UpperLimitCoefficient,
             request.DependencyWeight,
             request.Exponent);
         if (validation.IsFailure)
@@ -66,7 +65,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
             MonetaryPool = request.MonetaryPool,
             Currency = request.Currency.Trim().ToUpperInvariant(),
             AcceptablePerformanceRating = request.AcceptablePerformanceRating,
-            UpperLimitCoefficient = request.UpperLimitCoefficient,
             DependencyWeight = request.DependencyWeight,
             Exponent = request.Exponent,
             AllowNegativeVariable = request.AllowNegativeVariable,
@@ -85,7 +83,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
         decimal monetaryPool,
         string currency,
         decimal acceptablePerformanceRating,
-        decimal upperLimit,
         decimal dependencyWeight,
         decimal exponent)
     {
@@ -102,11 +99,6 @@ public sealed class CreateCompensationParametersCommandHandler : IRequestHandler
         if (acceptablePerformanceRating < 1 || acceptablePerformanceRating > 5)
         {
             return Result.Failure(ErrorCodes.AcceptablePerformanceRatingInvalid);
-        }
-
-        if (upperLimit <= 0 || upperLimit > 1)
-        {
-            return Result.Failure(ErrorCodes.UpperLimitCoefficientInvalid);
         }
 
         if (dependencyWeight <= 0)
@@ -128,11 +120,11 @@ public sealed record UpdateCompensationParametersCommand(
     decimal MonetaryPool,
     string Currency,
     decimal AcceptablePerformanceRating,
-    decimal UpperLimitCoefficient,
     decimal DependencyWeight,
     decimal Exponent,
     bool AllowNegativeVariable,
-    bool IsActive) : IRequest<Result<CompensationParametersResponse>>;
+    bool IsActive,
+    int? Version) : IRequest<Result<CompensationParametersResponse>>;
 
 public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler<UpdateCompensationParametersCommand, Result<CompensationParametersResponse>>
 {
@@ -146,7 +138,6 @@ public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler
             request.MonetaryPool,
             request.Currency,
             request.AcceptablePerformanceRating,
-            request.UpperLimitCoefficient,
             request.DependencyWeight,
             request.Exponent);
         if (validation.IsFailure)
@@ -160,6 +151,12 @@ public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler
             return Result.Failure<CompensationParametersResponse>(ErrorCodes.CompensationParametersNotFound);
         }
 
+        var version = EditVersion.Claim(entity, request.Version);
+        if (version.IsFailure)
+        {
+            return Result.Failure<CompensationParametersResponse>(version.Error);
+        }
+
         if (await this.repository.HasFinalResultsAsync(request.Id, cancellationToken))
         {
             return Result.Failure<CompensationParametersResponse>(ErrorCodes.UpdateFinalizedParametersForbidden);
@@ -168,7 +165,6 @@ public sealed class UpdateCompensationParametersCommandHandler : IRequestHandler
         entity.MonetaryPool = request.MonetaryPool;
         entity.Currency = request.Currency.Trim().ToUpperInvariant();
         entity.AcceptablePerformanceRating = request.AcceptablePerformanceRating;
-        entity.UpperLimitCoefficient = request.UpperLimitCoefficient;
         entity.DependencyWeight = request.DependencyWeight;
         entity.Exponent = request.Exponent;
         entity.AllowNegativeVariable = request.AllowNegativeVariable;

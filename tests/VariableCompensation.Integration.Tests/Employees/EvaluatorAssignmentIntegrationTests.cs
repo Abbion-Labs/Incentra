@@ -26,7 +26,8 @@ public class EvaluatorAssignmentIntegrationTests
         long JobPositionId,
         long EducationLevelId,
         long? EvaluatorEmployeeId,
-        bool IsActive = true);
+        bool IsActive = true,
+        int? Version = null);
 
     // The seeded evaluator has evaluator_settings; the seeded employee does not.
     [Fact]
@@ -60,11 +61,15 @@ public class EvaluatorAssignmentIntegrationTests
 
         var created = await client.PostAsJsonAsync("/api/employees", await this.NewEmployeeAsync(client, null));
         created.StatusCode.Should().Be(HttpStatusCode.Created);
-        var id = (await created.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("id").GetInt64();
+        var employee = await created.Content.ReadFromJsonAsync<JsonElement>();
+        var id = employee.GetProperty("id").GetInt64();
 
         var response = await client.PutAsJsonAsync(
             $"/api/employees/{id}",
-            await this.NewEmployeeAsync(client, TestEmployeeIds.Employee));
+            await this.NewEmployeeAsync(client, TestEmployeeIds.Employee) with
+            {
+                Version = employee.GetProperty("version").GetInt32(),
+            });
 
         await ShouldFailWithEvaluatorNotConfiguredAsync(response);
     }
@@ -80,14 +85,6 @@ public class EvaluatorAssignmentIntegrationTests
             {
                 employeeId = TestEmployeeIds.Employee,
                 controllerEmployeeId = TestEmployeeIds.Controller,
-                thresholdDoesNotMeet = 2m,
-                thresholdMeets = 2.5m,
-                thresholdGood = 3.5m,
-                thresholdExceeds = 4.5m,
-                percentDoesNotMeet = 0m,
-                percentMeets = 25m,
-                percentGood = 50m,
-                percentExceeds = 100m,
             });
 
         // The endpoint is gone: granting the role is the only way in.
@@ -101,9 +98,10 @@ public class EvaluatorAssignmentIntegrationTests
 
         // The seeded employee reports to the seeded evaluator.
         var payload = await this.NewEmployeeAsync(client, null);
+        var evaluator = await client.GetFromJsonAsync<JsonElement>($"/api/employees/{TestEmployeeIds.Evaluator}");
         var response = await client.PutAsJsonAsync(
             $"/api/employees/{TestEmployeeIds.Evaluator}",
-            payload with { IsActive = false });
+            payload with { IsActive = false, Version = evaluator.GetProperty("version").GetInt32() });
 
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var body = await response.Content.ReadFromJsonAsync<JsonElement>();

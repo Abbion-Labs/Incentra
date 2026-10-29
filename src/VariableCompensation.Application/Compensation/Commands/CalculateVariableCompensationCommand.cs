@@ -15,8 +15,7 @@ namespace VariableCompensation.Application.Compensation.Commands;
 public sealed record CalculateVariableCompensationCommand(
     long ParametersId,
     bool IsFinal,
-    bool RequireAllQuarters = false,
-    bool? AllowNegativeVariable = null) : IRequest<Result<CalculateCompensationResponse>>;
+    bool RequireAllQuarters = false) : IRequest<Result<CalculateCompensationResponse>>;
 
 public sealed class CalculateVariableCompensationCommandHandler : IRequestHandler<CalculateVariableCompensationCommand, Result<CalculateCompensationResponse>>
 {
@@ -60,7 +59,6 @@ public sealed class CalculateVariableCompensationCommandHandler : IRequestHandle
         var approvedEvaluations = await this.repository.GetApprovedEvaluationsAsync(parameters.OrganizationUnitId, parameters.Year, cancellationToken);
         var evaluationsByEmployee = approvedEvaluations.GroupBy(e => e.EmployeeId).ToDictionary(g => g.Key, g => g.ToList());
 
-        var allowNegativeVariable = request.AllowNegativeVariable ?? parameters.AllowNegativeVariable;
         var warnings = new List<string>();
         var inputs = new List<CompensationCalculationService.EmployeeCalculationInput>();
 
@@ -85,8 +83,7 @@ public sealed class CalculateVariableCompensationCommandHandler : IRequestHandle
                 parameters,
                 request.RequireAllQuarters,
                 salaryRow.Points,
-                salaryPerPoint,
-                allowNegativeVariable);
+                salaryPerPoint);
 
             if (input is null)
             {
@@ -104,25 +101,12 @@ public sealed class CalculateVariableCompensationCommandHandler : IRequestHandle
 
         var outputs = this.calculationService.DistributePool(inputs, parameters);
 
+        // The whole previous calculation goes, not only the rows of employees calculated again. Someone left out
+        // this time would otherwise keep an old share of the pool next to the new distribution.
+        await this.repository.RemoveDraftResultsAsync(parameters.Id, cancellationToken);
+
         foreach (var output in outputs)
         {
-            var existing = await this.repository.FindResultForEmployeeForUpdateAsync(
-                output.Input.Employee.Id,
-                parameters.Id,
-                parameters.Year,
-                cancellationToken);
-
-            if (existing is not null)
-            {
-                if (existing.IsFinal)
-                {
-                    warnings.Add($"Skipping finalized result for {output.Input.Employee.FullName}.");
-                    continue;
-                }
-
-                await this.repository.RemoveResultAsync(existing, cancellationToken);
-            }
-
             var result = new VariableCompensationResult
             {
                 EmployeeId = output.Input.Employee.Id,

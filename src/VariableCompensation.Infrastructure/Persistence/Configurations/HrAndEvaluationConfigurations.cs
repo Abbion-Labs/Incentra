@@ -62,7 +62,7 @@ internal sealed class EvaluationGoalConfiguration : IEntityTypeConfiguration<Eva
         builder.ToTable("evaluation_goals");
         builder.HasKey(x => x.Id);
         builder.Property(x => x.Description).HasMaxLength(500).IsRequired();
-        builder.Property(x => x.Weight).HasPrecision(5, 4);
+        builder.Property(x => x.Weight).HasPrecision(5, 2);
         builder.HasOne(x => x.Evaluation).WithMany(x => x.Goals).HasForeignKey(x => x.EvaluationId).OnDelete(DeleteBehavior.Cascade);
         builder.HasOne(x => x.RatingLevel).WithMany().HasForeignKey(x => x.RatingLevelId);
     }
@@ -121,6 +121,7 @@ internal sealed class EvaluationStatusHistoryConfiguration : IEntityTypeConfigur
         builder.HasKey(x => x.Id);
         builder.Property(x => x.FromStatus).HasMaxLength(30);
         builder.Property(x => x.ToStatus).HasMaxLength(30).IsRequired();
+        builder.Property(x => x.ChangedByRoleCode).HasMaxLength(50);
         builder.HasOne(x => x.Evaluation).WithMany(x => x.StatusHistory).HasForeignKey(x => x.EvaluationId).OnDelete(DeleteBehavior.Cascade);
     }
 }

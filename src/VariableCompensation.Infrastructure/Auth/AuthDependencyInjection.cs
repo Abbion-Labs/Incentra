@@ -70,8 +70,13 @@ public static class AuthDependencyInjection
                     ValidAudience = jwtSettings.Audience,
                     ValidateIssuerSigningKey = true,
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSettings.Secret)),
+                    ValidAlgorithms = [SecurityAlgorithms.HmacSha256],
                     ValidateLifetime = true,
                     ClockSkew = TimeSpan.FromMinutes(1)
+                };
+                options.Events = new JwtBearerEvents
+                {
+                    OnTokenValidated = ActiveSessionValidator.ValidateAsync
                 };
             });
 

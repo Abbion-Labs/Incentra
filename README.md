@@ -98,13 +98,70 @@ Seed admin nalog:
 
 Endpointi:
 - `POST /api/auth/login` — javno
-- `POST /api/auth/refresh` — javno
+- `POST /api/auth/refresh` — javno; refresh token čita iz kolačića
+- `POST /api/auth/logout` — javno; odjavljuje celu sesiju i briše kolačić
 - `GET /api/auth/me` — zahteva JWT (`Authorize`)
-- `POST /api/auth/register` — samo `ADMIN` role
+- `POST /api/auth/select-role` — zahteva JWT; `{ roleCode }`; zatvara tekuću sesiju i otvara novu u izabranoj ulozi
+- `POST /api/auth/register` — samo `ADMIN` role; `{ email, password, roleCodes, employeeId, controllerEmployeeId }`; vraća profil novog korisnika, bez tokena
 
-Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud/users`) pri kreiranju ili izmeni korisnika izaberite jednu ili više uloga (checkbox). Nakon promene uloga, korisnik se mora ponovo prijaviti da bi JWT sadržao nove uloge.
+Korisnik može imati **više uloga** istovremeno. U administraciji (`/admin/crud/users`) pri kreiranju ili izmeni korisnika izaberite jednu ili više uloga (checkbox). Promena uloga odmah odjavljuje sve sesije tog korisnika, pa se mora ponovo prijaviti da bi JWT sadržao nove uloge.
+
+Uloge `EMPLOYEE`, `EVALUATOR` i `CONTROLLER` rade kao određeni zaposleni, pa nalog sa njima uvek ima povezanog zaposlenog. Pri kreiranju naloga zaposleni se bira u istoj formi (`employeeId`: aktivan zaposleni koji još nema nalog), a za ocenjivača i kontrolor (`controllerEmployeeId`, ili bez kontrolora). Nalogu bez zaposlenog te uloge se ne mogu dodati. Nalozi sa samo `ADMIN` i/ili `PAYROLL` ulogom ne moraju imati zaposlenog.
+
+Sesija radi u **jednoj ulozi**: JWT nosi samo nju (`activeRole` u profilu), refresh token je pamti kroz rotaciju, a nalog pamti poslednju izabranu ulogu za sledeću prijavu. Prijava počinje u poslednjoj korišćenoj ulozi, a ako je nema, po prioritetu `EVALUATOR → CONTROLLER → EMPLOYEE → PAYROLL → ADMIN`. Ulogu menja prekidač **Aktivna uloga** u zaglavlju: `select-role` gasi tekuću sesiju i otvara novu samo za izabranu ulogu, pa stari access token prestaje da važi odmah, a ostali tabovi (dele kolačić) pređu u novu ulogu čim ih kanal obavesti. Uz promenu statusa ocene beleži se i uloga u kojoj je korisnik tada radio.
+
+> **Sesije otvorene pre ove izmene nose sve uloge u tokenu, pa nemaju aktivnu ulogu.** Korisnik sa više uloga do prvog osvežavanja tokena vidi samo svoj zapis i prazne liste; token se osvežava pri svakom učitavanju aplikacije, a najkasnije kroz sat vremena, i tada dobija ulogu po pravilu iz prethodnog pasusa.
+
+Ekrani ocenjivača i kontrolora imaju svoje liste: `GET /api/evaluator/{evaluations,employees,analytics}` i `GET /api/controller/{evaluations,employees,evaluators/{id}/analytics}`. Zajedničke liste (`/api/evaluations`, `/api/employees`) koriste admin ekrani i ekran „Moje ocene“.
+
+### Tokeni
+
+| Token | Trajanje | Gde se čuva |
+|---|---|---|
+| Access (JWT) | 60 min | u telu odgovora; frontend ga drži **samo u memoriji stranice** |
+| Refresh | 7 dana, rotira se | kolačić `vc_refresh` (`HttpOnly`, `SameSite=Strict`, `Path=/api/auth`) |
+
+Refresh token se **ne vraća u telu odgovora**, pa ga skripte na stranici ne mogu pročitati. `SameSite=Strict` znači da se kolačić nikad ne šalje sa tuđeg sajta, pa poseban CSRF token nije potreban.
+
+#### Sesije
+
+Svaka prijava otvara **sesiju**. Svi refresh tokeni nastali iz te prijave nose isti `SessionId`, a access token ga nosi u claim-u `sid`.
+
+- **Svaki zahtev proverava sesiju** (jedan upit po indeksu): sesija mora imati bar jedan važeći refresh token, a korisnik mora biti aktivan. Zato odjava, deaktivacija naloga, promena uloga i promena lozinke deluju **odmah**, a ne tek kad access token istekne. Access token bez `sid`-a se odbija.
+- **Odjava** gasi celu sesiju, sa svim tabovima tog browsera. Tabovi se međusobno obaveštavaju (`BroadcastChannel`), pa se odjava ili prijava u jednom tabu odmah vidi i u ostalima.
+- **Promena sopstvene lozinke** odjavljuje sve ostale uređaje, a trenutni ostaje prijavljen. Admin reset lozinke, promena uloga i deaktivacija odjavljuju sve sesije korisnika.
+
+#### Rotacija i ukraden token
+
+Refresh token se menja pri svakoj upotrebi, a zamena je atomična: dva istovremena refresh-a istim tokenom ne mogu oba da ga iskoriste.
+
+- Ako isti token stigne ponovo **u roku od 30 sekundi** posle zamene, dobija novi token u istoj sesiji. To pokriva reload stranice dok je odgovor na refresh još bio na putu.
+- Ako stigne **kasnije**, to znači da postoji kopija tokena: **cela sesija se odjavljuje** (i kod napadača i kod korisnika), a u log ide upozorenje.
+
+Podešavanja:
+
+- `RefreshCookie__Secure` — kolačić se šalje samo preko HTTPS-a. Podrazumevano je `true` i u produkciji se **ne podešava**. Isključen je jedino u `appsettings.Development.json`, jer lokalni razvoj radi preko HTTP-a, gde bi browser odbio `Secure` kolačić.
+
+  > Namerno se ne izvodi iz `Request.IsHttps`: iza Vercel proxy-ja backend prima običan HTTP (proxy završava TLS), pa bi se `Secure` tiho isključio u produkciji.
+- Kolačić radi dok su frontend i API na istom domenu (lokalno preko Vite proxy-ja, na Vercelu preko `/api` rewrite-a). Ako API pređe na poseban domen, traži `SameSite=None`, CORS sa kredencijalima i zasebnu CSRF zaštitu.
+- `POST /api/auth/refresh` i `/logout` primarno čitaju kolačić, a kao rezervu prihvataju i `{ "refreshToken": "..." }` u telu, radi Swagger-a i ručnog testiranja.
+- `Jwt__RefreshTokenReuseGraceSeconds` — koliko dugo posle zamene token sme ponovo da stigne (podrazumevano `30`).
+
+> **Pri prelasku na kolačić i sesije svi prijavljeni korisnici moraju jednom ponovo da se prijave.** Tokeni su im ostali u `localStorage`, koji se više ne koristi (frontend te ključeve briše pri učitavanju), migracija `AddRefreshTokenSessions` briše stare refresh tokene, a stari access tokeni nemaju `sid`.
 
 U Swagger-u klikni **Authorize** i unesi: `Bearer <accessToken>`
+
+## Istovremene izmene
+
+Svaki zapis koji se menja kroz formu (zaposleni, korisnici, podešavanja ocenjivača, organizacione jedinice, radna mesta, nivoi obrazovanja, opisne ocene, parametri kompenzacije, plate) ima polje `version`. API ga vraća uz zapis, a svaka izmena (`PUT`) mora da pošalje verziju sa koje je napravljena:
+
+- bez verzije: `400` sa `vn-0106`,
+- zapis je u međuvremenu izmenjen: `400` sa `vn-0090` (ili `409` ako su se dve izmene sudarile u istom trenutku),
+- inače izmena prolazi i verzija raste za 1.
+
+Kod plata je to verzija trenutno važeće plate, a izostavlja se samo pri unosu prve plate. Ocene imaju svoj `version` sa istim značenjem. Forma koja dobije konflikt prikazuje poruku i učitava novo stanje.
+
+Izuzeci su akcije nad jednim poljem koje ne mogu da pregaze tuđe podatke: promena lozinke, reset lozinke, obaveštenja i avatar.
 
 ## HR modul (Faza 4)
 
@@ -160,38 +217,42 @@ Workflow statusa: `Draft` → `Submitted` → `UnderReview` → `Approved` (ili 
 - `GET /api/evaluations` — paginacija (`?page&pageSize&year&quarter&status&employeeId&evaluatorEmployeeId&organizationUnitId`)
 - `GET /api/evaluations/{id}`
 - `GET /api/evaluations/{id}/status-history`
-- `POST /api/evaluations` — ADMIN, EVALUATOR
+- `POST /api/evaluations` — EVALUATOR
 - `PUT /api/evaluations/{id}` — izmena draft-a (version obavezan)
-- `PUT /api/evaluations/{id}/goals` — zamena ciljeva (draft)
+- `PUT /api/evaluations/{id}/goals` — zamena ciljeva dok plan nije postavljen; posle toga samo ocena i komentar postojećih ciljeva (po `id`)
 - `PUT /api/evaluations/{id}/measures` — zamena merila (draft)
 - `PUT /api/evaluations/{id}/criteria` — zamena kriterijuma (draft)
 - `PUT /api/evaluations/{id}/conditions` — zamena uslova (draft)
 - `PUT /api/evaluations/{id}/training` — obuka/razvoj (draft)
-- `POST /api/evaluations/{id}/submit` — ADMIN, EVALUATOR
-- `POST /api/evaluations/{id}/start-review` — ADMIN, CONTROLLER
-- `POST /api/evaluations/{id}/approve` — ADMIN, CONTROLLER
-- `POST /api/evaluations/{id}/return-for-revision` — ADMIN, CONTROLLER
+- `POST /api/evaluations/{id}/submit` — EVALUATOR; ocena ocenjivača bez kontrolora je odmah odobrena
+- `POST /api/evaluations/{id}/start-review` — CONTROLLER
+- `POST /api/evaluations/{id}/approve` — CONTROLLER
+- `POST /api/evaluations/{id}/return-for-revision` — CONTROLLER
 
 Svaka izmena zahteva `version` za optimističko zaključavanje. Prosek se računa automatski pri čuvanju ciljeva/merila i pri submit-u.
 
 ## Evaluator settings i RBAC (Faza 6)
 
-### Podešavanja ocenjivača (pragovi i procenti)
+### Podešavanja ocenjivača (dodeljeni kontrolor)
+
+Podešavanja nastaju dodelom uloge `EVALUATOR` i nose samo kontrolora ocenjivača. Ocenjivač na vrhu organizacije može biti **bez kontrolora**: njegove ocene niko ne kontroliše, pa su odobrene čim ih pošalje. Ocenjivač ne može biti sam sebi kontrolor, a kontrolor ne može kontrolisati ocenjivača koji ocenjuje njega (niko ne odobrava sopstvenu ocenu). Opsezi ocena i preporučeni udeli su zajednički za celu organizaciju i podešavaju se na opisnim ocenama.
+
 - `GET /api/evaluator-settings` — ADMIN (lista svih)
 - `GET /api/evaluator-settings/me` — EVALUATOR (sopstvena podešavanja)
 - `GET /api/evaluator-settings/{employeeId}` — ADMIN ili evaluator (samo svoj `employeeId`)
-- `POST /api/evaluator-settings` — ADMIN
-- `PUT /api/evaluator-settings/{employeeId}` — ADMIN
+- `PUT /api/evaluator-settings/{employeeId}` — ADMIN — body: `{ "controllerEmployeeId": 5 }` ili `{ "controllerEmployeeId": null }` (bez kontrolora)
 
 ### Povezivanje korisnika sa zaposlenim
-- `PUT /api/employees/{id}/user` — ADMIN — body: `{ "userId": 2 }` ili `{ "userId": null }`
+- `PUT /api/employees/{id}/user` — ADMIN — body: `{ "userId": 2, "version": 0 }` ili `{ "userId": null, "version": 0 }`
+
+Nalog se ne predaje drugom zaposlenom. Zaposlenom bez naloga može se povezati slobodan nalog (uloga ocenjivača na nalogu i podešavanja ocenjivača na zaposlenom moraju se poklapati). Povezani nalog se može samo odvezati, radi ispravke greške, i to tek kada nema uloge `EMPLOYEE`, `EVALUATOR` ni `CONTROLLER`; zamena jednog naloga drugim se odbija.
 
 `/api/auth/me` sada vraća `employeeId` i `employeeFullName` kada je korisnik povezan sa zaposlenim.
 
 ### Role-based pristup ocenama
 | Uloga | Pristup |
 |-------|---------|
-| `ADMIN` | pun pristup |
+| `ADMIN` | vidi sve ocene, ali ne učestvuje u toku: ne kreira, ne menja, ne šalje, ne odobrava i ne vraća ocene |
 | `EVALUATOR` | vidi/uređuje ocene gde je dodeljen kao ocenjivač |
 | `CONTROLLER` | vidi/review/approve ocene gde je dodeljen kao kontroler; može vratiti na doradu |
 | `EMPLOYEE` | read-only sopstvene ocene |
@@ -200,7 +261,7 @@ Korisnik mora biti povezan sa zaposlenim (`userId` na employee) da bi scoped pri
 
 ## Varijabilna kompenzacija (Faza 7)
 
-Kalkulacija koristi **samo odobrene** (`Approved`) kvartalne ocene i `EvaluatorSettings` pragove za procenat.
+Kalkulacija koristi **samo odobrene** (`Approved`) kvartalne ocene i parametre organizacione jedinice (prihvatljiva ocena, eksponent, težina zavisnosti, fond).
 
 ### Parametri
 - `GET /api/compensation-parameters` — PAYROLL
@@ -216,7 +277,6 @@ Primer kreiranja parametara:
   "organizationUnitId": 1,
   "year": 2026,
   "monetaryPool": 500000,
-  "upperLimitCoefficient": 0.25,
   "dependencyWeight": 1.0,
   "exponent": 1.5
 }
@@ -231,7 +291,7 @@ Primer kalkulacije:
 - `GET /api/compensation-results` — paginacija (`?parametersId&year&organizationUnitId&employeeId`)
 - `GET /api/compensation-results/{id}` — detalj sa povezanim ocenama
 
-Formula `v1`: bodovi iz radnog mesta (`SortOrder × 10`), procenat iz evaluator settings, Z-score normalizacija i raspodela novčane mase sa gornjim limitom po zaposlenom.
+Formula `v1`: bodovi iz radnog mesta (`SortOrder × 10`), procenat iz evaluator settings, Z-score normalizacija i raspodela novčane mase.
 
 ## Pregled baze podataka
 
@@ -303,7 +363,7 @@ Korisnik sa više uloga vidi sve stavke menija za uloge koje poseduje (npr. `ADM
 
 ### Tok ocenjivanja u UI
 
-1. **Postavljanje ciljeva** (`/evaluator/goals`) — razgovor, ciljevi, uslovi i kriterijumi; automatsko čuvanje nacrta
+1. **Postavljanje ciljeva** (`/evaluator/goals`) — razgovor, ciljevi, uslovi i kriterijumi; čuvanjem se plan zaključava: posle toga se ciljevi, uslovi i kriterijumi više ne menjaju, ni posle vraćanja na doradu
 2. **Ocenjivanje** (`/evaluator/evaluations/:id`) — ocene ciljeva, merila, obuka, slanje kontroloru
 3. **Kontrolor** (`/controller/evaluations/:id`) — odobrenje ili vraćanje na doradu
 4. **Zaposleni** (`/employee`) — pregled ocena po statusu (neocenjene, vraćene, poslate, odobrene); filter po godini i kvartalu (uključujući „Svi kvartali“)
@@ -312,13 +372,18 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 
 ### Test nalozi
 
-- Admin: `admin@local.dev` / `Admin123!`
-- Ocenjivač: `evaluator@local.dev` / `Eval123!` (povezan sa zaposlenim Jovan)
-- Kontrolor: `controller@local.dev` / `Control123!` (povezan sa zaposlenim Milan)
-- Zaposleni: `marko@local.dev` / `Marko123!` (Marko Marković)
-- Plate/varijabila: korisnik sa `PAYROLL` ulogom (kreirati u administraciji ako nije u seed-u)
+Demo seed pravi 6 organizacionih jedinica sa 120 zaposlenih: u svakoj rukovodioca koji ocenjuje ostale, dva menadžera koji kontrolišu rukovodioce, i ocene za 2024, 2025 i 2026. Za Q3 2026 otprilike svaki četvrti zaposleni kod svakog ocenjivača ima već poslatu ocenu, pa svaki kontrolor ima šta da pregleda; ostali imaju nacrt za planiranje.
 
-Demo seed pri inicijalizaciji baze kreira 8 podređenih zaposlenih (Marko, Ana, Petar, …) dodeljenih ocenjivaču Jovanu.
+| Nalog | Lozinka | Uloge |
+|---|---|---|
+| `admin@local.dev` | `Admin123!` | Administrator |
+| `payroll@local.dev` | `Payroll123!` | Plate i varijabila |
+| `evaluator@local.dev` | `Eval123!` | Zaposleni, Ocenjivač i Kontrolor: rukovodilac prve jedinice, koji kontroliše i rukovodioca četvrte (`evaluator4@`) |
+| `evaluator2@` … `evaluator6@local.dev` | `Eval123!` | Zaposleni i Ocenjivač: rukovodioci ostalih jedinica |
+| `controller@local.dev`, `controller2@local.dev` | `Control123!` | Zaposleni i Kontrolor: menadžeri |
+| `zaposleni@local.dev` … `zaposleni6@local.dev` | `Zaposleni123!` | Zaposleni: po jedan zaposleni u svakoj jedinici |
+
+Pri svakoj inicijalizaciji baze seed proverava demo naloge i vraća im uloge i vezu sa zaposlenim ako su promenjene.
 
 ## Skladištenje avatara
 

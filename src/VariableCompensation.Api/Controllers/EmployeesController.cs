@@ -101,7 +101,8 @@ public sealed class EmployeesController : ControllerBase
                 request.EducationLevelId,
                 request.EvaluatorEmployeeId,
                 request.HiredAt,
-                request.IsActive),
+                request.IsActive,
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
@@ -111,17 +112,17 @@ public sealed class EmployeesController : ControllerBase
     [Authorize(Roles = "ADMIN")]
     public async Task<IActionResult> LinkUser(long id, [FromBody] LinkEmployeeUserRequest request, CancellationToken cancellationToken)
     {
-        var result = await this.mediator.Send(new LinkEmployeeUserCommand(id, request.UserId), cancellationToken);
+        var result = await this.mediator.Send(new LinkEmployeeUserCommand(id, request.UserId, request.Version), cancellationToken);
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
     }
 
     [HttpPost("{id:long}/avatar")]
     [RequestSizeLimit(2 * 1024 * 1024)]
-    public async Task<IActionResult> UploadAvatar(long id, IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> UploadAvatar(long id, IFormFile? file, CancellationToken cancellationToken)
     {
-        if (file.Length == 0)
+        if (file is null || file.Length == 0)
         {
-            return this.BadRequest(new { error = "Image file is required." });
+            return this.BadRequest(new { error = ErrorCodes.ImageRequired });
         }
 
         await using var stream = file.OpenReadStream();

@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using MediatR;
+using Microsoft.Extensions.Logging;
 using VariableCompensation.Application.Abstractions.Auth;
 using VariableCompensation.Application.Abstractions.Persistence;
 using VariableCompensation.Application.Abstractions.Storage;
@@ -16,17 +17,20 @@ public sealed class DeleteEmployeeAvatarCommandHandler : IRequestHandler<DeleteE
     private readonly IEmployeeAvatarStorage avatarStorage;
     private readonly ICurrentUserService currentUserService;
     private readonly ICurrentEmployeeContext currentEmployeeContext;
+    private readonly ILogger<DeleteEmployeeAvatarCommandHandler> logger;
 
     public DeleteEmployeeAvatarCommandHandler(
         IEmployeeRepository employeeRepository,
         IEmployeeAvatarStorage avatarStorage,
         ICurrentUserService currentUserService,
-        ICurrentEmployeeContext currentEmployeeContext)
+        ICurrentEmployeeContext currentEmployeeContext,
+        ILogger<DeleteEmployeeAvatarCommandHandler> logger)
     {
         this.employeeRepository = employeeRepository;
         this.avatarStorage = avatarStorage;
         this.currentUserService = currentUserService;
         this.currentEmployeeContext = currentEmployeeContext;
+        this.logger = logger;
     }
 
     public async Task<Result<EmployeeResponse>> Handle(DeleteEmployeeAvatarCommand request, CancellationToken cancellationToken)
@@ -48,12 +52,14 @@ public sealed class DeleteEmployeeAvatarCommandHandler : IRequestHandler<DeleteE
             return Result.Failure<EmployeeResponse>(access.Error);
         }
 
-        await this.avatarStorage.DeleteIfExistsAsync(employee.AvatarUrl, cancellationToken);
+        // The record lets go of the picture first, so a failed save never leaves it pointing at a deleted file.
+        var avatarUrl = employee.AvatarUrl;
         employee.AvatarUrl = null;
         employee.UpdatedAt = DateTime.UtcNow;
         employee.UpdatedByUserId = this.currentUserService.UserId;
 
         await this.employeeRepository.SaveChangesAsync(cancellationToken);
+        await AvatarCleanup.DeleteQuietlyAsync(this.avatarStorage, avatarUrl, this.logger);
 
         var updated = await this.employeeRepository.FindByIdAsync(request.EmployeeId, cancellationToken);
         return Result.Success(HrMappings.ToResponse(updated!));

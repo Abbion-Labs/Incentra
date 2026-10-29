@@ -1,5 +1,6 @@
 using CSharpFunctionalExtensions;
 using VariableCompensation.Application.Abstractions.Persistence;
+using VariableCompensation.Domain.Entities.Hr;
 using VariableCompensation.Domain;
 using EvaluatorSettingsEntity = VariableCompensation.Domain.Entities.Hr.EvaluatorSettings;
 
@@ -13,17 +14,6 @@ namespace VariableCompensation.Application.Hr.EvaluatorSettings.Services;
 /// </summary>
 public static class EvaluatorRoleSync
 {
-    // Mirrors the defaults the admin form has always pre-filled, so that
-    // granting the role produces the same settings an admin would have typed.
-    public const decimal DefaultThresholdDoesNotMeet = 2m;
-    public const decimal DefaultThresholdMeets = 2.5m;
-    public const decimal DefaultThresholdGood = 3.5m;
-    public const decimal DefaultThresholdExceeds = 4.5m;
-    public const decimal DefaultPercentDoesNotMeet = 0m;
-    public const decimal DefaultPercentMeets = 25m;
-    public const decimal DefaultPercentGood = 50m;
-    public const decimal DefaultPercentExceeds = 100m;
-
     public static async Task<Result> ApplyAsync(
         long userId,
         bool hasEvaluatorRole,
@@ -34,7 +24,29 @@ public static class EvaluatorRoleSync
         CancellationToken cancellationToken)
     {
         var employee = await employeeRepository.FindByUserIdAsync(userId, cancellationToken);
+        return await ApplyToEmployeeAsync(
+            employee,
+            hasEvaluatorRole,
+            controllerEmployeeId,
+            employeeRepository,
+            evaluatorSettingsRepository,
+            userRepository,
+            cancellationToken);
+    }
 
+    /// <summary>
+    /// The same for the employee the account is (or is about to be) linked to, so a new account can become an
+    /// evaluator in the step that creates and links it.
+    /// </summary>
+    public static async Task<Result> ApplyToEmployeeAsync(
+        Employee? employee,
+        bool hasEvaluatorRole,
+        long? controllerEmployeeId,
+        IEmployeeRepository employeeRepository,
+        IEvaluatorSettingsRepository evaluatorSettingsRepository,
+        IUserRepository userRepository,
+        CancellationToken cancellationToken)
+    {
         if (!hasEvaluatorRole)
         {
             return employee is null
@@ -47,19 +59,15 @@ public static class EvaluatorRoleSync
             return Result.Failure(ErrorCodes.EvaluatorUserNotLinkedToEmployee);
         }
 
-        // Already an evaluator: leave the thresholds the admin has tuned alone.
+        // Already an evaluator: keep the controller the admin has assigned.
         if (await evaluatorSettingsRepository.ExistsAsync(employee.Id, cancellationToken))
         {
             return Result.Success();
         }
 
-        if (controllerEmployeeId is null)
-        {
-            return Result.Failure(ErrorCodes.EvaluatorControllerRequired);
-        }
-
-        var controllerCheck = await ControllerRoleCheck.EnsureIsAControllerAsync(
-            controllerEmployeeId.Value,
+        var controllerCheck = await ControllerRoleCheck.EnsureCanControlAsync(
+            employee.Id,
+            controllerEmployeeId,
             employeeRepository,
             userRepository,
             cancellationToken);
@@ -72,15 +80,7 @@ public static class EvaluatorRoleSync
             new EvaluatorSettingsEntity
             {
                 EmployeeId = employee.Id,
-                ControllerEmployeeId = controllerEmployeeId.Value,
-                ThresholdDoesNotMeet = DefaultThresholdDoesNotMeet,
-                ThresholdMeets = DefaultThresholdMeets,
-                ThresholdGood = DefaultThresholdGood,
-                ThresholdExceeds = DefaultThresholdExceeds,
-                PercentDoesNotMeet = DefaultPercentDoesNotMeet,
-                PercentMeets = DefaultPercentMeets,
-                PercentGood = DefaultPercentGood,
-                PercentExceeds = DefaultPercentExceeds,
+                ControllerEmployeeId = controllerEmployeeId,
             },
             cancellationToken);
 

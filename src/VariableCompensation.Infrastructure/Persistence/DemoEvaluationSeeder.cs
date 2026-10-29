@@ -199,7 +199,7 @@ internal static class DemoEvaluationSeeder
     internal static Evaluation CreateEvaluation(
         Employee employee,
         long evaluatorId,
-        long controllerId,
+        long? controllerId,
         QuarterPlan plan,
         IReadOnlyList<RatingLevel> ratingLevels,
         IReadOnlyList<MeasureType> measureTypes,

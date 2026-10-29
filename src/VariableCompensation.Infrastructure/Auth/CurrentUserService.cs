@@ -15,17 +15,9 @@ public sealed class CurrentUserService : ICurrentUserService
         this.httpContextAccessor = httpContextAccessor;
     }
 
-    public long? UserId
-    {
-        get
-        {
-            var value = this.httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.NameIdentifier)
-                        ?? this.httpContextAccessor.HttpContext?.User.FindFirstValue(ClaimTypes.Name)
-                        ?? this.httpContextAccessor.HttpContext?.User.FindFirstValue("sub");
+    public long? UserId => SessionClaims.ReadUserId(this.httpContextAccessor.HttpContext?.User);
 
-            return long.TryParse(value, out var userId) ? userId : null;
-        }
-    }
+    public Guid? SessionId => SessionClaims.ReadSessionId(this.httpContextAccessor.HttpContext?.User);
 
     public bool IsAuthenticated => this.httpContextAccessor.HttpContext?.User.Identity?.IsAuthenticated == true;
 
@@ -35,6 +27,8 @@ public sealed class CurrentUserService : ICurrentUserService
             .Select(c => c.Value)
             .ToList()
         ?? [];
+
+    public string? ActiveRole => this.Roles.Count == 1 ? this.Roles[0] : null;
 
     public bool IsInRole(string role) => this.Roles.Contains(role, StringComparer.OrdinalIgnoreCase);
 

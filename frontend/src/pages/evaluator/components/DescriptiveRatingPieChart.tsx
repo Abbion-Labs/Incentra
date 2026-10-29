@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useState } from 'react';
 import type { DescriptiveRatingDistributionItem } from '../../../api/types';
 import { useIntl } from '../../../i18n';
 import {
@@ -11,7 +11,7 @@ interface DescriptiveRatingPieChartProps {
   year: number;
 }
 
-interface Slice {
+interface Segment {
   key: string;
   label: string;
   count: number;
@@ -21,87 +21,84 @@ interface Slice {
   endAngle: number;
 }
 
-function polarToCartesian(
-  cx: number,
-  cy: number,
-  radius: number,
-  angle: number,
-) {
+const SIZE = 220;
+const OUTER_RADIUS = 104;
+const INNER_RADIUS = 74;
+/** Razmak u boji podloge između delova prstena (u stepenima). */
+const GAP_DEGREES = 1.4;
+const TOTAL_TEXT_COLOR = '#0f172a';
+const CAPTION_TEXT_COLOR = '#64748b';
+
+function polar(radius: number, angle: number) {
   const rad = ((angle - 90) * Math.PI) / 180;
   return {
-    x: cx + radius * Math.cos(rad),
-    y: cy + radius * Math.sin(rad),
+    x: SIZE / 2 + radius * Math.cos(rad),
+    y: SIZE / 2 + radius * Math.sin(rad),
   };
 }
 
-function describeArc(
-  cx: number,
-  cy: number,
-  radius: number,
-  startAngle: number,
-  endAngle: number,
-) {
-  const start = polarToCartesian(cx, cy, radius, endAngle);
-  const end = polarToCartesian(cx, cy, radius, startAngle);
-  const largeArc = endAngle - startAngle > 180 ? 1 : 0;
-  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${radius} ${radius} 0 ${largeArc} 0 ${end.x} ${end.y} Z`;
+function ringPath(startAngle: number, endAngle: number): string {
+  // Ceo krug (jedina ocena) ne može jednim lukom: crta se kao dva polukruga.
+  if (endAngle - startAngle >= 359.99) {
+    return `${ringPath(0, 180)} ${ringPath(180, 360)}`;
+  }
+  const outerStart = polar(OUTER_RADIUS, startAngle);
+  const outerEnd = polar(OUTER_RADIUS, endAngle);
+  const innerEnd = polar(INNER_RADIUS, endAngle);
+  const innerStart = polar(INNER_RADIUS, startAngle);
+  const large = endAngle - startAngle > 180 ? 1 : 0;
+  return [
+    `M${outerStart.x},${outerStart.y}`,
+    `A${OUTER_RADIUS},${OUTER_RADIUS} 0 ${large} 1 ${outerEnd.x},${outerEnd.y}`,
+    `L${innerEnd.x},${innerEnd.y}`,
+    `A${INNER_RADIUS},${INNER_RADIUS} 0 ${large} 0 ${innerStart.x},${innerStart.y}`,
+    'Z',
+  ].join(' ');
 }
 
+/** Raspodela opisnih ocena: prsten (udeo celine) i legenda sa brojevima. */
 export function DescriptiveRatingPieChart({
   items,
   year,
 }: DescriptiveRatingPieChartProps) {
   const { formatMessage } = useIntl();
   const [activeKey, setActiveKey] = useState<string | null>(null);
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const [pieSize, setPieSize] = useState(280);
 
-  useEffect(() => {
-    const element = canvasRef.current;
-    if (!element) return;
+  const labelFor = (item: DescriptiveRatingDistributionItem) =>
+    formatDescriptiveRatingLabel(formatMessage, {
+      code: item.code,
+      name: item.name,
+    }) ?? item.name;
 
-    const update = () => {
-      const width = element.clientWidth;
-      if (width > 0) {
-        setPieSize(Math.round(width));
-      }
-    };
+  const total = items.reduce((sum, item) => sum + item.count, 0);
 
-    update();
-    const observer = new ResizeObserver(update);
-    observer.observe(element);
-    return () => observer.disconnect();
-  }, []);
-
-  const slices = useMemo<Slice[]>(() => {
-    const total = items.reduce((sum, item) => sum + item.count, 0);
+  const segments = useMemo<Segment[]>(() => {
     if (total === 0) return [];
-
     let cursor = 0;
     return items
       .filter((item) => item.count > 0)
       .map((item) => {
         const sweep = (item.count / total) * 360;
-        const label =
-          formatDescriptiveRatingLabel(formatMessage, {
-            code: item.code,
-            name: item.name,
-          }) ?? item.name;
-        const slice: Slice = {
+        const gap = sweep >= 359.99 ? 0 : GAP_DEGREES / 2;
+        const segment: Segment = {
           key: item.code,
-          label,
+          label:
+            formatDescriptiveRatingLabel(formatMessage, {
+              code: item.code,
+              name: item.name,
+            }) ?? item.name,
           count: item.count,
           percentage: item.percentage,
           color: descriptiveRatingChartColor(item.code),
-          startAngle: cursor,
-          endAngle: cursor + sweep,
+          startAngle: cursor + gap,
+          endAngle: cursor + sweep - gap,
         };
         cursor += sweep;
-        return slice;
+        return segment;
       });
-  }, [items, formatMessage]);
+  }, [items, total, formatMessage]);
 
-  if (slices.length === 0) {
+  if (segments.length === 0) {
     return (
       <div className="analytics-chart analytics-chart--empty">
         <p>
@@ -111,83 +108,81 @@ export function DescriptiveRatingPieChart({
     );
   }
 
-  const size = 280;
-  const cx = size / 2;
-  const cy = size / 2;
-  const radius = 108;
+  const active = segments.find((segment) => segment.key === activeKey);
 
   return (
-    <div
-      className="analytics-chart analytics-pie-chart"
-      style={{ '--pie-chart-size': `${pieSize}px` } as React.CSSProperties}
-    >
-      <div ref={canvasRef} className="analytics-pie-chart__canvas-wrap">
+    <div className="donut-chart">
+      <div className="donut-chart__figure">
         <svg
-          viewBox={`0 0 ${size} ${size}`}
-          className="analytics-chart__svg"
-          preserveAspectRatio="xMidYMid meet"
+          viewBox={`0 0 ${SIZE} ${SIZE}`}
+          className="donut-chart__svg"
           role="img"
           aria-label={formatMessage(
             { id: 'charts.descriptiveRatingDistributionAria' },
             { year },
           )}
         >
-          {slices.map((slice) => (
+          {segments.map((segment) => (
             <path
-              key={slice.key}
-              d={describeArc(cx, cy, radius, slice.startAngle, slice.endAngle)}
-              fill={slice.color}
-              opacity={activeKey && activeKey !== slice.key ? 0.45 : 1}
-              onMouseEnter={() => setActiveKey(slice.key)}
+              key={segment.key}
+              d={ringPath(segment.startAngle, segment.endAngle)}
+              fill={segment.color}
+              className="donut-chart__segment"
+              opacity={activeKey && activeKey !== segment.key ? 0.3 : 1}
+              onMouseEnter={() => setActiveKey(segment.key)}
               onMouseLeave={() => setActiveKey(null)}
             />
           ))}
-          <circle cx={cx} cy={cy} r={52} fill="#fff" />
           <text
-            x={cx}
-            y={cy - 4}
+            x={SIZE / 2}
+            y={SIZE / 2 - 2}
             textAnchor="middle"
-            fontSize="13"
-            fill="#64748b"
+            className="donut-chart__total"
+            fill={TOTAL_TEXT_COLOR}
           >
-            {year}.
+            {active ? active.count : total}
           </text>
           <text
-            x={cx}
-            y={cy + 16}
+            x={SIZE / 2}
+            y={SIZE / 2 + 20}
             textAnchor="middle"
-            fontSize="18"
-            fontWeight="600"
-            fill="#0f172a"
+            className="donut-chart__caption"
+            fill={CAPTION_TEXT_COLOR}
           >
-            {slices.reduce((sum, slice) => sum + slice.count, 0)}
+            {active
+              ? `${active.percentage.toFixed(1)}%`
+              : formatMessage({ id: 'charts.ratingsTotal' }, { year })}
           </text>
         </svg>
       </div>
 
-      <ul className="analytics-chart__legend">
+      <ul className="donut-chart__legend">
         {items.map((item) => {
-          const label =
-            formatDescriptiveRatingLabel(formatMessage, {
-              code: item.code,
-              name: item.name,
-            }) ?? item.name;
+          const selected = activeKey === item.code;
           return (
             <li
               key={item.descriptiveRatingId}
-              className={activeKey === item.code ? 'is-active' : undefined}
-              onMouseEnter={() => setActiveKey(item.code)}
+              className={`donut-chart__row${selected ? ' is-active' : ''}${activeKey && !selected ? ' is-dimmed' : ''}`}
+              onMouseEnter={() => item.count > 0 && setActiveKey(item.code)}
               onMouseLeave={() => setActiveKey(null)}
             >
               <span
-                className="analytics-chart__legend-swatch"
+                className="donut-chart__swatch"
                 style={{ background: descriptiveRatingChartColor(item.code) }}
+                aria-hidden
               />
-              <span className="analytics-chart__legend-body">
-                <span className="analytics-chart__legend-label">{label}</span>
-                <span className="analytics-chart__legend-value">
-                  {item.count} ({item.percentage.toFixed(1)}%)
-                </span>
+              <span className="donut-chart__label">{labelFor(item)}</span>
+              <span className="donut-chart__count">{item.count}</span>
+              <span className="donut-chart__percent">
+                {item.percentage.toFixed(1)}%
+              </span>
+              <span className="donut-chart__bar" aria-hidden>
+                <span
+                  style={{
+                    width: `${Math.min(item.percentage, 100)}%`,
+                    background: descriptiveRatingChartColor(item.code),
+                  }}
+                />
               </span>
             </li>
           );

@@ -43,7 +43,7 @@ public class SaveEvaluationRatingDraftCommandHandlerTests
             null,
             true,
             [
-                new EvaluationGoalItem("Cilj 1", ratedGoalLevel, "Komentar cilja", 50m, 1),
+                new EvaluationGoalItem("Cilj 1", ratedGoalLevel, "Komentar cilja", 100m, 1),
             ],
             [
                 new EvaluationMeasureItem(1, null, ratedMeasureLevel, 1),

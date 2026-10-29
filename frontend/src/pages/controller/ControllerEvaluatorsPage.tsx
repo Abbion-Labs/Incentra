@@ -7,7 +7,8 @@ import { TableSkeleton } from '../../components/common/LoadingSkeleton';
 import { AppLayout } from '../../components/AppLayout';
 import { useDebouncedSearch, useToast } from '../../hooks';
 import { matchesNameSearch, normalizeSearchTerm } from '../../utils/nameSearch';
-import { EmployeeAvatar } from '../../components/employee/EmployeeAvatar';
+import { PersonName } from '../../components/employee/PersonName';
+import { ToolbarSearch } from '../../components/common/ToolbarSearch';
 import { useIntl } from '../../i18n';
 
 export function ControllerEvaluatorsPage() {
@@ -58,24 +59,18 @@ export function ControllerEvaluatorsPage() {
 
   return (
     <AppLayout title={formatMessage({ id: 'navigation.controllerEvaluators' })}>
-      <div className="card card--filter">
-        <div className="form-row filter-bar-search">
-          <label htmlFor="evaluator-search">
-            {formatMessage({ id: 'controller.searchEvaluators' })}
-          </label>
-          <input
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
+          <ToolbarSearch
             id="evaluator-search"
-            type="search"
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
+            label={formatMessage({ id: 'controller.searchEvaluators' })}
             placeholder={formatMessage({
               id: 'controller.evaluatorsSearchPlaceholder',
             })}
+            value={searchInput}
+            onChange={setSearchInput}
           />
         </div>
-      </div>
-
-      <div className="card card--flush">
         {loading ? (
           <TableSkeleton rows={4} columns={4} />
         ) : filtered.length === 0 ? (
@@ -121,21 +116,22 @@ export function ControllerEvaluatorsPage() {
                         `/controller/evaluators/${ev.employeeId}/analytics`,
                       )
                     }
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        navigate(
+                          `/controller/evaluators/${ev.employeeId}/analytics`,
+                        );
+                      }
+                    }}
                     tabIndex={0}
+                    role="link"
                   >
                     <td className="cell-primary col-text">
-                      <span className="employee-list-name">
-                        <EmployeeAvatar
-                          employee={{
-                            fullName: ev.employeeFullName,
-                            firstName: '',
-                            lastName: '',
-                            avatarUrl: ev.avatarUrl,
-                          }}
-                          size="sm"
-                        />
-                        <span>{ev.employeeFullName}</span>
-                      </span>
+                      <PersonName
+                        fullName={ev.employeeFullName}
+                        avatarUrl={ev.avatarUrl}
+                      />
                     </td>
                     <td className="cell-muted col-text">
                       {ev.organizationUnitName || '—'}

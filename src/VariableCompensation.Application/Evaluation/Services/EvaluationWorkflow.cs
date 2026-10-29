@@ -1,4 +1,5 @@
 using EvaluationEntity = VariableCompensation.Domain.Entities.Evaluation.Evaluation;
+using VariableCompensation.Domain;
 using VariableCompensation.Domain.Entities.Evaluation;
 using VariableCompensation.Domain.Enums;
 
@@ -25,7 +26,7 @@ internal static class EvaluationWorkflow
 
         if (allowed is null)
         {
-            error = $"Cannot {action} evaluation in status {current}.";
+            error = ErrorCodes.EvaluationActionNotAllowed;
             return false;
         }
 
@@ -38,6 +39,7 @@ internal static class EvaluationWorkflow
         EvaluationStatus from,
         EvaluationStatus to,
         long changedByUserId,
+        string? changedByRoleCode,
         string? comment)
     {
         evaluation.Status = to;
@@ -48,6 +50,7 @@ internal static class EvaluationWorkflow
             FromStatus = from.ToString(),
             ToStatus = to.ToString(),
             ChangedByUserId = changedByUserId,
+            ChangedByRoleCode = changedByRoleCode,
             Comment = comment,
             ChangedAt = DateTime.UtcNow
         });
@@ -56,6 +59,9 @@ internal static class EvaluationWorkflow
         {
             case EvaluationStatus.Submitted:
                 evaluation.SubmittedAt = DateTime.UtcNow;
+                // The comment of a return for revision has been dealt with once the evaluation is sent again; it
+                // stays in RejectionReason and in the history, but must not pass for the controller's final word.
+                evaluation.ControllerComment = null;
                 break;
             case EvaluationStatus.UnderReview:
                 evaluation.ReviewedAt = DateTime.UtcNow;

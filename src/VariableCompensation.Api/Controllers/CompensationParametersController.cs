@@ -47,7 +47,6 @@ public sealed class CompensationParametersController : ControllerBase
                 request.MonetaryPool,
                 request.Currency,
                 request.AcceptablePerformanceRating,
-                request.UpperLimitCoefficient,
                 request.DependencyWeight,
                 request.Exponent,
                 request.AllowNegativeVariable),
@@ -68,11 +67,11 @@ public sealed class CompensationParametersController : ControllerBase
                 request.MonetaryPool,
                 request.Currency,
                 request.AcceptablePerformanceRating,
-                request.UpperLimitCoefficient,
                 request.DependencyWeight,
                 request.Exponent,
                 request.AllowNegativeVariable,
-                request.IsActive),
+                request.IsActive,
+                request.Version),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
@@ -91,7 +90,7 @@ public sealed class CompensationParametersController : ControllerBase
     public async Task<IActionResult> Calculate(long id, [FromBody] CalculateCompensationRequest request, CancellationToken cancellationToken)
     {
         var result = await this.mediator.Send(
-            new CalculateVariableCompensationCommand(id, request.IsFinal, request.RequireAllQuarters, request.AllowNegativeVariable),
+            new CalculateVariableCompensationCommand(id, request.IsFinal, request.RequireAllQuarters),
             cancellationToken);
 
         return result.IsSuccess ? this.Ok(result.Value) : this.BadRequest(new { error = result.Error });
