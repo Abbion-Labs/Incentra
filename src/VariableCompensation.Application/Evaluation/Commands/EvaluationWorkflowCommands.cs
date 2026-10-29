@@ -244,13 +244,15 @@ public sealed class ApproveEvaluationCommandHandler : IRequestHandler<ApproveEva
             return Result.Failure<EvaluationDetailResponse>(reviewAccess.Error);
         }
 
+        var userId = this.currentUserService.UserId ?? 0;
+        EvaluationWorkflow.StartReviewIfSubmitted(entity, userId, this.currentUserService.ActiveRole);
+
         if (!EvaluationWorkflow.TryGetNextStatus(entity.Status, EvaluationWorkflowAction.Approve, out var next, out var error))
         {
             return Result.Failure<EvaluationDetailResponse>(error!);
         }
 
         var from = entity.Status;
-        var userId = this.currentUserService.UserId ?? 0;
         entity.ControllerComment = request.ControllerComment;
         entity.ExcludedFromCompensation = !entity.ConditionsFulfilled;
         EvaluationWorkflow.ApplyTransition(

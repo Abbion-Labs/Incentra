@@ -114,26 +114,15 @@ export function ControllerReviewPage() {
     setControllerComment('');
   }, [evaluation?.id]);
 
-  async function startReviewIfNeeded() {
-    if (!evaluation || evaluation.status !== 'Submitted') return evaluation;
-    return api.post<EvaluationDetail>(
-      `/api/evaluations/${evaluation.id}/start-review`,
-      {
-        version: evaluation.version,
-      },
-    );
-  }
-
+  // Odluka je jedan zahtev: server ocenu koja još čeka sam prvo stavlja na pregled.
   async function approve() {
     if (!evaluation) return;
     setSaving(true);
     try {
-      const current = await startReviewIfNeeded();
-      if (current) setEvaluation(current);
       const updated = await api.post<EvaluationDetail>(
         `/api/evaluations/${evaluation.id}/approve`,
         {
-          version: current?.version ?? evaluation.version,
+          version: evaluation.version,
           controllerComment: controllerComment || null,
         },
       );
@@ -158,12 +147,10 @@ export function ControllerReviewPage() {
     }
     setSaving(true);
     try {
-      const current = await startReviewIfNeeded();
-      if (current) setEvaluation(current);
       const updated = await api.post<EvaluationDetail>(
         `/api/evaluations/${evaluation.id}/return-for-revision`,
         {
-          version: current?.version ?? evaluation.version,
+          version: evaluation.version,
           revisionComment: revisionComment.trim(),
         },
       );

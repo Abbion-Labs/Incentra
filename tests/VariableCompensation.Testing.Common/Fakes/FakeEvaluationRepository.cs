@@ -75,6 +75,19 @@ public sealed class FakeEvaluationRepository : IEvaluationRepository
         return Task.FromResult<IReadOnlyList<EvaluationStatusHistory>>(entity.StatusHistory.ToList());
     }
 
+    public Task<bool> MarkViewedByControllerAsync(long id, DateTime viewedAt, CancellationToken cancellationToken)
+    {
+        if (!this.store.TryGetValue(id, out var entity) ||
+            entity.ControllerViewedAt is not null ||
+            entity.Status is not (EvaluationStatus.Submitted or EvaluationStatus.UnderReview))
+        {
+            return Task.FromResult(false);
+        }
+
+        entity.ControllerViewedAt = viewedAt;
+        return Task.FromResult(true);
+    }
+
     public Task<(IReadOnlyList<EvaluationEntity> Items, int TotalCount)> GetPagedAsync(
         int page,
         int pageSize,

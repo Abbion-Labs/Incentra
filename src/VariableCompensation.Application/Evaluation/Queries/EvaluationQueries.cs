@@ -188,12 +188,11 @@ public sealed class GetEvaluationByIdQueryHandler : IRequestHandler<GetEvaluatio
             entity.ControllerViewedAt is null &&
             (entity.Status == EvaluationStatus.Submitted || entity.Status == EvaluationStatus.UnderReview))
         {
-            var forUpdate = await this.repository.FindByIdForUpdateAsync(request.Id, cancellationToken);
-            if (forUpdate is not null)
+            // A single update, without loading the evaluation a second time just to set one column.
+            var viewedAt = DateTime.UtcNow;
+            if (await this.repository.MarkViewedByControllerAsync(entity.Id, viewedAt, cancellationToken))
             {
-                forUpdate.ControllerViewedAt = DateTime.UtcNow;
-                await this.repository.SaveChangesAsync(cancellationToken);
-                entity = forUpdate;
+                entity.ControllerViewedAt = viewedAt;
             }
         }
 

@@ -87,11 +87,7 @@ describe('ControllerReviewPage', () => {
     renderReview({ ...evaluation, controllerComment: 'Dopuniti ciljeve.' });
     const post = vi
       .spyOn(api, 'post')
-      .mockImplementation(async (path: string) =>
-        path.endsWith('/start-review')
-          ? { ...evaluation, status: 'UnderReview', version: 5 }
-          : { ...evaluation, status: 'Approved', version: 6 },
-      );
+      .mockResolvedValue({ ...evaluation, status: 'Approved', version: 6 });
 
     const comment = await screen.findByLabelText('controller.commentOptional');
     expect((comment as HTMLTextAreaElement).value).toBe('');
@@ -104,11 +100,13 @@ describe('ControllerReviewPage', () => {
       screen.getByRole('button', { name: 'controller.approveEvaluation' }),
     );
 
+    // Jedan zahtev: server sam stavlja ocenu na pregled pre odobravanja.
     await waitFor(() =>
       expect(post).toHaveBeenCalledWith('/api/evaluations/5/approve', {
-        version: 5,
+        version: 4,
         controllerComment: null,
       }),
     );
+    expect(post).toHaveBeenCalledTimes(1);
   });
 });

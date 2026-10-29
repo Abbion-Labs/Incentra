@@ -115,7 +115,8 @@ public class ReturnEvaluationForRevisionCommandHandlerTests
 
         result.IsSuccess.Should().BeTrue();
         repository.Store[1].EvaluatorEmployeeId.Should().Be(2);
-        repository.Store[1].Version.Should().Be(2);
+        // Two status changes, into review and back to draft, and no third one for a reassignment.
+        repository.Store[1].Version.Should().Be(3);
     }
 
     private static ReturnEvaluationForRevisionCommandHandler CreateHandler(
