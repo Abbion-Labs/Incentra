@@ -16,4 +16,13 @@ export default defineConfig({
       },
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        // Biblioteke se menjaju ređe od koda aplikacije: u svom fajlu ostaju u kešu browsera i posle deploy-a.
+        manualChunks: (id) =>
+          id.includes('/node_modules/') ? 'vendor' : undefined,
+      },
+    },
+  },
 });

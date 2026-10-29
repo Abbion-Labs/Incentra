@@ -14,7 +14,11 @@ createRoot(document.getElementById('root')!).render(
       <AppIntlProvider>
         <AuthProvider>
           <ToastProvider>
-            <RouterProvider router={router} />
+            {/* Navigacija kao tranzicija: dok stiže kod sledeće stranice, ostaje prikazana trenutna. */}
+            <RouterProvider
+              router={router}
+              future={{ v7_startTransition: true }}
+            />
           </ToastProvider>
         </AuthProvider>
       </AppIntlProvider>

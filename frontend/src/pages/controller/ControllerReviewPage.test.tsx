@@ -6,6 +6,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { api } from '../../api/client';
 import type { EvaluationDetail } from '../../api/types';
 import { ToastProvider } from '../../components/common/Toast';
+import { invalidateLookups } from '../../hooks';
 import { stubMatchMedia } from '../../test/browserStubs';
 import { mockApiGetDeferred } from '../../test/deferredApi';
 import { ControllerReviewPage } from './ControllerReviewPage';
@@ -75,6 +76,7 @@ function renderReview(detail: EvaluationDetail = evaluation) {
 describe('ControllerReviewPage', () => {
   beforeEach(() => {
     stubMatchMedia();
+    invalidateLookups();
   });
 
   afterEach(() => {
