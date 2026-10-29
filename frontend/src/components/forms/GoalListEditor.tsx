@@ -1,4 +1,3 @@
-import { FieldHint } from '../common/FieldHint';
 import { useIntl } from '../../i18n';
 import {
   checkGoalWeights,
@@ -9,6 +8,7 @@ import {
   type GoalDraft,
 } from '../../utils/goalsPlanning';
 import { TEXT_LIMITS } from '../../utils/textLimits';
+import { AutoGrowTextarea } from './AutoGrowTextarea';
 import { AddItemButton, RemoveItemButton } from './ListItemButtons';
 
 const maxLength = TEXT_LIMITS.planItem;
@@ -34,10 +34,6 @@ export function GoalListEditor({
 }: GoalListEditorProps) {
   const { formatMessage } = useIntl();
   const customized = hasCustomWeights(goals);
-  const weightHint = formatMessage(
-    { id: 'evaluation.goalWeightHint' },
-    { min: MIN_GOAL_WEIGHT },
-  );
 
   const update = (index: number, patch: Partial<GoalDraft>) => {
     const next = [...goals];
@@ -48,6 +44,13 @@ export function GoalListEditor({
   const resize = (next: GoalDraft[]) =>
     setGoals(customized ? next : withEvenWeights(next));
 
+  // Uz jedan cilj zbir je isti broj kao u polju, pa se prikazuje tek kad
+  // ima više ciljeva ili kad zbir nije ispravan.
+  const weights = checkGoalWeights(goals);
+  const showTotal =
+    goals.some((goal) => goal.description.trim()) &&
+    (goals.length > 1 || !weights.valid);
+
   return (
     <>
       <div className="form-list">
@@ -55,9 +58,8 @@ export function GoalListEditor({
           <div key={idx} className="form-list__item form-list__item--weighted">
             <span className="form-list__index">{idx + 1}</span>
             <div className="form-list__field">
-              <textarea
+              <AutoGrowTextarea
                 className="form-list__input"
-                rows={2}
                 maxLength={maxLength}
                 value={goal.description}
                 onChange={(e) => update(idx, { description: e.target.value })}
@@ -69,14 +71,17 @@ export function GoalListEditor({
                 </span>
               )}
             </div>
-            <div className="form-list__weight">
-              <label>
-                <span className="sr-only">
-                  {formatMessage(
-                    { id: 'evaluation.goalWeightLabel' },
-                    { index: idx + 1 },
-                  )}
-                </span>
+            <label className="form-list__weight">
+              <span className="form-list__weight-caption" aria-hidden="true">
+                {formatMessage({ id: 'evaluation.goalWeight' })}
+              </span>
+              <span className="sr-only">
+                {formatMessage(
+                  { id: 'evaluation.goalWeightLabel' },
+                  { index: idx + 1 },
+                )}
+              </span>
+              <span className="form-list__weight-control">
                 <input
                   type="number"
                   inputMode="numeric"
@@ -92,9 +97,8 @@ export function GoalListEditor({
                   }
                 />
                 <span aria-hidden="true">%</span>
-              </label>
-              <FieldHint hint={weightHint} />
-            </div>
+              </span>
+            </label>
             {goals.length > 1 && (
               <RemoveItemButton
                 onClick={() => resize(goals.filter((_, i) => i !== idx))}
@@ -103,45 +107,51 @@ export function GoalListEditor({
           </div>
         ))}
       </div>
+      {/* Zbir stoji ispod kolone sa težinama, kao zbir u tabeli. */}
       <div className="goal-weights__footer">
-        <AddItemButton
-          label={addLabel}
-          onClick={() =>
-            resize([
-              ...goals,
-              { description: '', sortOrder: goals.length, weight: null },
-            ])
-          }
-        />
-        {customized && goals.length > 1 && (
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => setGoals(withEvenWeights(goals))}
+        <div className="goal-weights__actions">
+          <AddItemButton
+            label={addLabel}
+            onClick={() =>
+              resize([
+                ...goals,
+                { description: '', sortOrder: goals.length, weight: null },
+              ])
+            }
+          />
+          {customized && goals.length > 1 && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setGoals(withEvenWeights(goals))}
+            >
+              {formatMessage({ id: 'evaluation.distributeWeightsEvenly' })}
+            </button>
+          )}
+          {showTotal && (
+            <span className="goal-weights__total-label" aria-hidden="true">
+              {formatMessage({ id: 'evaluation.planning.weightsTotalLabel' })}
+            </span>
+          )}
+        </div>
+        {showTotal && (
+          <span
+            className={`goal-weights__total ${weights.valid ? 'is-complete' : 'is-invalid'}`}
+            role="status"
           >
-            {formatMessage({ id: 'evaluation.distributeWeightsEvenly' })}
-          </button>
+            <span className="goal-weights__total-value" aria-hidden="true">
+              {weights.total}
+            </span>
+            <span aria-hidden="true">%</span>
+            <span className="sr-only">
+              {formatMessage(
+                { id: 'evaluation.goalWeightsTotal' },
+                { total: weights.total, required: TOTAL_GOAL_WEIGHT },
+              )}
+            </span>
+          </span>
         )}
       </div>
     </>
-  );
-}
-
-/** Zbir pondera uz naslov ciljeva: zelen kad je tačno 100%, crven kad nije. */
-export function GoalWeightsTotal({ goals }: { goals: GoalDraft[] }) {
-  const { formatMessage } = useIntl();
-  const { total, valid } = checkGoalWeights(goals);
-  if (!goals.some((goal) => goal.description.trim())) return null;
-
-  return (
-    <span
-      className={`section-progress__count ${valid ? 'is-complete' : 'is-invalid'}`}
-      role="status"
-    >
-      {formatMessage(
-        { id: 'evaluation.goalWeightsTotal' },
-        { total, required: TOTAL_GOAL_WEIGHT },
-      )}
-    </span>
   );
 }

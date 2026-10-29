@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { api } from '../../api/client';
 import type {
@@ -9,20 +9,17 @@ import type {
 } from '../../api/types';
 import { LoadingEmpty } from '../../components/common/LoadingEmpty';
 import { FormSection } from '../../components/forms/FormSection';
-import {
-  GoalListEditor,
-  GoalWeightsTotal,
-} from '../../components/forms/GoalListEditor';
+import { GoalListEditor } from '../../components/forms/GoalListEditor';
 import { TextListEditor } from '../../components/forms/TextListEditor';
 import { AppLayout } from '../../components/AppLayout';
 import { useAuth } from '../../auth/AuthContext';
 import { useLookups, useToast, useUnsavedChangesGuard } from '../../hooks';
-import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChangesIndicator';
 import {
   checkGoalWeights,
   defaultConversationDatetime,
   hasValidPlanningDraft,
   isGoalsPlanningComplete,
+  MIN_GOAL_WEIGHT,
   toGoalDrafts,
   toTextDrafts,
   type GoalDraft,
@@ -31,11 +28,43 @@ import {
 import { roleListPath } from '../../utils/evaluationApi';
 import { isStaleEvaluationError } from '../../utils/evaluationSave';
 import { previousQuarter } from '../../utils/status';
-import { CopyFromPreviousQuarterButton } from './components/CopyFromPreviousQuarterButton';
-import { GoalsConversationForm } from './components/GoalsConversationForm';
 import { GoalsPlanningEmployeeCard } from './components/GoalsPlanningEmployeeCard';
+import { GoalsPlanningSidePanel } from './components/GoalsPlanningSidePanel';
 import { GoalsReadOnlyOverview } from './components/GoalsReadOnlyOverview';
+import {
+  CopyPreviousPlanButton,
+  type PreviousPlan,
+} from './components/PreviousPlanPrompt';
 import { useIntl } from '../../i18n';
+
+interface PreviousPlanResult {
+  summary: EvaluationSummary | null;
+  detail: EvaluationDetail | null;
+  hasPlan: boolean;
+}
+
+/** Ocena istog zaposlenog iz datog kvartala i da li u njoj postoji plan. */
+async function fetchPreviousPlan(
+  employeeId: number,
+  year: number,
+  quarter: number,
+): Promise<PreviousPlanResult> {
+  const list = await api.get<PagedResult<EvaluationSummary>>(
+    `${roleListPath('evaluations', 'evaluator')}?pageSize=5&year=${year}&quarter=${quarter}&employeeId=${employeeId}`,
+  );
+  const summary = list.items[0] ?? null;
+  if (!summary) return { summary: null, detail: null, hasPlan: false };
+
+  const detail = await api.get<EvaluationDetail>(
+    `/api/evaluations/${summary.id}`,
+  );
+  const hasPlan = [
+    ...detail.goals,
+    ...detail.conditions,
+    ...detail.criteria,
+  ].some((item) => item.description.trim());
+  return { summary, detail, hasPlan };
+}
 
 export function GoalsPlanningPage() {
   const { formatMessage } = useIntl();
@@ -56,12 +85,20 @@ export function GoalsPlanningPage() {
   const [conversationAt, setConversationAt] = useState('');
   const [evaluatorComment, setEvaluatorComment] = useState('');
   const [isDirty, setIsDirty] = useState(false);
+  const [previousPlan, setPreviousPlan] = useState<PreviousPlan | null>(null);
+  const [previousSummary, setPreviousSummary] =
+    useState<EvaluationSummary | null>(null);
+  // Plan iz prethodnog kvartala se učitava odmah; preuzimanje čeka isti zahtev.
+  const previousPlanRequest = useRef<Promise<PreviousPlanResult> | null>(null);
 
   const { activeRole } = useAuth();
   // Nacrt menja samo ocenjivač; admin ga samo gleda.
   const editable = evaluation?.status === 'Draft' && activeRole === 'EVALUATOR';
   const goalsLocked = evaluation ? isGoalsPlanningComplete(evaluation) : false;
   const canEditPlanning = editable && !goalsLocked;
+  const previous = evaluation
+    ? previousQuarter(evaluation.year, evaluation.quarter)
+    : null;
 
   const markDirty = useCallback(() => {
     if (!canEditPlanning) return;
@@ -121,6 +158,47 @@ export function GoalsPlanningPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const employeeId = evaluation?.employeeId;
+  const previousYear = previous?.year;
+  const previousQuarterNumber = previous?.quarter;
+
+  useEffect(() => {
+    if (
+      !canEditPlanning ||
+      employeeId == null ||
+      previousYear == null ||
+      previousQuarterNumber == null
+    ) {
+      return;
+    }
+
+    let active = true;
+    const request = fetchPreviousPlan(
+      employeeId,
+      previousYear,
+      previousQuarterNumber,
+    );
+    previousPlanRequest.current = request;
+    setPreviousPlan({ state: 'loading' });
+    request.then(
+      (result) => {
+        if (!active) return;
+        setPreviousPlan({
+          state: 'ready',
+          detail: result.detail,
+          hasPlan: result.hasPlan,
+        });
+        setPreviousSummary(result.summary);
+      },
+      () => {
+        if (active) setPreviousPlan({ state: 'failed' });
+      },
+    );
+    return () => {
+      active = false;
+    };
+  }, [canEditPlanning, employeeId, previousYear, previousQuarterNumber]);
 
   const handleGoalsChange = useCallback(
     (items: GoalDraft[]) => {
@@ -261,7 +339,7 @@ export function GoalsPlanningPage() {
   }
 
   async function copyFromPreviousQuarter() {
-    if (!evaluation || !canEditPlanning) return;
+    if (!evaluation || !previous || !canEditPlanning) return;
 
     const hasContent = [...goals, ...conditions, ...criteria].some((item) =>
       item.description.trim(),
@@ -273,17 +351,15 @@ export function GoalsPlanningPage() {
       return;
     }
 
-    const { year, quarter } = previousQuarter(
-      evaluation.year,
-      evaluation.quarter,
-    );
+    const { year, quarter } = previous;
     setCopying(true);
     try {
-      const list = await api.get<PagedResult<EvaluationSummary>>(
-        `${roleListPath('evaluations', 'evaluator')}?pageSize=5&year=${year}&quarter=${quarter}&employeeId=${evaluation.employeeId}`,
-      );
-      const previous = list.items[0];
-      if (!previous) {
+      // Ako učitavanje nije uspelo, preuzimanje pokušava ponovo.
+      const result = await (previousPlan?.state !== 'failed' &&
+      previousPlanRequest.current
+        ? previousPlanRequest.current
+        : fetchPreviousPlan(evaluation.employeeId, year, quarter));
+      if (!result.summary) {
         toast.warning(
           formatMessage(
             { id: 'errors.noSavedEvaluationForQuarter' },
@@ -292,14 +368,7 @@ export function GoalsPlanningPage() {
         );
         return;
       }
-
-      const detail = await api.get<EvaluationDetail>(
-        `/api/evaluations/${previous.id}`,
-      );
-      const hasGoals = detail.goals.some((g) => g.description.trim());
-      const hasConditions = detail.conditions.some((c) => c.description.trim());
-      const hasCriteria = detail.criteria.some((c) => c.description.trim());
-      if (!hasGoals && !hasConditions && !hasCriteria) {
+      if (!result.detail || !result.hasPlan) {
         toast.warning(
           formatMessage(
             { id: 'errors.noPlanningDataForQuarter' },
@@ -309,9 +378,9 @@ export function GoalsPlanningPage() {
         return;
       }
 
-      setGoals(toGoalDrafts(detail.goals));
-      setConditions(toTextDrafts(detail.conditions));
-      setCriteria(toTextDrafts(detail.criteria));
+      setGoals(toGoalDrafts(result.detail.goals));
+      setConditions(toTextDrafts(result.detail.conditions));
+      setCriteria(toTextDrafts(result.detail.criteria));
       markDirty();
       toast.info(
         formatMessage({ id: 'alerts.copiedFromQuarter' }, { quarter, year }),
@@ -351,96 +420,138 @@ export function GoalsPlanningPage() {
     );
   }
 
-  const copyButton = canEditPlanning ? (
-    <CopyFromPreviousQuarterButton
-      copying={copying}
-      saving={saving}
-      lookupsLoading={lookupsLoading}
-      onClick={copyFromPreviousQuarter}
-    />
-  ) : undefined;
+  const title = goalsLocked
+    ? `${formatMessage({ id: 'evaluation.goalsTitle' })} — ${evaluation.employeeFullName}`
+    : `${formatMessage({ id: 'evaluation.setGoals' })} — ${evaluation.employeeFullName}`;
+
+  if (goalsLocked) {
+    return (
+      <AppLayout title={title}>
+        <GoalsPlanningEmployeeCard
+          evaluation={evaluation}
+          employee={employee}
+          employeeAnalyticsPath={`/evaluator/employees/${evaluation.employeeId}`}
+          showStatusHistory
+        />
+        <div className="alert alert-info">
+          {formatMessage({ id: 'evaluation.goalsLockedInfo' })}
+        </div>
+        <GoalsReadOnlyOverview evaluation={evaluation} />
+        {editable && (
+          <div className="card card--actions">
+            <Link
+              to={`/evaluator/evaluations/${evaluation.id}`}
+              className="btn btn-primary"
+            >
+              {formatMessage({ id: 'evaluation.continueToEvaluation' })}
+            </Link>
+          </div>
+        )}
+      </AppLayout>
+    );
+  }
+
+  // Preuzimanje se nudi dok se plan učitava ili kad postoji; ako prethodni
+  // kvartal nema plan, dugmeta nema.
+  const canCopyPrevious =
+    previous != null &&
+    previousPlan != null &&
+    !(previousPlan.state === 'ready' && !previousPlan.hasPlan);
+
+  const headerBadges = (
+    <>
+      {previous && previousSummary?.descriptiveRatingName && (
+        <span className="goals-employee-card__previous">
+          {formatMessage(
+            { id: 'evaluation.planning.previousRating' },
+            { ...previous, rating: previousSummary.descriptiveRatingName },
+          )}
+        </span>
+      )}
+      {previous && canCopyPrevious && (
+        <CopyPreviousPlanButton
+          quarter={previous.quarter}
+          year={previous.year}
+          detail={
+            previousPlan?.state === 'ready' && previousPlan.hasPlan
+              ? previousPlan.detail
+              : null
+          }
+          copying={copying}
+          disabled={saving || lookupsLoading}
+          onCopy={copyFromPreviousQuarter}
+        />
+      )}
+    </>
+  );
 
   return (
-    <AppLayout
-      title={
-        goalsLocked
-          ? `${formatMessage({ id: 'evaluation.goalsTitle' })} — ${evaluation.employeeFullName}`
-          : `${formatMessage({ id: 'evaluation.setGoals' })} — ${evaluation.employeeFullName}`
-      }
-    >
+    <AppLayout title={title}>
       <GoalsPlanningEmployeeCard
         evaluation={evaluation}
         employee={employee}
         employeeAnalyticsPath={`/evaluator/employees/${evaluation.employeeId}`}
-        showStatusHistory
+        compact
+        badges={headerBadges}
       />
-      <UnsavedChangesIndicator visible={canEditPlanning && isDirty} />
 
-      {goalsLocked ? (
-        <>
-          <div className="alert alert-info">
-            {formatMessage({ id: 'evaluation.goalsLockedInfo' })}
-          </div>
-          <GoalsReadOnlyOverview evaluation={evaluation} />
-          {editable && (
-            <div className="card card--actions">
-              <Link
-                to={`/evaluator/evaluations/${evaluation.id}`}
-                className="btn btn-primary"
-              >
-                {formatMessage({ id: 'evaluation.continueToEvaluation' })}
-              </Link>
-            </div>
-          )}
-        </>
-      ) : (
-        <div className="form-page">
+      <div className="goals-planning">
+        <div className="goals-planning__main">
           <FormSection
             title={formatMessage({ id: 'evaluation.goalsTitle' })}
-            actions={copyButton}
-            meta={<GoalWeightsTotal goals={goals} />}
+            titleHint={formatMessage(
+              { id: 'evaluation.planning.goalsHint' },
+              { min: MIN_GOAL_WEIGHT },
+            )}
           >
             <GoalListEditor
               goals={goals}
               setGoals={handleGoalsChange}
               placeholder={formatMessage({
-                id: 'evaluation.goalDescriptionPlaceholder',
+                id: 'evaluation.planning.goalPlaceholder',
               })}
               addLabel={formatMessage({ id: 'evaluation.addGoal' })}
             />
           </FormSection>
 
-          <div className="form-section-grid">
-            <FormSection
-              title={formatMessage({ id: 'evaluation.conditionsTitle' })}
-            >
-              <TextListEditor
-                items={conditions}
-                setItems={handleConditionsChange}
-                placeholder={formatMessage({
-                  id: 'evaluation.conditionPlaceholder',
-                })}
-                addLabel={formatMessage({ id: 'evaluation.addCondition' })}
-              />
-            </FormSection>
+          <FormSection
+            title={formatMessage({ id: 'evaluation.conditionsTitle' })}
+            titleHint={formatMessage({
+              id: 'evaluation.planning.conditionsHint',
+            })}
+          >
+            <TextListEditor
+              items={conditions}
+              setItems={handleConditionsChange}
+              placeholder={formatMessage({
+                id: 'evaluation.planning.conditionPlaceholder',
+              })}
+              addLabel={formatMessage({ id: 'evaluation.addCondition' })}
+            />
+          </FormSection>
 
-            <FormSection
-              title={formatMessage({ id: 'evaluation.criteriaTitle' })}
-            >
-              <TextListEditor
-                items={criteria}
-                setItems={handleCriteriaChange}
-                placeholder={formatMessage({
-                  id: 'evaluation.criterionPlaceholder',
-                })}
-                addLabel={formatMessage({ id: 'evaluation.addCriterion' })}
-              />
-            </FormSection>
-          </div>
+          <FormSection
+            title={formatMessage({ id: 'evaluation.criteriaTitle' })}
+            titleHint={formatMessage({
+              id: 'evaluation.planning.criteriaHint',
+            })}
+          >
+            <TextListEditor
+              items={criteria}
+              setItems={handleCriteriaChange}
+              placeholder={formatMessage({
+                id: 'evaluation.planning.criterionPlaceholder',
+              })}
+              addLabel={formatMessage({ id: 'evaluation.addCriterion' })}
+            />
+          </FormSection>
+        </div>
 
-          <GoalsConversationForm
+        <aside className="goals-planning__aside">
+          <GoalsPlanningSidePanel
             conversationAt={conversationAt}
             evaluatorComment={evaluatorComment}
+            unsaved={canEditPlanning && isDirty}
             saving={saving}
             copying={copying}
             lookupsLoading={lookupsLoading}
@@ -452,8 +563,8 @@ export function GoalsPlanningPage() {
             onEvaluatorCommentChange={handleEvaluatorCommentChange}
             onSave={handleSave}
           />
-        </div>
-      )}
+        </aside>
+      </div>
     </AppLayout>
   );
 }
