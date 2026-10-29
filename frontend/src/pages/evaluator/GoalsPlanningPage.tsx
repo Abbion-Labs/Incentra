@@ -472,6 +472,11 @@ export function GoalsPlanningPage() {
         <CopyPreviousPlanButton
           quarter={previous.quarter}
           year={previous.year}
+          detail={
+            previousPlan?.state === 'ready' && previousPlan.hasPlan
+              ? previousPlan.detail
+              : null
+          }
           copying={copying}
           disabled={saving || lookupsLoading}
           onCopy={copyFromPreviousQuarter}

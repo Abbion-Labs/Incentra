@@ -256,6 +256,31 @@ describe('GoalsPlanningPage', () => {
     expect(confirm).not.toHaveBeenCalled();
   });
 
+  it('shows the previous quarter plan when hovering over the copy button', async () => {
+    renderPage((path) => {
+      if (path === previousQuarterPath) return { items: [previousEvaluation] };
+      if (path === '/api/evaluations/4') return previousEvaluation;
+      return undefined;
+    });
+
+    await screen.findByText('evaluation.planning.previousRating');
+    const copy = screen.getByRole('button', {
+      name: 'evaluation.planning.copyPreviousPlanLink',
+    });
+    expect(screen.queryByRole('tooltip')).toBeNull();
+
+    fireEvent.mouseEnter(copy);
+
+    const preview = screen.getByRole('tooltip');
+    expect(preview.textContent).toContain('Prošli cilj');
+    expect(preview.textContent).toContain('100%');
+    expect(preview.textContent).toContain('Prošli uslov');
+    expect(preview.textContent).toContain('Prošli kriterijum');
+
+    fireEvent.mouseLeave(copy);
+    expect(screen.queryByRole('tooltip')).toBeNull();
+  });
+
   it('offers nothing to copy when the previous quarter has no plan', async () => {
     renderPage((path) => {
       if (path === '/api/evaluations/5') {

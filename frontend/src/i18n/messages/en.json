@@ -309,7 +309,8 @@
       "lockNote": "Once set, the goals, conditions and criteria can no longer be changed.",
       "previousRating": "Q{quarter}/{year}: {rating}",
       "weightsTotalLabel": "Total",
-      "copyPreviousPlanLink": "Use the plan from Q{quarter}/{year}"
+      "copyPreviousPlanLink": "Use the plan from Q{quarter}/{year}",
+      "previousPlanTitle": "Plan from Q{quarter}/{year}"
     }
   },
   "admin": {

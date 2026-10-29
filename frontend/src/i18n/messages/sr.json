@@ -309,7 +309,8 @@
       "lockNote": "Posle postavljanja ciljevi, uslovi i kriterijumi se više ne mogu menjati.",
       "previousRating": "Q{quarter}/{year}: {rating}",
       "weightsTotalLabel": "Ukupno",
-      "copyPreviousPlanLink": "Preuzmi plan iz Q{quarter}/{year}"
+      "copyPreviousPlanLink": "Preuzmi plan iz Q{quarter}/{year}",
+      "previousPlanTitle": "Plan iz Q{quarter}/{year}"
     }
   },
   "admin": {
