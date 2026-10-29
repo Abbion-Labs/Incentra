@@ -1,5 +1,19 @@
-import { useEffect, useState, type CSSProperties } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  createContext,
+  Suspense,
+  useContext,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  type CSSProperties,
+} from 'react';
+import {
+  Link,
+  Navigate,
+  Outlet,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import { useAuth } from '../auth/AuthContext';
 import { useIntl } from '../i18n';
 import { BrandMark } from './BrandMark';
@@ -14,6 +28,7 @@ import {
   type NavGroup,
 } from '../utils/homeNavigation';
 import { SidebarNavIcon, type SidebarNavIconName } from './SidebarNavIcon';
+import { CardSkeleton } from './common/LoadingSkeleton';
 import { TopbarUserAvatar } from './common/TopbarUserAvatar';
 
 // Na desktopu je meni uska traka sa ikonicama; nazivi su u tooltip-u.
@@ -142,7 +157,64 @@ const navItems: NavItem[] = [
   },
 ];
 
+// Kroz njega stranica javlja naslov okviru koji ostaje montiran između stranica.
+const PageTitleContext = createContext<((title: string) => void) | null>(null);
+
+/**
+ * Okvir aplikacije (meni i zaglavlje) kao zajednička ruta: ostaje montiran dok se stranice smenjuju,
+ * pa se pri navigaciji iznova crta samo sadržaj. Naslov mu javljaju stranice preko AppLayout-a.
+ */
+export function AppShell() {
+  const { user } = useAuth();
+  const { formatMessage } = useIntl();
+  const [title, setTitle] = useState('');
+  const brand = formatMessage({ id: 'navigation.brand' });
+
+  useEffect(() => {
+    document.title = title ? `${title} · ${brand}` : brand;
+  }, [title, brand]);
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // Kod stranice stiže tek kad zatreba; dotle okvir ostaje, a umesto sadržaja stoji skelet.
+  return (
+    <PageTitleContext.Provider value={setTitle}>
+      <AppFrame title={title}>
+        <Suspense fallback={<CardSkeleton lines={4} />}>
+          <Outlet />
+        </Suspense>
+      </AppFrame>
+    </PageTitleContext.Provider>
+  );
+}
+
+/**
+ * Unutar AppShell-a stranica samo javlja svoj naslov; van njega (npr. u testovima) crta ceo okvir.
+ */
 export function AppLayout({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  const setTitle = useContext(PageTitleContext);
+
+  // Pre iscrtavanja, da se ne vidi naslov prethodne stranice.
+  useLayoutEffect(() => {
+    setTitle?.(title);
+  }, [setTitle, title]);
+
+  if (setTitle) {
+    return <>{children}</>;
+  }
+
+  return <AppFrame title={title}>{children}</AppFrame>;
+}
+
+function AppFrame({
   title,
   children,
 }: {

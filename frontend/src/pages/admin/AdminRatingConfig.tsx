@@ -3,7 +3,7 @@ import { api } from '../../api/client';
 import type { DescriptiveRating } from '../../api/types';
 import { useIntl } from '../../i18n';
 import { formatDescriptiveRatingLabel } from '../../utils/descriptiveRating';
-import { useToast } from '../../hooks';
+import { invalidateLookups, useToast } from '../../hooks';
 import { isEditConflict } from '../../utils/editConflict';
 import { TableIconButton } from '../../components/common/TableIconButton';
 import { TEXT_LIMITS } from '../../utils/textLimits';
@@ -161,6 +161,8 @@ export function AdminRatingConfig() {
         toast.success(formatMessage({ id: 'alerts.descriptiveRatingAdded' }));
         closeForm();
       }
+      // Ocenjivački ekrani drže opisne ocene u kešu; sledeći put ih učitavaju ponovo.
+      invalidateLookups();
       await load();
     } catch (err) {
       if (editingId && isEditConflict(err)) {

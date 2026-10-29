@@ -13,6 +13,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, api } from '../../api/client';
 import type { EvaluationDetail } from '../../api/types';
 import { ToastProvider } from '../../components/common/Toast';
+import { invalidateLookups } from '../../hooks';
 import { stubMatchMedia } from '../../test/browserStubs';
 import { mockApiGetDeferred } from '../../test/deferredApi';
 import { EvaluationEditorPage } from './EvaluationEditorPage';
@@ -90,6 +91,7 @@ function renderEditor(detail: EvaluationDetail = evaluation) {
 describe('EvaluationEditorPage', () => {
   beforeEach(() => {
     stubMatchMedia();
+    invalidateLookups();
     auth.activeRole = 'EVALUATOR';
   });
 

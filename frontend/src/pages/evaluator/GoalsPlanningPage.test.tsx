@@ -12,6 +12,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type { Employee, EvaluationDetail } from '../../api/types';
 import { api } from '../../api/client';
 import { ToastProvider } from '../../components/common/Toast';
+import { invalidateLookups } from '../../hooks';
 import { stubMatchMedia } from '../../test/browserStubs';
 import { mockApiGetDeferred } from '../../test/deferredApi';
 import { GoalsPlanningPage } from './GoalsPlanningPage';
@@ -100,6 +101,7 @@ function renderPage(responses: (path: string) => unknown) {
 describe('GoalsPlanningPage', () => {
   beforeEach(() => {
     stubMatchMedia();
+    invalidateLookups();
   });
 
   afterEach(() => {
