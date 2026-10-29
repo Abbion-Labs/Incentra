@@ -55,7 +55,13 @@ dotnet ef database update \
   --startup-project src/VariableCompensation.Host
 ```
 
-Migracije se automatski primenjuju pri pokretanju aplikacije (`MigrateAndSeedAsync`).
+Migracije i seed se pokreću kroz `IDbInitializator`. Podrazumevana `DbInit:Policy` je `OnStart`, pa lokalni razvoj inicijalizaciju izvršava pri svakom pokretanju. `DbInit:Seed` određuje da li se nakon migracija izvršava seed.
+
+Na Vercelu `deploy/vercel/backend-entrypoint.sh` postavlja `DbInit__Policy=OnDeploy`, `Deployment__IdentityProvider=Vercel` i `Deployment__IdentityStore=Postgres` (environment varijable istog imena u podešavanjima projekta imaju prednost). Tako se migracije i seed izvršavaju jednom po deployment-u, a ne na svakom hladnom startu:
+
+- Vercel provider koristi `VERCEL_DEPLOYMENT_ID` (potrebno je da su sistemske environment varijable uključene). Ako identitet nije dostupan, baza se inicijalizuje na tom startu, kao kod `OnStart`.
+- PostgreSQL store beleži inicijalizovane deployment-e u tabeli `deployment_initializations`. Prva instanca uzima advisory lock i drži ga dok migracije i seed ne završe; instance koje startuju u isto vreme čekaju na lock i zatim preskaču inicijalizaciju. Deployment se upisuje tek kada inicijalizacija uspe, pa je posle greške sledeća instanca ponavlja.
+- Svaki sledeći start istog deployment-a radi samo jedan upit nad tom tabelom. Log poruka `Database initialized in … ms` / `Database initialization skipped …` pokazuje šta se desilo i koliko je trajalo.
 
 ## pgAdmin
 
@@ -163,7 +169,7 @@ Izuzeci su akcije nad jednim poljem koje ne mogu da pregaze tuđe podatke: prome
 
 ## HR modul (Faza 4)
 
-Lookup podaci se seed-uju pri pokretanju (org. jedinice, radna mesta, nivoi obrazovanja).
+Lookup podaci se seed-uju pri inicijalizaciji baze (org. jedinice, radna mesta, nivoi obrazovanja).
 
 Svi GET endpointi zahtevaju JWT. POST/PUT zahtevaju `ADMIN` ulogu.
 
@@ -381,7 +387,7 @@ Demo seed pravi 6 organizacionih jedinica sa 120 zaposlenih: u svakoj rukovodioc
 | `controller@local.dev`, `controller2@local.dev` | `Control123!` | Zaposleni i Kontrolor: menadžeri |
 | `zaposleni@local.dev` … `zaposleni6@local.dev` | `Zaposleni123!` | Zaposleni: po jedan zaposleni u svakoj jedinici |
 
-Pri svakom pokretanju seed proverava demo naloge i vraća im uloge i vezu sa zaposlenim ako su promenjene.
+Pri svakoj inicijalizaciji baze seed proverava demo naloge i vraća im uloge i vezu sa zaposlenim ako su promenjene.
 
 ## Skladištenje avatara
 
@@ -429,6 +435,10 @@ Email__Username
 Email__Password
 Email__FromAddress
 Email__FrontendBaseUrl
+DbInit__Policy
+DbInit__Seed
+Deployment__IdentityProvider
+Deployment__IdentityStore
 ```
 
 ### SMTP konfiguracija
