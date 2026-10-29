@@ -1286,6 +1286,12 @@ a.btn-secondary:hover {
   letter-spacing: -0.02em;
 }
 
+.form-section__title-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
 .form-section__hint {
   margin: 0.35rem 0 0;
   color: var(--muted);

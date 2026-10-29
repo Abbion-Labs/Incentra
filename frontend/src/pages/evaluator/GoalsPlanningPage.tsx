@@ -494,7 +494,7 @@ export function GoalsPlanningPage() {
         <div className="goals-planning__main">
           <FormSection
             title={formatMessage({ id: 'evaluation.goalsTitle' })}
-            hint={formatMessage(
+            titleHint={formatMessage(
               { id: 'evaluation.planning.goalsHint' },
               { min: MIN_GOAL_WEIGHT },
             )}
@@ -511,7 +511,9 @@ export function GoalsPlanningPage() {
 
           <FormSection
             title={formatMessage({ id: 'evaluation.conditionsTitle' })}
-            hint={formatMessage({ id: 'evaluation.planning.conditionsHint' })}
+            titleHint={formatMessage({
+              id: 'evaluation.planning.conditionsHint',
+            })}
           >
             <TextListEditor
               items={conditions}
@@ -525,7 +527,9 @@ export function GoalsPlanningPage() {
 
           <FormSection
             title={formatMessage({ id: 'evaluation.criteriaTitle' })}
-            hint={formatMessage({ id: 'evaluation.planning.criteriaHint' })}
+            titleHint={formatMessage({
+              id: 'evaluation.planning.criteriaHint',
+            })}
           >
             <TextListEditor
               items={criteria}

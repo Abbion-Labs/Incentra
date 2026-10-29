@@ -299,7 +299,7 @@
     "statusHistoryTransition": "{from} → {to}",
     "statusHistoryInitial": "Created — {status}",
     "planning": {
-      "goalsHint": "Measurable goals for this quarter. The weight is how much a goal carries in the average: 100% together, and each goal at least {min}%.",
+      "goalsHint": "What the employee should achieve this quarter. Goal weights add up to 100%, each at least {min}%.",
       "conditionsHint": "What the employee needs to be given to be able to reach the goals.",
       "criteriaHint": "How it will be judged at the end of the quarter whether the goals were reached.",
       "goalPlaceholder": "Goal description...",

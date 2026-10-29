@@ -299,7 +299,7 @@
     "statusHistoryTransition": "{from} → {to}",
     "statusHistoryInitial": "Kreirano — {status}",
     "planning": {
-      "goalsHint": "Merljivi ciljevi za ovaj kvartal. Težina pokazuje koliko cilj nosi u proseku: zajedno 100%, a svaki cilj najmanje {min}%.",
+      "goalsHint": "Šta zaposleni treba da ostvari u ovom kvartalu. Težine ciljeva zajedno daju 100%, a svaka je najmanje {min}%.",
       "conditionsHint": "Šta zaposlenom mora biti obezbeđeno da bi mogao da ostvari ciljeve.",
       "criteriaHint": "Po čemu će se na kraju kvartala proceniti da li su ciljevi ostvareni.",
       "goalPlaceholder": "Opis cilja...",

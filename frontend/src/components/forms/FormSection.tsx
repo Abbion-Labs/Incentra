@@ -1,8 +1,11 @@
 import type { ReactNode } from 'react';
+import { FieldHint } from '../common/FieldHint';
 
 interface FormSectionProps {
   title: string;
   hint?: string;
+  /** Objašnjenje iza ikonice „i” uz naslov, umesto stalno vidljivog opisa. */
+  titleHint?: string;
   actions?: ReactNode;
   /** Sažetak uz naslov (npr. napredak i prosek sekcije). */
   meta?: ReactNode;
@@ -14,6 +17,7 @@ interface FormSectionProps {
 export function FormSection({
   title,
   hint,
+  titleHint,
   actions,
   meta,
   children,
@@ -26,7 +30,14 @@ export function FormSection({
     >
       <div className="form-section__header">
         <div className="form-section__heading">
-          <h2 className="form-section__title">{title}</h2>
+          {titleHint ? (
+            <div className="form-section__title-row">
+              <h2 className="form-section__title">{title}</h2>
+              <FieldHint hint={titleHint} />
+            </div>
+          ) : (
+            <h2 className="form-section__title">{title}</h2>
+          )}
           {hint && <p className="form-section__hint">{hint}</p>}
         </div>
         {(meta || actions) && (
