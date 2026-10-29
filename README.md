@@ -57,7 +57,11 @@ dotnet ef database update \
 
 Migracije i seed se pokreću kroz `IDbInitializator`. Podrazumevana `DbInit:Policy` je `OnStart`, pa lokalni razvoj inicijalizaciju izvršava pri svakom pokretanju. `DbInit:Seed` određuje da li se nakon migracija izvršava seed.
 
-Na Vercelu su `DbInit__Policy=OnDeploy`, `Deployment__IdentityProvider=Vercel` i `Deployment__IdentityStore=Postgres`. `OnDeployDbInitPolicy` zavisi samo od `IDeploymentIdentityProvider` i `IDeploymentIdentityStore`, dok konfiguracija bira njihove konkretne implementacije. Vercel provider koristi `VERCEL_DEPLOYMENT_ID`, a PostgreSQL store obezbeđuje da samo jedna instanca za taj identitet dobije dozvolu za inicijalizaciju.
+Na Vercelu `deploy/vercel/backend-entrypoint.sh` postavlja `DbInit__Policy=OnDeploy`, `Deployment__IdentityProvider=Vercel` i `Deployment__IdentityStore=Postgres` (environment varijable istog imena u podešavanjima projekta imaju prednost). Tako se migracije i seed izvršavaju jednom po deployment-u, a ne na svakom hladnom startu:
+
+- Vercel provider koristi `VERCEL_DEPLOYMENT_ID` (potrebno je da su sistemske environment varijable uključene). Ako identitet nije dostupan, baza se inicijalizuje na tom startu, kao kod `OnStart`.
+- PostgreSQL store beleži inicijalizovane deployment-e u tabeli `deployment_initializations`. Prva instanca uzima advisory lock i drži ga dok migracije i seed ne završe; instance koje startuju u isto vreme čekaju na lock i zatim preskaču inicijalizaciju. Deployment se upisuje tek kada inicijalizacija uspe, pa je posle greške sledeća instanca ponavlja.
+- Svaki sledeći start istog deployment-a radi samo jedan upit nad tom tabelom. Log poruka `Database initialized in … ms` / `Database initialization skipped …` pokazuje šta se desilo i koliko je trajalo.
 
 ## pgAdmin
 

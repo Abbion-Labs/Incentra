@@ -12,6 +12,8 @@ public sealed class IntegrationTestFixture : IAsyncLifetime, IDisposable
 
     public CustomWebApplicationFactory Factory { get; private set; } = null!;
 
+    public string ConnectionString => this.postgres.ConnectionString;
+
     public async Task InitializeAsync()
     {
         await this.postgres.InitializeAsync();

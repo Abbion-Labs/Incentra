@@ -1,4 +1,6 @@
+using System.Diagnostics;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using VariableCompensation.Infrastructure.Persistence;
 
@@ -8,15 +10,29 @@ public sealed class DbInitializator(
     IDbInitPolicy policy,
     AppDbContext context,
     IDatabaseSeeder seeder,
-    IOptions<DbInitOptions> options) : IDbInitializator
+    IOptions<DbInitOptions> options,
+    ILogger<DbInitializator> logger) : IDbInitializator
 {
     public async Task InitializeAsync()
     {
-        if (!await policy.ShouldInitAsync())
-        {
-            return;
-        }
+        var stopwatch = Stopwatch.StartNew();
 
+        if (await policy.RunAsync(MigrateAndSeedAsync))
+        {
+            logger.LogInformation(
+                "Database initialized in {ElapsedMilliseconds} ms",
+                stopwatch.ElapsedMilliseconds);
+        }
+        else
+        {
+            logger.LogInformation(
+                "Database initialization skipped, it already ran for this deployment ({ElapsedMilliseconds} ms)",
+                stopwatch.ElapsedMilliseconds);
+        }
+    }
+
+    private async Task MigrateAndSeedAsync()
+    {
         await context.Database.MigrateAsync();
 
         if (options.Value.Seed)

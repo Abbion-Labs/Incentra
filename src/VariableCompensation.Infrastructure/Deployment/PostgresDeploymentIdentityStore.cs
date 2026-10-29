@@ -7,10 +7,19 @@ public sealed class PostgresDeploymentIdentityStore(string connectionString)
 {
     private const long AdvisoryLockId = 6224895494147451220L;
 
-    public async Task<bool> TryAddAsync(string deploymentIdentity)
+    public async Task<bool> RunOnceAsync(string deploymentIdentity, Func<Task> action)
     {
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();
+
+        // Every start after the first one for a deployment ends here, without waiting for the lock.
+        if (await IsRegisteredAsync(connection, transaction: null, deploymentIdentity))
+        {
+            return false;
+        }
+
+        // The lock is held until the action has finished, so instances that start at the same
+        // time wait for it instead of serving requests against a schema that is not migrated yet.
         await using var transaction = await connection.BeginTransactionAsync();
 
         await using (var lockCommand = new NpgsqlCommand(
@@ -35,19 +44,48 @@ public sealed class PostgresDeploymentIdentityStore(string connectionString)
             await createCommand.ExecuteNonQueryAsync();
         }
 
-        await using var insertCommand = new NpgsqlCommand(
-            """
-            INSERT INTO deployment_initializations (deployment_identity)
-            VALUES (@deploymentIdentity)
-            ON CONFLICT (deployment_identity) DO NOTHING
-            RETURNING deployment_identity;
-            """,
+        if (await IsRegisteredAsync(connection, transaction, deploymentIdentity))
+        {
+            await transaction.CommitAsync();
+            return false;
+        }
+
+        // The deployment is registered only after the action succeeds; if it throws, the
+        // transaction rolls back and the next instance runs it again.
+        await action();
+
+        await using (var insertCommand = new NpgsqlCommand(
+            "INSERT INTO deployment_initializations (deployment_identity) VALUES (@deploymentIdentity);",
+            connection,
+            transaction))
+        {
+            insertCommand.Parameters.AddWithValue("deploymentIdentity", deploymentIdentity);
+            await insertCommand.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+        return true;
+    }
+
+    private static async Task<bool> IsRegisteredAsync(
+        NpgsqlConnection connection,
+        NpgsqlTransaction? transaction,
+        string deploymentIdentity)
+    {
+        await using var command = new NpgsqlCommand(
+            "SELECT EXISTS (SELECT 1 FROM deployment_initializations WHERE deployment_identity = @deploymentIdentity);",
             connection,
             transaction);
-        insertCommand.Parameters.AddWithValue("deploymentIdentity", deploymentIdentity);
+        command.Parameters.AddWithValue("deploymentIdentity", deploymentIdentity);
 
-        var added = await insertCommand.ExecuteScalarAsync() is not null;
-        await transaction.CommitAsync();
-        return added;
+        try
+        {
+            return await command.ExecuteScalarAsync() is true;
+        }
+        catch (PostgresException exception) when (
+            transaction is null && exception.SqlState == PostgresErrorCodes.UndefinedTable)
+        {
+            return false;
+        }
     }
 }
