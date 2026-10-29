@@ -169,7 +169,7 @@ Izuzeci su akcije nad jednim poljem koje ne mogu da pregaze tuđe podatke: prome
 
 ## HR modul (Faza 4)
 
-Lookup podaci se seed-uju pri inicijalizaciji baze (org. jedinice, radna mesta, nivoi obrazovanja).
+Radna mesta i nivoi obrazovanja se seed-uju pri inicijalizaciji baze; organizacione jedinice se unose kroz administraciju.
 
 Svi GET endpointi zahtevaju JWT. POST/PUT zahtevaju `ADMIN` ulogu.
 
@@ -376,7 +376,9 @@ Istorija promena statusa dostupna je na detalju ocene (ocenjivač, kontrolor, za
 
 ### Test nalozi
 
-Demo seed pravi 6 organizacionih jedinica sa 120 zaposlenih: u svakoj rukovodioca koji ocenjuje ostale, dva menadžera koji kontrolišu rukovodioce, i ocene za 2024, 2025 i 2026. Za Q3 2026 otprilike svaki četvrti zaposleni kod svakog ocenjivača ima već poslatu ocenu, pa svaki kontrolor ima šta da pregleda; ostali imaju nacrt za planiranje.
+Seed pravi samo referentne podatke (uloge, nivoe ocena, opisne ocene, merila, radna mesta i nivoe obrazovanja) i, dok baza nema nijednog korisnika, nalog `admin@local.dev` / `Admin123!`. Organizacione jedinice, zaposleni, plate i ostali nalozi unose se kroz aplikaciju.
+
+Demo organizacija (6 jedinica, 120 zaposlenih, ocene i plate) se više ne seed-uje. Baze koje su je ranije dobile, lokalne i ona na Vercelu, zadržavaju te podatke i sledeće naloge, a seed ih više ne menja:
 
 | Nalog | Lozinka | Uloge |
 |---|---|---|
@@ -386,8 +388,6 @@ Demo seed pravi 6 organizacionih jedinica sa 120 zaposlenih: u svakoj rukovodioc
 | `evaluator2@` … `evaluator6@local.dev` | `Eval123!` | Zaposleni i Ocenjivač: rukovodioci ostalih jedinica |
 | `controller@local.dev`, `controller2@local.dev` | `Control123!` | Zaposleni i Kontrolor: menadžeri |
 | `zaposleni@local.dev` … `zaposleni6@local.dev` | `Zaposleni123!` | Zaposleni: po jedan zaposleni u svakoj jedinici |
-
-Pri svakoj inicijalizaciji baze seed proverava demo naloge i vraća im uloge i vezu sa zaposlenim ako su promenjene.
 
 ## Skladištenje avatara
 
