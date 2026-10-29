@@ -32,9 +32,10 @@ import { GoalsPlanningEmployeeCard } from './components/GoalsPlanningEmployeeCar
 import { GoalsPlanningSidePanel } from './components/GoalsPlanningSidePanel';
 import { GoalsReadOnlyOverview } from './components/GoalsReadOnlyOverview';
 import {
-  PreviousPlanCard,
+  CopyPreviousPlanLink,
+  PreviousPlanBanner,
   type PreviousPlan,
-} from './components/PreviousPlanCard';
+} from './components/PreviousPlanPrompt';
 import { useIntl } from '../../i18n';
 
 interface PreviousPlanResult {
@@ -461,6 +462,19 @@ export function GoalsPlanningPage() {
       </span>
     ) : undefined;
 
+  // Prazna forma nudi prošli plan na vrhu ciljeva; kad već ima sadržaja,
+  // preuzimanje ostaje kao link uz naslov (uz potvrdu pre prepisivanja).
+  const formEmpty = ![...goals, ...conditions, ...criteria].some((item) =>
+    item.description.trim(),
+  );
+  const previousPlanReady =
+    previousPlan?.state === 'ready' && previousPlan.hasPlan
+      ? previousPlan.detail
+      : null;
+  const noPreviousPlan =
+    previousPlan?.state === 'ready' && !previousPlan.hasPlan;
+  const copyDisabled = saving || lookupsLoading;
+
   return (
     <AppLayout title={title}>
       <GoalsPlanningEmployeeCard
@@ -479,7 +493,32 @@ export function GoalsPlanningPage() {
               { id: 'evaluation.planning.goalsHint' },
               { min: MIN_GOAL_WEIGHT },
             )}
+            className="form-section--actions-top"
+            actions={
+              previous &&
+              previousPlan &&
+              !noPreviousPlan &&
+              !(formEmpty && previousPlanReady) ? (
+                <CopyPreviousPlanLink
+                  quarter={previous.quarter}
+                  year={previous.year}
+                  copying={copying}
+                  disabled={copyDisabled}
+                  onCopy={copyFromPreviousQuarter}
+                />
+              ) : undefined
+            }
           >
+            {previous && formEmpty && previousPlanReady && (
+              <PreviousPlanBanner
+                quarter={previous.quarter}
+                year={previous.year}
+                detail={previousPlanReady}
+                copying={copying}
+                disabled={copyDisabled}
+                onCopy={copyFromPreviousQuarter}
+              />
+            )}
             <GoalListEditor
               goals={goals}
               setGoals={handleGoalsChange}
@@ -535,16 +574,6 @@ export function GoalsPlanningPage() {
             onEvaluatorCommentChange={handleEvaluatorCommentChange}
             onSave={handleSave}
           />
-          {previous && previousPlan && (
-            <PreviousPlanCard
-              quarter={previous.quarter}
-              year={previous.year}
-              plan={previousPlan}
-              copying={copying}
-              disabled={saving || lookupsLoading}
-              onCopy={copyFromPreviousQuarter}
-            />
-          )}
         </aside>
       </div>
     </AppLayout>

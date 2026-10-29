@@ -6700,8 +6700,7 @@ input[type='search']::-webkit-search-cancel-button {
   }
 }
 
-.goals-planning__panel,
-.goals-previous-plan {
+.goals-planning__panel {
   display: flex;
   flex-direction: column;
   padding: 1.1rem 1.25rem;
@@ -6709,10 +6708,6 @@ input[type='search']::-webkit-search-cancel-button {
 
 .goals-planning__panel {
   gap: var(--space-md);
-}
-
-.goals-previous-plan {
-  gap: var(--space-sm);
 }
 
 .goals-planning__panel-header {
@@ -6770,36 +6765,74 @@ input[type='search']::-webkit-search-cancel-button {
   margin-top: 0.1rem;
 }
 
-.goals-previous-plan__empty,
-.goals-previous-plan__meta {
-  margin: 0;
+/* Akcija ostaje desno u ravni sa naslovom, a dugačak opis se prelama ispod. */
+.form-section--actions-top .form-section__header {
+  flex-wrap: nowrap;
+  align-items: flex-start;
+}
+
+.form-section--actions-top .form-section__heading {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+@container main (max-width: 640px) {
+  .form-section--actions-top .form-section__header {
+    flex-wrap: wrap;
+  }
+}
+
+/* Prošli plan: ponuda na vrhu praznih ciljeva i tihi link uz naslov. */
+.goals-previous-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) 0.75rem;
+  margin: 0 0 var(--space-md);
+  padding: 0.6rem 0.75rem;
+  border-radius: var(--radius-sm);
+  background: var(--primary-soft);
+  color: var(--primary);
   font-size: var(--text-sm);
-  color: var(--muted);
 }
 
-.goals-previous-plan__goals {
-  display: grid;
-  gap: 0.3rem;
-  margin: 0;
-  padding-left: 1.1rem;
+.goals-previous-banner svg {
+  flex-shrink: 0;
+}
+
+.goals-previous-banner__text {
+  flex: 1 1 14rem;
+  min-width: 0;
+  font-weight: 500;
+}
+
+.goals-copy-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.6rem;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--primary);
   font-size: var(--text-sm);
-  color: var(--text-secondary);
+  font-weight: 600;
+  cursor: pointer;
+  transition: background var(--transition);
 }
 
-.goals-previous-plan__goals li::marker {
+.goals-copy-link:hover:not(:disabled) {
+  background: var(--primary-soft);
+}
+
+.goals-copy-link:focus-visible {
+  outline: none;
+  box-shadow: var(--ring);
+}
+
+.goals-copy-link:disabled {
   color: var(--muted);
-  font-variant-numeric: tabular-nums;
-}
-
-.goals-previous-plan__weight {
-  margin-left: 0.35rem;
-  color: var(--muted);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-}
-
-.goals-previous-plan__copy {
-  align-self: flex-start;
+  cursor: not-allowed;
 }
 
 /* Kompaktno zaglavlje zaposlenog: sve u jednom redu. */

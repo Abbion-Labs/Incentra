@@ -1,5 +1,11 @@
 import type { ReactNode } from 'react';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { IntlProvider } from 'react-intl';
 import { RouterProvider, createMemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -134,7 +140,7 @@ describe('GoalsPlanningPage', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'evaluation.planning.copyPreviousPlan',
+        name: 'evaluation.planning.copyPreviousPlanLink',
       }),
     );
     await waitFor(() => expect(pending.has(previousQuarterPath)).toBe(true));
@@ -217,15 +223,20 @@ describe('GoalsPlanningPage', () => {
     expect(screen.queryByText('evaluation.planning.incompleteHint')).toBeNull();
   });
 
-  it('shows the previous quarter plan and copies it without loading it again', async () => {
+  it('offers the previous quarter plan on an empty form and fills it in without loading it again', async () => {
     renderPage((path) => {
+      if (path === '/api/evaluations/5') {
+        return { ...evaluation, goals: [], conditions: [], criteria: [] };
+      }
       if (path === previousQuarterPath) return { items: [previousEvaluation] };
       if (path === '/api/evaluations/4') return previousEvaluation;
       return undefined;
     });
-    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const confirm = vi.spyOn(window, 'confirm');
 
-    expect(await screen.findByText('Prošli cilj')).toBeTruthy();
+    expect(
+      await screen.findByText('evaluation.planning.previousPlanBanner'),
+    ).toBeTruthy();
     expect(screen.getByText('evaluation.planning.previousRating')).toBeTruthy();
     const get = vi.mocked(api.get);
     const requests = get.mock.calls.length;
@@ -239,21 +250,42 @@ describe('GoalsPlanningPage', () => {
     await waitFor(() =>
       expect(screen.getByDisplayValue('Prošli kriterijum')).toBeTruthy(),
     );
+    expect(screen.getByDisplayValue('Prošli cilj')).toBeTruthy();
     expect(screen.getByDisplayValue('Prošli uslov')).toBeTruthy();
     expect(get.mock.calls.length).toBe(requests);
+    expect(confirm).not.toHaveBeenCalled();
+    // Kad forma ima sadržaj, ponuda se svodi na link uz naslov ciljeva.
+    expect(
+      screen.queryByText('evaluation.planning.previousPlanBanner'),
+    ).toBeNull();
+    expect(
+      screen.getByRole('button', {
+        name: 'evaluation.planning.copyPreviousPlanLink',
+      }),
+    ).toBeTruthy();
   });
 
-  it('says so when the previous quarter has no plan to copy', async () => {
-    renderPage((path) =>
-      path === previousQuarterPath ? { items: [] } : undefined,
+  it('offers nothing to copy when the previous quarter has no plan', async () => {
+    renderPage((path) => {
+      if (path === '/api/evaluations/5') {
+        return { ...evaluation, goals: [], conditions: [], criteria: [] };
+      }
+      if (path === previousQuarterPath) return { items: [] };
+      return undefined;
+    });
+
+    await screen.findByRole('button', { name: 'evaluation.setGoals' });
+    await waitFor(() =>
+      expect(vi.mocked(api.get)).toHaveBeenCalledWith(previousQuarterPath),
     );
+    await act(async () => {});
 
     expect(
-      await screen.findByText('evaluation.planning.previousPlanNone'),
-    ).toBeTruthy();
+      screen.queryByText('evaluation.planning.previousPlanBanner'),
+    ).toBeNull();
     expect(
       screen.queryByRole('button', {
-        name: 'evaluation.planning.copyPreviousPlan',
+        name: 'evaluation.planning.copyPreviousPlanLink',
       }),
     ).toBeNull();
   });
