@@ -15,6 +15,9 @@ interface GoalsPlanningEmployeeCardProps {
   hidePeriod?: boolean;
   employeeAnalyticsPath?: string;
   showStatusHistory?: boolean;
+  /** Jedan red: ime, radno mesto i jedinica, period i dodatne oznake. */
+  compact?: boolean;
+  badges?: ReactNode;
 }
 
 export function GoalsPlanningEmployeeCard({
@@ -26,6 +29,8 @@ export function GoalsPlanningEmployeeCard({
   hidePeriod = false,
   employeeAnalyticsPath,
   showStatusHistory = false,
+  compact = false,
+  badges,
 }: GoalsPlanningEmployeeCardProps) {
   const { formatMessage } = useIntl();
   const analyticsHint = formatMessage({
@@ -49,6 +54,44 @@ export function GoalsPlanningEmployeeCard({
       </span>
     </>
   );
+
+  if (compact) {
+    const summary = (
+      <>
+        <EmployeeAvatar employee={avatarEmployee} size="md" />
+        <span className="goals-employee-card__summary">
+          <span className="goals-employee-card__name">
+            {evaluation.employeeFullName}
+          </span>
+          <span className="goals-employee-card__meta">
+            {[employee?.jobPositionName, evaluation.organizationUnitName]
+              .filter(Boolean)
+              .join(' · ')}
+          </span>
+        </span>
+      </>
+    );
+
+    return (
+      <div className="card goals-employee-card goals-employee-card--compact">
+        {employeeAnalyticsPath ? (
+          <Link
+            to={employeeAnalyticsPath}
+            className="goals-employee-card__identity goals-employee-card__identity--link"
+            title={analyticsHint}
+          >
+            {summary}
+          </Link>
+        ) : (
+          <div className="goals-employee-card__identity">{summary}</div>
+        )}
+        <div className="goals-employee-card__badges">
+          <PeriodPill quarter={evaluation.quarter} year={evaluation.year} />
+          {badges}
+        </div>
+      </div>
+    );
+  }
 
   const asideContent =
     ratingAside ??

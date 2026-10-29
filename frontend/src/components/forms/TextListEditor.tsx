@@ -1,5 +1,6 @@
 import type { TextItemDraft } from '../../utils/goalsPlanning';
 import { TEXT_LIMITS } from '../../utils/textLimits';
+import { AutoGrowTextarea } from './AutoGrowTextarea';
 import { AddItemButton, RemoveItemButton } from './ListItemButtons';
 
 const maxLength = TEXT_LIMITS.planItem;
@@ -26,9 +27,8 @@ export function TextListEditor({
           <div key={idx} className="form-list__item">
             <span className="form-list__index">{idx + 1}</span>
             <div className="form-list__field">
-              <textarea
+              <AutoGrowTextarea
                 className="form-list__input"
-                rows={2}
                 maxLength={maxLength}
                 value={item.description}
                 onChange={(e) => {

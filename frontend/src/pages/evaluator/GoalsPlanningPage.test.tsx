@@ -49,6 +49,48 @@ const employee = {
 const previousQuarterPath =
   '/api/evaluator/evaluations?pageSize=5&year=2026&quarter=2&employeeId=7';
 
+const previousEvaluation = {
+  ...evaluation,
+  id: 4,
+  quarter: 2,
+  status: 'Approved',
+  goalsPlanningComplete: true,
+  descriptiveRatingName: 'Ističe se',
+  goals: [{ id: 2, description: 'Prošli cilj', sortOrder: 0, weight: 100 }],
+  conditions: [{ id: 2, description: 'Prošli uslov', sortOrder: 0 }],
+  criteria: [{ id: 2, description: 'Prošli kriterijum', sortOrder: 0 }],
+} as unknown as EvaluationDetail;
+
+function renderPage(responses: (path: string) => unknown) {
+  const pending = mockApiGetDeferred((path) => {
+    const response = responses(path);
+    if (response !== undefined) return response;
+    if (path === '/api/evaluations/5') return evaluation;
+    if (path === '/api/employees/7') return employee;
+    if (path.startsWith('/api/lookups/')) return [];
+    if (path.endsWith('/status-history')) return [];
+    return undefined;
+  });
+  const router = createMemoryRouter(
+    [
+      {
+        path: '/evaluator/goals/evaluations/:id',
+        element: <GoalsPlanningPage />,
+      },
+      { path: '/evaluator/goals', element: <div /> },
+    ],
+    { initialEntries: ['/evaluator/goals/evaluations/5'] },
+  );
+  render(
+    <IntlProvider locale="sr" messages={{}} onError={() => undefined}>
+      <ToastProvider>
+        <RouterProvider router={router} />
+      </ToastProvider>
+    </IntlProvider>,
+  );
+  return pending;
+}
+
 describe('GoalsPlanningPage', () => {
   beforeEach(() => {
     stubMatchMedia();
@@ -92,7 +134,7 @@ describe('GoalsPlanningPage', () => {
 
     fireEvent.click(
       screen.getByRole('button', {
-        name: 'evaluation.copyFromPreviousQuarter',
+        name: 'evaluation.planning.copyPreviousPlan',
       }),
     );
     await waitFor(() => expect(pending.has(previousQuarterPath)).toBe(true));
@@ -151,5 +193,65 @@ describe('GoalsPlanningPage', () => {
     expect(body.goals).toEqual([
       expect.objectContaining({ description: 'Cilj', weight: 100 }),
     ]);
+  });
+
+  it('shows which part of the plan is still missing', async () => {
+    renderPage((path) =>
+      path === '/api/evaluations/5'
+        ? { ...evaluation, criteria: [] }
+        : undefined,
+    );
+
+    const criteria = await screen.findByText(
+      'evaluation.planning.checkCriteria',
+    );
+    const goals = screen.getByText('evaluation.planning.checkGoals');
+
+    expect(criteria.closest('li')?.className).toContain('is-missing');
+    expect(goals.closest('li')?.className).toContain('is-done');
+    expect(
+      screen.getByRole('button', { name: 'evaluation.setGoals' }),
+    ).toHaveProperty('disabled', true);
+  });
+
+  it('shows the previous quarter plan and copies it without loading it again', async () => {
+    renderPage((path) => {
+      if (path === previousQuarterPath) return { items: [previousEvaluation] };
+      if (path === '/api/evaluations/4') return previousEvaluation;
+      return undefined;
+    });
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    expect(await screen.findByText('Prošli cilj')).toBeTruthy();
+    expect(screen.getByText('evaluation.planning.previousRating')).toBeTruthy();
+    const get = vi.mocked(api.get);
+    const requests = get.mock.calls.length;
+
+    fireEvent.click(
+      screen.getByRole('button', {
+        name: 'evaluation.planning.copyPreviousPlan',
+      }),
+    );
+
+    await waitFor(() =>
+      expect(screen.getByDisplayValue('Prošli kriterijum')).toBeTruthy(),
+    );
+    expect(screen.getByDisplayValue('Prošli uslov')).toBeTruthy();
+    expect(get.mock.calls.length).toBe(requests);
+  });
+
+  it('says so when the previous quarter has no plan to copy', async () => {
+    renderPage((path) =>
+      path === previousQuarterPath ? { items: [] } : undefined,
+    );
+
+    expect(
+      await screen.findByText('evaluation.planning.previousPlanNone'),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole('button', {
+        name: 'evaluation.planning.copyPreviousPlan',
+      }),
+    ).toBeNull();
   });
 });

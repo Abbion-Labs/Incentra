@@ -1,4 +1,3 @@
-import { FieldHint } from '../common/FieldHint';
 import { useIntl } from '../../i18n';
 import {
   checkGoalWeights,
@@ -9,6 +8,7 @@ import {
   type GoalDraft,
 } from '../../utils/goalsPlanning';
 import { TEXT_LIMITS } from '../../utils/textLimits';
+import { AutoGrowTextarea } from './AutoGrowTextarea';
 import { AddItemButton, RemoveItemButton } from './ListItemButtons';
 
 const maxLength = TEXT_LIMITS.planItem;
@@ -34,10 +34,6 @@ export function GoalListEditor({
 }: GoalListEditorProps) {
   const { formatMessage } = useIntl();
   const customized = hasCustomWeights(goals);
-  const weightHint = formatMessage(
-    { id: 'evaluation.goalWeightHint' },
-    { min: MIN_GOAL_WEIGHT },
-  );
 
   const update = (index: number, patch: Partial<GoalDraft>) => {
     const next = [...goals];
@@ -50,14 +46,19 @@ export function GoalListEditor({
 
   return (
     <>
+      {goals.some((goal) => goal.description.trim()) && (
+        <div className="goal-weights-summary">
+          <GoalWeightsBar goals={goals} />
+          <GoalWeightsTotal goals={goals} />
+        </div>
+      )}
       <div className="form-list">
         {goals.map((goal, idx) => (
           <div key={idx} className="form-list__item form-list__item--weighted">
             <span className="form-list__index">{idx + 1}</span>
             <div className="form-list__field">
-              <textarea
+              <AutoGrowTextarea
                 className="form-list__input"
-                rows={2}
                 maxLength={maxLength}
                 value={goal.description}
                 onChange={(e) => update(idx, { description: e.target.value })}
@@ -69,14 +70,17 @@ export function GoalListEditor({
                 </span>
               )}
             </div>
-            <div className="form-list__weight">
-              <label>
-                <span className="sr-only">
-                  {formatMessage(
-                    { id: 'evaluation.goalWeightLabel' },
-                    { index: idx + 1 },
-                  )}
-                </span>
+            <label className="form-list__weight">
+              <span className="form-list__weight-caption" aria-hidden="true">
+                {formatMessage({ id: 'evaluation.goalWeight' })}
+              </span>
+              <span className="sr-only">
+                {formatMessage(
+                  { id: 'evaluation.goalWeightLabel' },
+                  { index: idx + 1 },
+                )}
+              </span>
+              <span className="form-list__weight-control">
                 <input
                   type="number"
                   inputMode="numeric"
@@ -92,9 +96,8 @@ export function GoalListEditor({
                   }
                 />
                 <span aria-hidden="true">%</span>
-              </label>
-              <FieldHint hint={weightHint} />
-            </div>
+              </span>
+            </label>
             {goals.length > 1 && (
               <RemoveItemButton
                 onClick={() => resize(goals.filter((_, i) => i !== idx))}
@@ -127,11 +130,38 @@ export function GoalListEditor({
   );
 }
 
-/** Zbir pondera uz naslov ciljeva: zelen kad je tačno 100%, crven kad nije. */
-export function GoalWeightsTotal({ goals }: { goals: GoalDraft[] }) {
+/**
+ * Raspodela težina na jednoj traci, segment po cilju sa opisom.
+ * Neraspoređeni deo ostaje prazan, a preko 100% traka postaje crvena.
+ */
+function GoalWeightsBar({ goals }: { goals: GoalDraft[] }) {
+  const { total } = checkGoalWeights(goals);
+  const scale = Math.max(total, TOTAL_GOAL_WEIGHT);
+  const over = total > TOTAL_GOAL_WEIGHT;
+
+  return (
+    <div
+      className={`goal-weights-bar${over ? ' is-over' : ''}`}
+      aria-hidden="true"
+    >
+      {goals.map((goal, idx) =>
+        goal.description.trim() && goal.weight ? (
+          <span
+            key={idx}
+            className="goal-weights-bar__segment"
+            style={{ width: `${(goal.weight / scale) * 100}%` }}
+            title={`${idx + 1}: ${goal.weight}%`}
+          />
+        ) : null,
+      )}
+    </div>
+  );
+}
+
+/** Zbir pondera uz traku: zelen kad je tačno 100%, crven kad nije. */
+function GoalWeightsTotal({ goals }: { goals: GoalDraft[] }) {
   const { formatMessage } = useIntl();
   const { total, valid } = checkGoalWeights(goals);
-  if (!goals.some((goal) => goal.description.trim())) return null;
 
   return (
     <span
