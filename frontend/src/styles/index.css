@@ -1412,8 +1412,9 @@ a.btn-secondary:hover {
   color: var(--muted);
 }
 
+/* Kolona za brisanje ima stalnu širinu, da se zbir ispod poravna sa težinama. */
 .form-list__item--weighted {
-  grid-template-columns: 1.6rem minmax(0, 1fr) auto auto;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto 2rem;
 }
 
 .form-list__weight {
@@ -1447,7 +1448,7 @@ a.btn-secondary:hover {
 /* Telefon: ponder ide ispod opisa, ikonica za brisanje ostaje desno. */
 @container main (max-width: 640px) {
   .form-list__item--weighted {
-    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+    grid-template-columns: 1.6rem minmax(0, 1fr) 2rem;
   }
 
   .form-list__item--weighted .form-list__weight {
@@ -1476,12 +1477,68 @@ a.btn-secondary:hover {
 }
 
 .goal-weights__footer {
+  display: grid;
+  grid-template-columns: 1.6rem minmax(0, 1fr) auto 2rem;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+}
+
+.goal-weights__actions {
+  grid-column: 2;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-sm);
-  margin-top: var(--space-sm);
+  min-width: 0;
+}
+
+.goal-weights__actions .list-add-button {
+  margin-left: -0.6rem;
+}
+
+.goal-weights__total-label {
+  margin-left: auto;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* Broj je iste širine i poravnanja kao polja za težinu iznad njega. */
+.goal-weights__total {
+  grid-column: 3;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.goal-weights__total-value {
+  width: 4rem;
+  padding: 0 calc(0.5rem + 1px);
+  text-align: right;
+}
+
+.goal-weights__total.is-complete {
+  color: var(--success);
+}
+
+.goal-weights__total.is-invalid {
+  color: var(--danger);
+}
+
+/* Telefon: težine su ispod opisa, pa zbir ide uz desnu ivicu. */
+@container main (max-width: 640px) {
+  .goal-weights__footer {
+    grid-template-columns: 1.6rem minmax(0, 1fr) auto;
+  }
+
+  .goal-weights__total-value {
+    width: auto;
+    padding: 0;
+  }
 }
 
 .form-list__footer {
@@ -6772,46 +6829,6 @@ input[type='search']::-webkit-search-cancel-button {
 
 .goals-previous-plan__copy {
   align-self: flex-start;
-}
-
-/* Raspodela težina: segment po cilju, prazan deo je neraspoređeno. */
-.goal-weights-summary {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm) var(--space-md);
-  margin: 0 0 var(--space-md);
-}
-
-.goal-weights-bar {
-  display: flex;
-  flex: 1 1 8rem;
-  gap: 2px;
-  height: 6px;
-  border-radius: var(--radius-pill);
-  background: var(--surface-sunken);
-  overflow: hidden;
-}
-
-.goal-weights-bar__segment {
-  background: var(--primary);
-  transition: width var(--transition);
-}
-
-.goal-weights-bar__segment:nth-child(4n + 2) {
-  background: #3b7bc8;
-}
-
-.goal-weights-bar__segment:nth-child(4n + 3) {
-  background: #7aa5da;
-}
-
-.goal-weights-bar__segment:nth-child(4n + 4) {
-  background: #b3cdee;
-}
-
-.goal-weights-bar.is-over .goal-weights-bar__segment {
-  background: var(--danger);
 }
 
 /* Kompaktno zaglavlje zaposlenog: sve u jednom redu. */

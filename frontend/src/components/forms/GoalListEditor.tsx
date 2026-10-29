@@ -44,14 +44,15 @@ export function GoalListEditor({
   const resize = (next: GoalDraft[]) =>
     setGoals(customized ? next : withEvenWeights(next));
 
+  // Uz jedan cilj zbir je isti broj kao u polju, pa se prikazuje tek kad
+  // ima više ciljeva ili kad zbir nije ispravan.
+  const weights = checkGoalWeights(goals);
+  const showTotal =
+    goals.some((goal) => goal.description.trim()) &&
+    (goals.length > 1 || !weights.valid);
+
   return (
     <>
-      {goals.some((goal) => goal.description.trim()) && (
-        <div className="goal-weights-summary">
-          <GoalWeightsBar goals={goals} />
-          <GoalWeightsTotal goals={goals} />
-        </div>
-      )}
       <div className="form-list">
         {goals.map((goal, idx) => (
           <div key={idx} className="form-list__item form-list__item--weighted">
@@ -106,72 +107,51 @@ export function GoalListEditor({
           </div>
         ))}
       </div>
+      {/* Zbir stoji ispod kolone sa težinama, kao zbir u tabeli. */}
       <div className="goal-weights__footer">
-        <AddItemButton
-          label={addLabel}
-          onClick={() =>
-            resize([
-              ...goals,
-              { description: '', sortOrder: goals.length, weight: null },
-            ])
-          }
-        />
-        {customized && goals.length > 1 && (
-          <button
-            type="button"
-            className="btn btn-secondary btn-sm"
-            onClick={() => setGoals(withEvenWeights(goals))}
+        <div className="goal-weights__actions">
+          <AddItemButton
+            label={addLabel}
+            onClick={() =>
+              resize([
+                ...goals,
+                { description: '', sortOrder: goals.length, weight: null },
+              ])
+            }
+          />
+          {customized && goals.length > 1 && (
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={() => setGoals(withEvenWeights(goals))}
+            >
+              {formatMessage({ id: 'evaluation.distributeWeightsEvenly' })}
+            </button>
+          )}
+          {showTotal && (
+            <span className="goal-weights__total-label" aria-hidden="true">
+              {formatMessage({ id: 'evaluation.planning.weightsTotalLabel' })}
+            </span>
+          )}
+        </div>
+        {showTotal && (
+          <span
+            className={`goal-weights__total ${weights.valid ? 'is-complete' : 'is-invalid'}`}
+            role="status"
           >
-            {formatMessage({ id: 'evaluation.distributeWeightsEvenly' })}
-          </button>
+            <span className="goal-weights__total-value" aria-hidden="true">
+              {weights.total}
+            </span>
+            <span aria-hidden="true">%</span>
+            <span className="sr-only">
+              {formatMessage(
+                { id: 'evaluation.goalWeightsTotal' },
+                { total: weights.total, required: TOTAL_GOAL_WEIGHT },
+              )}
+            </span>
+          </span>
         )}
       </div>
     </>
-  );
-}
-
-/**
- * Raspodela težina na jednoj traci, segment po cilju sa opisom.
- * Neraspoređeni deo ostaje prazan, a preko 100% traka postaje crvena.
- */
-function GoalWeightsBar({ goals }: { goals: GoalDraft[] }) {
-  const { total } = checkGoalWeights(goals);
-  const scale = Math.max(total, TOTAL_GOAL_WEIGHT);
-  const over = total > TOTAL_GOAL_WEIGHT;
-
-  return (
-    <div
-      className={`goal-weights-bar${over ? ' is-over' : ''}`}
-      aria-hidden="true"
-    >
-      {goals.map((goal, idx) =>
-        goal.description.trim() && goal.weight ? (
-          <span
-            key={idx}
-            className="goal-weights-bar__segment"
-            style={{ width: `${(goal.weight / scale) * 100}%` }}
-            title={`${idx + 1}: ${goal.weight}%`}
-          />
-        ) : null,
-      )}
-    </div>
-  );
-}
-
-/** Zbir pondera uz traku: zelen kad je tačno 100%, crven kad nije. */
-function GoalWeightsTotal({ goals }: { goals: GoalDraft[] }) {
-  const { formatMessage } = useIntl();
-  const { total, valid } = checkGoalWeights(goals);
-
-  return (
-    <span
-      className={`section-progress__count ${valid ? 'is-complete' : 'is-invalid'}`}
-      role="status"
-    >
-      {formatMessage(
-        { id: 'evaluation.goalWeightsTotal' },
-        { total, required: TOTAL_GOAL_WEIGHT },
-      )}
-    </span>
   );
 }

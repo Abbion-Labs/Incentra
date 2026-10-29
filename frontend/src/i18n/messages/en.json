@@ -317,7 +317,8 @@
       "previousPlanNone": "There is no saved plan for that quarter.",
       "previousPlanMeta": "Conditions: {conditions} · Criteria: {criteria}",
       "copyPreviousPlan": "Use this plan",
-      "previousRating": "Q{quarter}/{year}: {rating}"
+      "previousRating": "Q{quarter}/{year}: {rating}",
+      "weightsTotalLabel": "Total"
     }
   },
   "admin": {

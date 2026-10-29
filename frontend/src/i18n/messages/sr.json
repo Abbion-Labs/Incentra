@@ -317,7 +317,8 @@
       "previousPlanNone": "Za taj kvartal nema sačuvanog plana.",
       "previousPlanMeta": "Uslovi: {conditions} · Kriterijumi: {criteria}",
       "copyPreviousPlan": "Preuzmi ovaj plan",
-      "previousRating": "Q{quarter}/{year}: {rating}"
+      "previousRating": "Q{quarter}/{year}: {rating}",
+      "weightsTotalLabel": "Ukupno"
     }
   },
   "admin": {
