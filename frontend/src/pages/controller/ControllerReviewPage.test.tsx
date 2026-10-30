@@ -111,4 +111,21 @@ describe('ControllerReviewPage', () => {
     );
     expect(post).toHaveBeenCalledTimes(1);
   });
+
+  it('shows whether the conditions were met, like the evaluator does', async () => {
+    renderReview({
+      ...evaluation,
+      conditionsFulfilled: false,
+      conditionsNotMetComment: 'Nije bilo resursa.',
+    });
+
+    const no = await screen.findByRole('radio', { name: 'common.no' });
+    expect(no.getAttribute('aria-checked')).toBe('true');
+    expect(no).toHaveProperty('disabled', true);
+    const comment = screen.getByLabelText(
+      'evaluation.conditionsNotMetCommentLabel',
+    ) as HTMLTextAreaElement;
+    expect(comment.value).toBe('Nije bilo resursa.');
+    expect(comment.disabled).toBe(true);
+  });
 });

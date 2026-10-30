@@ -144,14 +144,34 @@ describe('EvaluationEditorPage', () => {
     auth.activeRole = 'ADMIN';
     renderEditor();
 
-    await screen.findByText('Cilj');
+    const comment = await screen.findByLabelText(
+      'evaluation.conditionsNotMetCommentLabel',
+    );
+    expect(comment.matches(':disabled')).toBe(true);
+    expect(
+      screen.getByRole('radio', { name: 'common.no' }).matches(':disabled'),
+    ).toBe(true);
     expect(screen.queryByRole('button', { name: 'buttons.save' })).toBeNull();
     expect(
       screen.queryByRole('button', { name: 'buttons.submitToController' }),
     ).toBeNull();
+  });
+
+  it('keeps the conditions decision visible after the evaluation is sent', async () => {
+    renderEditor({ ...evaluation, status: 'Submitted' });
+
+    const comment = (await screen.findByLabelText(
+      'evaluation.conditionsNotMetCommentLabel',
+    )) as HTMLTextAreaElement;
+    expect(comment.value).toBe('Uslovi nisu ispunjeni');
+    expect(comment.disabled).toBe(true);
     expect(
-      screen.queryByLabelText('evaluation.conditionsNotMetCommentLabel'),
-    ).toBeNull();
+      screen
+        .getByRole('radio', { name: 'common.no' })
+        .getAttribute('aria-checked'),
+    ).toBe('true');
+    // Ciljevi se ne ocenjuju kad uslovi nisu ispunjeni.
+    expect(screen.queryByText('Cilj')).toBeNull();
   });
 
   it('locks the rating fields while the evaluation is saving', async () => {

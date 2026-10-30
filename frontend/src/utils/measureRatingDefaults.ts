@@ -1,3 +1,4 @@
+import type { EvaluationMeasure, MeasureType, RatingLevel } from '../api/types';
 import type { IntlMessage, NestedKeys } from '../i18n/i18n.types';
 
 export type MeasureFormatMessage = (descriptor: {
@@ -98,6 +99,30 @@ export function getMeasureRatingComment(
   const key = MEASURE_RATING_COMMENT_KEYS[measureTypeCode]?.[ratingValue];
   if (!key) return '';
   return formatMessage({ id: key as never });
+}
+
+/** Merila ocene za prikaz: merilo bez komentara dobija opis izabrane ocene. */
+export function measuresWithRatingComments(
+  measures: EvaluationMeasure[],
+  measureTypes: MeasureType[],
+  ratingLevels: RatingLevel[],
+  formatMessage: MeasureFormatMessage,
+) {
+  return measures.map((m) => {
+    const mt = measureTypes.find((t) => t.id === m.measureTypeId);
+    const level = ratingLevels.find((rl) => rl.id === m.ratingLevelId);
+    const autoComment =
+      mt && level && level.value > 0
+        ? getMeasureRatingComment(mt.code, level.value, formatMessage)
+        : '';
+
+    return {
+      measureTypeId: m.measureTypeId,
+      ratingComment: m.ratingComment?.trim() ? m.ratingComment : autoComment,
+      ratingLevelId: m.ratingLevelId,
+      sortOrder: m.sortOrder,
+    };
+  });
 }
 
 export function measureRatingOptionLabel(
