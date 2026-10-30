@@ -10,7 +10,8 @@ namespace VariableCompensation.Integration.Tests.Evaluations;
 /// <summary>
 /// A controller decides on a submitted evaluation in one request. The evaluation is taken into review on the way,
 /// so its history reads the same as when the review was opened first. The tab counts come from one query and
-/// still agree with the lists behind the tabs.
+/// still agree with the lists behind the tabs. The tests use 2021 and 2022, which no other test uses and which stay
+/// inside the years an evaluation can be created for.
 /// </summary>
 [Collection("Integration")]
 [Trait("Category", "Integration")]
@@ -28,7 +29,7 @@ public class ControllerDecisionIntegrationTests
     {
         var evaluator = await this.CreateClientAsync(TestCredentials.EvaluatorEmail, TestCredentials.EvaluatorPassword);
         var controller = await this.CreateClientAsync(TestCredentials.ControllerEmail, TestCredentials.ControllerPassword);
-        var (id, version) = await SubmitEvaluationAsync(evaluator, year: 2031, quarter: 1);
+        var (id, version) = await SubmitEvaluationAsync(evaluator, year: 2021, quarter: 1);
 
         var response = await controller.PostAsJsonAsync($"/api/evaluations/{id}/approve", new
         {
@@ -47,7 +48,7 @@ public class ControllerDecisionIntegrationTests
     {
         var evaluator = await this.CreateClientAsync(TestCredentials.EvaluatorEmail, TestCredentials.EvaluatorPassword);
         var controller = await this.CreateClientAsync(TestCredentials.ControllerEmail, TestCredentials.ControllerPassword);
-        var (id, version) = await SubmitEvaluationAsync(evaluator, year: 2031, quarter: 2);
+        var (id, version) = await SubmitEvaluationAsync(evaluator, year: 2021, quarter: 2);
 
         var response = await controller.PostAsJsonAsync($"/api/evaluations/{id}/return-for-revision", new
         {
@@ -69,7 +70,7 @@ public class ControllerDecisionIntegrationTests
         var create = await evaluator.PostAsJsonAsync("/api/evaluations", new
         {
             employeeId = TestEmployeeIds.Employee,
-            year = 2032,
+            year = 2022,
             quarter = 1,
         });
         create.StatusCode.Should().BeOneOf(HttpStatusCode.OK, HttpStatusCode.Created);
