@@ -8,7 +8,6 @@ import { formatAverageDisplay } from '../../../utils/scoring';
 import { AverageDisplay } from '../../../components/evaluation/AverageDisplay';
 import { DescriptiveRatingBadge } from '../../../components/evaluation/DescriptiveRatingBadge';
 import { EvaluationStatusWithHistory } from '../../../components/evaluation/EvaluationStatusWithHistory';
-import { PeriodPill } from '../../../components/common/PageHeader';
 
 export interface EvaluationRatingMetaProps {
   evaluation: EvaluationDetail;
@@ -22,10 +21,8 @@ export interface EvaluationRatingMetaProps {
 
 export function EvaluationStatusSummary({
   evaluation,
-  showPeriod = false,
   showStatusHistory = false,
 }: Pick<EvaluationRatingMetaProps, 'evaluation'> & {
-  showPeriod?: boolean;
   showStatusHistory?: boolean;
 }) {
   const { formatMessage } = useIntl();
@@ -50,31 +47,21 @@ export function EvaluationStatusSummary({
   );
 
   return (
-    <>
-      <div className="goals-employee-card__item">
-        <dt>{formatMessage({ id: 'evaluation.statusLabel' })}</dt>
-        <dd>
-          {showStatusHistory ? (
-            <EvaluationStatusWithHistory
-              evaluationId={evaluation.id}
-              evaluation={evaluation}
-            >
-              {statusBadge}
-            </EvaluationStatusWithHistory>
-          ) : (
-            statusBadge
-          )}
-        </dd>
-      </div>
-      {showPeriod && (
-        <div className="goals-employee-card__item">
-          <dt>{formatMessage({ id: 'evaluation.period' })}</dt>
-          <dd>
-            <PeriodPill quarter={evaluation.quarter} year={evaluation.year} />
-          </dd>
-        </div>
-      )}
-    </>
+    <div className="goals-employee-card__item">
+      <dt>{formatMessage({ id: 'evaluation.statusLabel' })}</dt>
+      <dd>
+        {showStatusHistory ? (
+          <EvaluationStatusWithHistory
+            evaluationId={evaluation.id}
+            evaluation={evaluation}
+          >
+            {statusBadge}
+          </EvaluationStatusWithHistory>
+        ) : (
+          statusBadge
+        )}
+      </dd>
+    </div>
   );
 }
 

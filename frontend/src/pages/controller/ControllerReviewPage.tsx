@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../../api/client';
-import type { Employee, EvaluationDetail } from '../../api/types';
+import type { EvaluationDetail } from '../../api/types';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { ControllerDecisionPanel } from '../../components/evaluation/ControllerDecisionPanel';
 import { EvaluationPlanningOverview } from '../../components/evaluation/EvaluationPlanningOverview';
@@ -12,7 +12,7 @@ import {
 import { TrainingSection } from '../../components/evaluation/TrainingSection';
 import { AppLayout } from '../../components/AppLayout';
 import { useAuth } from '../../auth/AuthContext';
-import { useEvaluation, useLookups, useToast } from '../../hooks';
+import { useEmployee, useEvaluation, useLookups, useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { GoalsPlanningEmployeeCard } from '../evaluator/components/GoalsPlanningEmployeeCard';
 import {
@@ -20,7 +20,7 @@ import {
   EvaluationStatusSummary,
 } from '../evaluator/components/EvaluationRatingMeta';
 import { detailHasIncompleteRatings } from '../../utils/scoring';
-import { getMeasureRatingComment } from '../../utils/measureRatingDefaults';
+import { measuresWithRatingComments } from '../../utils/measureRatingDefaults';
 
 export function ControllerReviewPage() {
   const { formatMessage } = useIntl();
@@ -28,7 +28,7 @@ export function ControllerReviewPage() {
   const toast = useToast();
   const { ratingLevels, measureTypes } = useLookups();
   const { evaluation, setEvaluation, loading, error } = useEvaluation(id);
-  const [employee, setEmployee] = useState<Employee | null>(null);
+  const employee = useEmployee(evaluation?.employeeId);
   const [saving, setSaving] = useState(false);
   const [controllerComment, setControllerComment] = useState('');
   const [revisionComment, setRevisionComment] = useState('');
@@ -53,46 +53,14 @@ export function ControllerReviewPage() {
   }, [error, toast]);
 
   useEffect(() => {
-    if (!evaluation?.employeeId) {
-      setEmployee(null);
-      return;
-    }
-
-    let cancelled = false;
-    api
-      .get<Employee>(`/api/employees/${evaluation.employeeId}`)
-      .then((data) => {
-        if (!cancelled) setEmployee(data);
-      })
-      .catch(() => {
-        if (!cancelled) setEmployee(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [evaluation?.employeeId]);
-
-  useEffect(() => {
     if (!evaluation) return;
     setMeasures(
-      evaluation.measures.map((m) => {
-        const mt = measureTypes.find((t) => t.id === m.measureTypeId);
-        const level = ratingLevels.find((rl) => rl.id === m.ratingLevelId);
-        const autoComment =
-          mt && level && level.value > 0
-            ? getMeasureRatingComment(mt.code, level.value, formatMessage)
-            : '';
-
-        return {
-          measureTypeId: m.measureTypeId,
-          ratingComment: m.ratingComment?.trim()
-            ? m.ratingComment
-            : autoComment,
-          ratingLevelId: m.ratingLevelId,
-          sortOrder: m.sortOrder,
-        };
-      }),
+      measuresWithRatingComments(
+        evaluation.measures,
+        measureTypes,
+        ratingLevels,
+        formatMessage,
+      ),
     );
     setTrainingsAttended(evaluation.training?.trainingDescription ?? '');
     setMissingKnowledgeSkills(evaluation.training?.knowledgeDescription ?? '');
@@ -199,13 +167,11 @@ export function ControllerReviewPage() {
           evaluation={evaluation}
           employee={employee}
           showEvaluator
-          hidePeriod
           showStatusHistory
           employeeAnalyticsPath={`/controller/employees/${evaluation.employeeId}`}
           ratingAside={
             <EvaluationStatusSummary
               evaluation={evaluation}
-              showPeriod
               showStatusHistory
             />
           }

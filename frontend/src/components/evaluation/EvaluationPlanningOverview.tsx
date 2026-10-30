@@ -206,11 +206,11 @@ export function EvaluationPlanningOverview({
           ) : undefined
         }
         actions={
-          showConditionsToggle && onConditionsFulfilledChange ? (
+          showConditionsToggle ? (
             <ConditionsFulfilledToggle
               checked={conditionsFulfilled}
-              editable={editable}
-              onChange={onConditionsFulfilledChange}
+              editable={editable && Boolean(onConditionsFulfilledChange)}
+              onChange={onConditionsFulfilledChange ?? (() => {})}
             />
           ) : undefined
         }
