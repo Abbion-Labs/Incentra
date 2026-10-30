@@ -8,6 +8,7 @@ import { EmptyState } from '../../../components/common/EmptyState';
 
 import { TableSkeleton } from '../../../components/common/LoadingSkeleton';
 
+import { ActiveBadge } from '../../../components/common/ActiveBadge';
 import { useIntl } from '../../../i18n';
 
 interface EmployeeListTableProps {
@@ -118,13 +119,7 @@ export function EmployeeListTable({
                 className="col-meta"
                 data-label={formatMessage({ id: 'evaluation.status' })}
               >
-                <span
-                  className={`badge ${emp.isActive ? 'badge-approved' : 'badge-draft'}`}
-                >
-                  {emp.isActive
-                    ? formatMessage({ id: 'common.active' })
-                    : formatMessage({ id: 'common.inactive' })}
-                </span>
+                <ActiveBadge active={emp.isActive} />
               </td>
             </tr>
           ))}

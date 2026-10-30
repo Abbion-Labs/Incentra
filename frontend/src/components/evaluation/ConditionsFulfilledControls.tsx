@@ -1,4 +1,5 @@
 import { useIntl } from '../../i18n';
+import { ReadOnlyText } from '../forms/ReadOnlyText';
 
 interface ConditionsFulfilledToggleProps {
   checked: boolean;
@@ -67,6 +68,18 @@ export function ConditionsNotMetCommentField({
 }: ConditionsNotMetCommentFieldProps) {
   const { formatMessage } = useIntl();
 
+  if (!editable) {
+    return (
+      <ReadOnlyText
+        id="evaluation-conditions-comment"
+        label={formatMessage({
+          id: 'evaluation.conditionsNotMetCommentLabel',
+        })}
+        value={value}
+      />
+    );
+  }
+
   return (
     <div className="form-row">
       <label htmlFor="evaluation-conditions-comment">
@@ -76,7 +89,6 @@ export function ConditionsNotMetCommentField({
         id="evaluation-conditions-comment"
         rows={3}
         value={value}
-        disabled={!editable}
         onChange={(e) => onChange(e.target.value)}
         placeholder={formatMessage({
           id: 'evaluation.conditionsNotMetCommentPlaceholder',

@@ -24,6 +24,8 @@ export function useEvaluationBucketCounts(
     year?: number | null;
     quarter?: number | null;
     search?: string;
+    evaluatorEmployeeId?: number | null;
+    organizationUnitId?: number | null;
   },
   enabled = true,
 ) {
@@ -53,7 +55,15 @@ export function useEvaluationBucketCounts(
     } finally {
       if (isLatest()) setLoading(false);
     }
-  }, [enabled, params.quarter, params.scope, params.search, params.year]);
+  }, [
+    enabled,
+    params.quarter,
+    params.scope,
+    params.search,
+    params.year,
+    params.evaluatorEmployeeId,
+    params.organizationUnitId,
+  ]);
 
   useEffect(() => {
     void load();

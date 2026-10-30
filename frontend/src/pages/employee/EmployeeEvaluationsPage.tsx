@@ -10,7 +10,7 @@ import {
 import { AppLayout } from '../../components/AppLayout';
 import { PeriodFilters, currentYear } from '../../components/PeriodFilters';
 import { useIntl } from '../../i18n';
-import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
+import { usePagedList, useToast } from '../../hooks';
 import { useEvaluationBucketCounts } from '../../hooks/useEvaluationBucketCounts';
 import {
   type EvaluationBucket,
@@ -25,17 +25,14 @@ import { EmployeeEvaluationListTable } from './components/EmployeeEvaluationList
 export function EmployeeEvaluationsPage() {
   const { formatMessage } = useIntl();
   const toast = useToast();
-  const [activeTab, setActiveTab] = useState<EvaluationBucket>('unrated');
+  // Zaposlenog najviše zanimaju završene ocene, pa lista počinje od njih.
+  // Pretrage nema: u listi su samo njegove ocene, najviše četiri godišnje.
+  const [activeTab, setActiveTab] = useState<EvaluationBucket>('approved');
   const [year, setYear] = useState(currentYear);
   const [quarter, setQuarter] = useState<number | null>(null);
-  const {
-    input: searchInput,
-    debounced: search,
-    setInput: setSearchInput,
-  } = useDebouncedSearch();
 
-  const listQueryKey = `${year}|${quarter ?? 'all'}|${activeTab}|${search}`;
-  const countsQueryKey = `${year}|${quarter ?? 'all'}|${search}`;
+  const listQueryKey = `${year}|${quarter ?? 'all'}|${activeTab}`;
+  const countsQueryKey = `${year}|${quarter ?? 'all'}`;
 
   const {
     items: evaluations,
@@ -51,14 +48,12 @@ export function EmployeeEvaluationsPage() {
         year,
         quarter,
         bucket: activeTab,
-        search,
       }),
   });
 
   const { counts } = useEvaluationBucketCounts(countsQueryKey, {
     year,
     quarter,
-    search,
   });
   const tabCounts = useMemo(() => mapEvaluatorBucketCounts(counts), [counts]);
 
@@ -85,17 +80,8 @@ export function EmployeeEvaluationsPage() {
             onYearChange={setYear}
             onQuarterChange={setQuarter}
             showAllQuartersOption
-            search={searchInput}
-            onSearchChange={setSearchInput}
-            searchLabel={formatMessage({ id: 'evaluation.search' })}
-            searchPlaceholder={formatMessage({
-              id: 'evaluation.searchPlaceholder',
-            })}
-            canReset={
-              searchInput !== '' || year !== currentYear || quarter !== null
-            }
+            canReset={year !== currentYear || quarter !== null}
             onReset={() => {
-              setSearchInput('');
               setYear(currentYear);
               setQuarter(null);
             }}

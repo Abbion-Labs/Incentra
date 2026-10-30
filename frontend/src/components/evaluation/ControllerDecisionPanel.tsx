@@ -1,21 +1,21 @@
 import { useIntl } from '../../i18n';
 
 interface ControllerDecisionPanelProps {
-  controllerComment: string;
-  revisionComment: string;
+  comment: string;
   saving: boolean;
-  onControllerCommentChange: (value: string) => void;
-  onRevisionCommentChange: (value: string) => void;
+  onCommentChange: (value: string) => void;
   onApprove: () => void;
   onReturnForRevision: () => void;
 }
 
+/**
+ * Jedan komentar za obe odluke: uz odobrenje je opcion, a pri vraćanju na
+ * doradu obavezan, jer ocenjivač iz njega zna šta da ispravi.
+ */
 export function ControllerDecisionPanel({
-  controllerComment,
-  revisionComment,
+  comment,
   saving,
-  onControllerCommentChange,
-  onRevisionCommentChange,
+  onCommentChange,
   onApprove,
   onReturnForRevision,
 }: ControllerDecisionPanelProps) {
@@ -25,28 +25,21 @@ export function ControllerDecisionPanel({
       <div className="form-list controller-decision-fields">
         <div className="form-row">
           <label htmlFor="controller-comment">
-            {formatMessage({ id: 'controller.commentOptional' })}
+            {formatMessage({ id: 'controller.decisionComment' })}
           </label>
           <textarea
             id="controller-comment"
             rows={3}
-            value={controllerComment}
-            onChange={(e) => onControllerCommentChange(e.target.value)}
-          />
-        </div>
-        <div className="form-row">
-          <label htmlFor="revision-comment">
-            {formatMessage({ id: 'controller.revisionCommentRequired' })}
-          </label>
-          <textarea
-            id="revision-comment"
-            rows={3}
-            value={revisionComment}
-            onChange={(e) => onRevisionCommentChange(e.target.value)}
+            value={comment}
+            onChange={(e) => onCommentChange(e.target.value)}
             placeholder={formatMessage({
-              id: 'controller.revisionCommentPlaceholder',
+              id: 'controller.decisionCommentPlaceholder',
             })}
+            aria-describedby="controller-comment-hint"
           />
+          <p id="controller-comment-hint" className="form-hint">
+            {formatMessage({ id: 'controller.decisionCommentHint' })}
+          </p>
         </div>
       </div>
       <div className="actions">

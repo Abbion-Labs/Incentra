@@ -91,7 +91,7 @@ describe('ControllerReviewPage', () => {
       .spyOn(api, 'post')
       .mockResolvedValue({ ...evaluation, status: 'Approved', version: 6 });
 
-    const comment = await screen.findByLabelText('controller.commentOptional');
+    const comment = await screen.findByLabelText('controller.decisionComment');
     expect((comment as HTMLTextAreaElement).value).toBe('');
     expect(
       screen.getByText('evaluation.previousRevisionReasonLabel'),
@@ -112,6 +112,34 @@ describe('ControllerReviewPage', () => {
     expect(post).toHaveBeenCalledTimes(1);
   });
 
+  it('returns for revision only with a comment, from the same field', async () => {
+    renderReview();
+    const post = vi
+      .spyOn(api, 'post')
+      .mockResolvedValue({ ...evaluation, status: 'Draft', version: 5 });
+
+    const returnButton = await screen.findByRole('button', {
+      name: 'controller.returnForRevision',
+    });
+    fireEvent.click(returnButton);
+    expect(
+      await screen.findByText('errors.revisionCommentRequired'),
+    ).toBeTruthy();
+    expect(post).not.toHaveBeenCalled();
+
+    fireEvent.change(screen.getByLabelText('controller.decisionComment'), {
+      target: { value: '  Dopuniti merila.  ' },
+    });
+    fireEvent.click(returnButton);
+
+    await waitFor(() =>
+      expect(post).toHaveBeenCalledWith(
+        '/api/evaluations/5/return-for-revision',
+        { version: 4, revisionComment: 'Dopuniti merila.' },
+      ),
+    );
+  });
+
   it('shows whether the conditions were met, like the evaluator does', async () => {
     renderReview({
       ...evaluation,
@@ -122,10 +150,11 @@ describe('ControllerReviewPage', () => {
     const no = await screen.findByRole('radio', { name: 'common.no' });
     expect(no.getAttribute('aria-checked')).toBe('true');
     expect(no).toHaveProperty('disabled', true);
+    // Samo za čitanje: obrazloženje je tekst, ne polje za unos.
     const comment = screen.getByLabelText(
       'evaluation.conditionsNotMetCommentLabel',
-    ) as HTMLTextAreaElement;
-    expect(comment.value).toBe('Nije bilo resursa.');
-    expect(comment.disabled).toBe(true);
+    );
+    expect(comment.tagName).toBe('P');
+    expect(comment.textContent).toBe('Nije bilo resursa.');
   });
 });

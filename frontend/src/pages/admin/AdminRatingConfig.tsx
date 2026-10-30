@@ -5,6 +5,7 @@ import { useIntl } from '../../i18n';
 import { formatDescriptiveRatingLabel } from '../../utils/descriptiveRating';
 import { invalidateLookups, useToast } from '../../hooks';
 import { isEditConflict } from '../../utils/editConflict';
+import { ActiveBadge } from '../../components/common/ActiveBadge';
 import { TableIconButton } from '../../components/common/TableIconButton';
 import { TEXT_LIMITS } from '../../utils/textLimits';
 
@@ -367,7 +368,7 @@ export function AdminRatingConfig() {
                     {formatMessage({ id: 'admin.ratingConfig.sortOrder' })}
                   </th>
                   <th className="col-meta table-col--compact">
-                    {formatMessage({ id: 'admin.active' })}
+                    {formatMessage({ id: 'evaluation.status' })}
                   </th>
                   <th
                     className="col-actions"
@@ -419,11 +420,9 @@ export function AdminRatingConfig() {
                     </td>
                     <td
                       className="col-meta table-col--compact"
-                      data-label={formatMessage({ id: 'admin.active' })}
+                      data-label={formatMessage({ id: 'evaluation.status' })}
                     >
-                      {rating.isActive
-                        ? formatMessage({ id: 'common.yes' })
-                        : formatMessage({ id: 'common.no' })}
+                      <ActiveBadge active={rating.isActive} />
                     </td>
                     <td className="col-actions">
                       <TableIconButton

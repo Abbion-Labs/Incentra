@@ -30,8 +30,7 @@ export function ControllerReviewPage() {
   const { evaluation, setEvaluation, loading, error } = useEvaluation(id);
   const employee = useEmployee(evaluation?.employeeId);
   const [saving, setSaving] = useState(false);
-  const [controllerComment, setControllerComment] = useState('');
-  const [revisionComment, setRevisionComment] = useState('');
+  const [decisionComment, setDecisionComment] = useState('');
   const [measures, setMeasures] = useState<MeasureDraft[]>([]);
   const [trainingsAttended, setTrainingsAttended] = useState('');
   const [missingKnowledgeSkills, setMissingKnowledgeSkills] = useState('');
@@ -79,7 +78,7 @@ export function ControllerReviewPage() {
   // Komentar odluke uvek počinje prazan: raniji komentar vraćanja na doradu se prikazuje posebno
   // i ne sme da se greškom sačuva kao komentar odobrenja.
   useEffect(() => {
-    setControllerComment('');
+    setDecisionComment('');
   }, [evaluation?.id]);
 
   // Odluka je jedan zahtev: server ocenu koja još čeka sam prvo stavlja na pregled.
@@ -91,7 +90,7 @@ export function ControllerReviewPage() {
         `/api/evaluations/${evaluation.id}/approve`,
         {
           version: evaluation.version,
-          controllerComment: controllerComment || null,
+          controllerComment: decisionComment.trim() || null,
         },
       );
       setEvaluation(updated);
@@ -109,7 +108,7 @@ export function ControllerReviewPage() {
 
   async function returnForRevision() {
     if (!evaluation) return;
-    if (!revisionComment.trim()) {
+    if (!decisionComment.trim()) {
       toast.warning(formatMessage({ id: 'errors.revisionCommentRequired' }));
       return;
     }
@@ -119,12 +118,12 @@ export function ControllerReviewPage() {
         `/api/evaluations/${evaluation.id}/return-for-revision`,
         {
           version: evaluation.version,
-          revisionComment: revisionComment.trim(),
+          revisionComment: decisionComment.trim(),
         },
       );
       setEvaluation(updated);
       toast.success(formatMessage({ id: 'alerts.evaluationReturned' }));
-      setRevisionComment('');
+      setDecisionComment('');
     } catch (e) {
       toast.error(
         e instanceof Error
@@ -239,11 +238,9 @@ export function ControllerReviewPage() {
           )}
           {canReview && (
             <ControllerDecisionPanel
-              controllerComment={controllerComment}
-              revisionComment={revisionComment}
+              comment={decisionComment}
               saving={saving}
-              onControllerCommentChange={setControllerComment}
-              onRevisionCommentChange={setRevisionComment}
+              onCommentChange={setDecisionComment}
               onApprove={approve}
               onReturnForRevision={returnForRevision}
             />

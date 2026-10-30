@@ -15,6 +15,7 @@ import { previewCompensationByRating } from './compensationPreview';
 import { CompensationRatingPreviewChart } from './components/CompensationRatingPreviewChart';
 import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
+import { formatNumber } from '../../utils/formatLocale';
 import { isEditConflict } from '../../utils/editConflict';
 import { FormLabelWithHint } from './components/FormLabelWithHint';
 import { FilterChip } from '../../components/common/ToolbarSearch';
@@ -366,7 +367,14 @@ export function AdminCompensation() {
                   value={form.monetaryPool}
                   onChange={(e) => updateField('monetaryPool', e.target.value)}
                   required
+                  aria-describedby="comp-pool-formatted"
                 />
+                {/* Veliki iznos bez razdvajanja hiljada se lako pogrešno pročita. */}
+                {Number(form.monetaryPool) > 0 && (
+                  <p id="comp-pool-formatted" className="form-hint">
+                    {formatNumber(Number(form.monetaryPool))} {form.currency}
+                  </p>
+                )}
               </div>
 
               <div className="form-row">
@@ -516,6 +524,7 @@ export function AdminCompensation() {
 
         <FormSection
           title={formatMessage({ id: 'admin.compensation.previewTitle' })}
+          titleHint={formatMessage({ id: 'admin.compensation.previewHint' })}
           className="compensation-params__chart"
         >
           <div className="compensation-preview-settings">

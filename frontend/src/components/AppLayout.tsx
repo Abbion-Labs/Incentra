@@ -49,6 +49,7 @@ const navItems: NavItem[] = [
   {
     to: '/evaluator',
     labelKey: 'navigation.evaluatorEmployees',
+    labelKeyByRole: { ADMIN: 'admin.employees' },
     icon: 'employees',
     roles: ['EVALUATOR', 'ADMIN'],
     group: 'evaluator',

@@ -124,7 +124,7 @@ export function EvaluationScoresSummary({
           {formatMessage({ id: 'evaluation.descriptiveLabel' })}
         </span>
         {incompleteRatings ? (
-          <span className="average-muted">—</span>
+          <span className="average-muted">/</span>
         ) : (
           <DescriptiveRatingBadge
             name={liveDescriptiveRatingName ?? evaluation.descriptiveRatingName}

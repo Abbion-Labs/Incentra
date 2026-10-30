@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import type { Employee } from '../../api/types';
 import { InfiniteScrollSentinel } from '../../components/common/InfiniteScrollSentinel';
+import { useAuth } from '../../auth/AuthContext';
 import { AppLayout } from '../../components/AppLayout';
 import { ToolbarSearch } from '../../components/common/ToolbarSearch';
 import { useDebouncedSearch, usePagedList, useToast } from '../../hooks';
@@ -10,6 +11,7 @@ import { EmployeeListTable } from './components/EmployeeListTable';
 
 export function EvaluatorHomePage() {
   const { formatMessage } = useIntl();
+  const { activeRole } = useAuth();
   const toast = useToast();
   const {
     input: searchInput,
@@ -44,7 +46,15 @@ export function EvaluatorHomePage() {
   }, [error, toast]);
 
   return (
-    <AppLayout title={formatMessage({ id: 'admin.employees' })}>
+    <AppLayout
+      title={formatMessage({
+        // Admin vidi sve zaposlene, ocenjivač samo svoje.
+        id:
+          activeRole === 'ADMIN'
+            ? 'admin.employees'
+            : 'navigation.evaluatorEmployees',
+      })}
+    >
       <div className="card card--flush data-panel">
         <div className="data-panel__toolbar">
           <ToolbarSearch
