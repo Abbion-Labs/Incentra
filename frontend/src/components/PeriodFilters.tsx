@@ -1,4 +1,4 @@
-import { useId, useMemo } from 'react';
+import { useId, useMemo, type ReactNode } from 'react';
 
 import { currentQuarter, currentYear } from '../utils/status';
 
@@ -34,6 +34,10 @@ interface Props {
   /** Da li su filteri promenjeni, pa ima smisla ponuditi poništavanje. */
 
   canReset?: boolean;
+
+  /** U kompaktnom režimu: dodatni filteri (npr. FilterChip) posle kvartala. */
+
+  children?: ReactNode;
 }
 
 export function PeriodFilters({
@@ -60,6 +64,8 @@ export function PeriodFilters({
   onReset,
 
   canReset = false,
+
+  children,
 }: Props) {
   const { formatMessage } = useIntl();
 
@@ -136,6 +142,8 @@ export function PeriodFilters({
             ))}
           </select>
         </label>
+
+        {children}
 
         {onReset && (
           // Dugme je uvek u rasporedu (samo sakriveno), pa se traka ne pomera

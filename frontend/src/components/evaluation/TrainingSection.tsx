@@ -1,4 +1,5 @@
 import { FormSection } from '../forms/FormSection';
+import { ReadOnlyText } from '../forms/ReadOnlyText';
 import { useIntl } from '../../i18n';
 
 interface TrainingSectionProps {
@@ -70,20 +71,28 @@ export function TrainingSection({
       title={formatMessage({ id: 'evaluation.trainingAndDevelopment' })}
     >
       <div className="form-list training-fields">
-        {TRAINING_FIELDS.map((field) => (
-          <div key={field.id} className="form-row">
-            <label htmlFor={field.id}>
-              {formatMessage({ id: field.labelKey as never })}
-            </label>
-            <textarea
+        {TRAINING_FIELDS.map((field) =>
+          editable ? (
+            <div key={field.id} className="form-row">
+              <label htmlFor={field.id}>
+                {formatMessage({ id: field.labelKey as never })}
+              </label>
+              <textarea
+                id={field.id}
+                rows={3}
+                value={values[field.valueKey]}
+                onChange={(e) => handlers[field.onChangeKey](e.target.value)}
+              />
+            </div>
+          ) : (
+            <ReadOnlyText
+              key={field.id}
               id={field.id}
-              rows={3}
+              label={formatMessage({ id: field.labelKey as never })}
               value={values[field.valueKey]}
-              onChange={(e) => handlers[field.onChangeKey](e.target.value)}
-              disabled={!editable}
             />
-          </div>
-        ))}
+          ),
+        )}
       </div>
     </FormSection>
   );

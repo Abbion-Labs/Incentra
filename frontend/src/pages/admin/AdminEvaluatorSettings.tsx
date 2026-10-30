@@ -7,6 +7,8 @@ import { useToast } from '../../hooks';
 import { useIntl } from '../../i18n';
 import { isEditConflict } from '../../utils/editConflict';
 import { TableIconButton } from '../../components/common/TableIconButton';
+import { ToolbarSearch } from '../../components/common/ToolbarSearch';
+import { matchesNameSearch } from '../../utils/nameSearch';
 import { adminEvaluatorAnalyticsState } from './adminNavigation';
 import { NO_CONTROLLER, controllerIdFromForm } from './evaluatorController';
 
@@ -38,6 +40,7 @@ export function AdminEvaluatorSettings() {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   // Verzija podešavanja sa kojom je forma otvorena; šalje se uz izmenu.
@@ -85,6 +88,17 @@ export function AdminEvaluatorSettings() {
       (e) => controllerEmployeeIds.has(e.id) && e.id !== editingId,
     );
   }, [employees, users, editingId]);
+
+  const visibleSettings = useMemo(
+    () =>
+      settings.filter(
+        (s) =>
+          matchesNameSearch(s.employeeFullName, search) ||
+          (s.controllerFullName != null &&
+            matchesNameSearch(s.controllerFullName, search)),
+      ),
+    [settings, search],
+  );
 
   const editingEvaluatorName = useMemo(
     () =>
@@ -220,16 +234,28 @@ export function AdminEvaluatorSettings() {
         </form>
       )}
 
-      <div className="card card--flush">
+      {/* Ista kartica i traka sa pretragom kao ostale admin tabele. */}
+      <div className="card card--flush data-panel">
+        <div className="data-panel__toolbar">
+          <ToolbarSearch
+            id="evaluator-settings-search"
+            label={formatMessage({ id: 'common.search' })}
+            placeholder={formatMessage({
+              id: 'admin.evaluatorSettings.searchPlaceholder',
+            })}
+            value={search}
+            onChange={setSearch}
+          />
+        </div>
         {loading ? (
           <div className="empty">{formatMessage({ id: 'common.loading' })}</div>
         ) : (
           <div className="table-wrap">
-            <table className="table table--hover table--compact table--clickable table--stack">
+            <table className="table table--hover table--clickable table--stack">
               <thead>
                 <tr>
                   <th className="col-text">
-                    {formatMessage({ id: 'admin.evaluators' })}
+                    {formatMessage({ id: 'evaluation.evaluator' })}
                   </th>
                   <th className="col-text">
                     {formatMessage({ id: 'roles.CONTROLLER' })}
@@ -241,16 +267,18 @@ export function AdminEvaluatorSettings() {
                 </tr>
               </thead>
               <tbody>
-                {settings.length === 0 ? (
+                {visibleSettings.length === 0 ? (
                   <tr>
                     <td colSpan={3} className="empty">
                       {formatMessage({
-                        id: 'admin.evaluatorSettings.noSettings',
+                        id: search.trim()
+                          ? 'evaluation.noSearchResults'
+                          : 'admin.evaluatorSettings.noSettings',
                       })}
                     </td>
                   </tr>
                 ) : (
-                  settings.map((item) => (
+                  visibleSettings.map((item) => (
                     <tr
                       key={item.employeeId}
                       onClick={() => openAnalytics(item.employeeId)}

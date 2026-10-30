@@ -49,11 +49,12 @@ const DESCRIPTIVE_RATING_CLASS_BY_CODE: Record<string, string> = {
 };
 
 // Divergentna skala za grafikone: ispod očekivanja topla, sredina siva, iznad
-// očekivanja plava (bezbedno za daltonizam; susedne ocene ΔE ≥ 8).
+// očekivanja plava (bezbedno za daltonizam; susedne ocene ΔE ≥ 8). Siva sredina
+// je dovoljno tamna da se ne meša sa praznom podlogom grafikona.
 const DESCRIPTIVE_RATING_CHART_COLOR_BY_CODE: Record<string, string> = {
   DOES_NOT_MEET: '#b2310e',
   MEETS: '#ee8a61',
-  GOOD: '#d3d7dd',
+  GOOD: '#9ba4b0',
   EXCEEDS: '#5a98d8',
   OUTSTANDING: '#1f5aa6',
 };

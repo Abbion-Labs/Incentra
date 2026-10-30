@@ -147,7 +147,7 @@ export function ControllerEmployeePage() {
               </div>
               {employee.evaluatorFullName && (
                 <div>
-                  <dt>{formatMessage({ id: 'admin.evaluators' })}</dt>
+                  <dt>{formatMessage({ id: 'evaluation.evaluator' })}</dt>
                   <dd>{employee.evaluatorFullName}</dd>
                 </div>
               )}

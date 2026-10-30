@@ -119,6 +119,7 @@ export function SelectedEvaluationPanel({
           <dd>
             <DescriptiveRatingBadge
               name={incomplete ? null : evaluation.descriptiveRatingName}
+              emptyLabel={incomplete ? '/' : undefined}
               descriptiveRatingId={
                 incomplete ? undefined : evaluation.descriptiveRatingId
               }

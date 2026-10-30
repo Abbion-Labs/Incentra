@@ -5,7 +5,7 @@
     "main": "Glavna navigacija",
     "myAccount": "Moj nalog",
     "logout": "Odjava",
-    "evaluatorEmployees": "Zaposleni",
+    "evaluatorEmployees": "Moji zaposleni",
     "evaluatorGoals": "Ciljevi",
     "workflow": "Ocenjivanje",
     "evaluatorWorkflow": "Ocenjivanje",
@@ -60,7 +60,7 @@
     "organizationUnit": "Organizaciona jedinica",
     "unexpectedError": "Došlo je do neočekivane greške.",
     "filtersNoData": "Nema rezultata za izabrane filtere. Prvo pokrenite kalkulaciju na stranici Parametri.",
-    "goToParameters": "Idi na Parametri",
+    "goToParameters": "Otvori parametre",
     "yes": "Da",
     "no": "Ne",
     "description": "Opis",
@@ -180,7 +180,6 @@
     "selectFromQuarterList": "Izaberite ocenu sa liste kvartala.",
     "employeeNoEvaluations": "Zaposleni još nema ocena.",
     "search": "Pretraga",
-    "searchPlaceholder": "Ocenjivač, zaposleni...",
     "noSearchResults": "Nema rezultata za pretragu",
     "tryDifferentSearch": "Pokušajte sa drugim imenom ili prezimenom.",
     "noGoalsSet": "Nema postavljenih ciljeva",
@@ -380,7 +379,8 @@
       "noSettings": "Nema podešavanja.",
       "editTitle": "Izmena ocenjivača",
       "noController": "Bez kontrolora (ocena je konačna posle slanja)",
-      "noControllerShort": "Bez kontrolora"
+      "noControllerShort": "Bez kontrolora",
+      "searchPlaceholder": "Ocenjivač ili kontrolor..."
     },
     "salaries": {
       "loadingEmployees": "Učitavanje zaposlenih...",
@@ -410,6 +410,7 @@
     "compensation": {
       "monetaryPool": "Novčana masa",
       "previewTitle": "Pregled varijabile po oceni",
+      "previewHint": "Primer za jednog zaposlenog. Polja ispod se ne čuvaju i ne utiču na kalkulaciju.",
       "exponent": "Eksponent",
       "dependencyWeight": "Ponder zavisnosti (bodovi)",
       "allowNegativeVariable": "Negativna varijabila",
@@ -451,9 +452,9 @@
     }
   },
   "controller": {
-    "commentOptional": "Komentar kontrolora (opciono pri odobrenju)",
-    "revisionCommentRequired": "Komentar za doradu (obavezno pri vraćanju)",
-    "revisionCommentPlaceholder": "Objasnite šta ocenjivač treba da ispravi...",
+    "decisionComment": "Komentar kontrolora",
+    "decisionCommentHint": "Opcion uz odobrenje, a obavezan kad ocenu vraćate na doradu.",
+    "decisionCommentPlaceholder": "Pri vraćanju objasnite šta ocenjivač treba da ispravi...",
     "approveEvaluation": "Odobri ocenu",
     "returnForRevision": "Vrati na doradu",
     "backToEvaluators": "Nazad na ocenjivače",

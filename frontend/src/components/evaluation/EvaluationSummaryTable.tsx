@@ -65,7 +65,7 @@ export function EvaluationSummaryTable({
                 </th>
                 {showEvaluator && (
                   <th className="col-text">
-                    {formatMessage({ id: 'admin.evaluators' })}
+                    {formatMessage({ id: 'evaluation.evaluator' })}
                   </th>
                 )}
                 <th className="col-meta">
@@ -104,7 +104,9 @@ export function EvaluationSummaryTable({
                     {showEvaluator && (
                       <td
                         className="cell-muted col-text"
-                        data-label={formatMessage({ id: 'admin.evaluators' })}
+                        data-label={formatMessage({
+                          id: 'evaluation.evaluator',
+                        })}
                       >
                         {ev.evaluatorFullName}
                       </td>
@@ -127,8 +129,12 @@ export function EvaluationSummaryTable({
                         id: 'evaluation.descriptiveLabel',
                       })}
                     >
+                      {/* Dok ocena nije završena, i opisna ocena je „/“ kao prosek. */}
                       <DescriptiveRatingBadge
                         name={summaryDescriptiveRatingName(ev)}
+                        emptyLabel={
+                          formatSummaryAverage(ev) === '/' ? '/' : undefined
+                        }
                       />
                     </td>
                   </tr>

@@ -14,6 +14,20 @@ export function roleListPath(
   return scope ? `/api/${scope}/${resource}` : `/api/${resource}`;
 }
 
+/** Filteri po ocenjivaču i org. jedinici, zajednički za listu i brojače tabova. */
+function setListFilters(
+  query: URLSearchParams,
+  params: {
+    evaluatorEmployeeId?: number | null;
+    organizationUnitId?: number | null;
+  },
+) {
+  if (params.evaluatorEmployeeId != null)
+    query.set('evaluatorEmployeeId', String(params.evaluatorEmployeeId));
+  if (params.organizationUnitId != null)
+    query.set('organizationUnitId', String(params.organizationUnitId));
+}
+
 export function buildEvaluationsPagePath(
   page: number,
   pageSize: number,
@@ -25,6 +39,8 @@ export function buildEvaluationsPagePath(
     search?: string;
     status?: string;
     employeeId?: number;
+    evaluatorEmployeeId?: number | null;
+    organizationUnitId?: number | null;
   },
 ): string {
   const query = new URLSearchParams({
@@ -39,6 +55,7 @@ export function buildEvaluationsPagePath(
   if (params.status) query.set('status', params.status);
   if (params.employeeId != null)
     query.set('employeeId', String(params.employeeId));
+  setListFilters(query, params);
 
   return `${roleListPath('evaluations', params.scope)}?${query}`;
 }
@@ -48,11 +65,14 @@ export function buildEvaluationBucketCountsPath(params: {
   year?: number | null;
   quarter?: number | null;
   search?: string;
+  evaluatorEmployeeId?: number | null;
+  organizationUnitId?: number | null;
 }): string {
   const query = new URLSearchParams();
   if (params.year != null) query.set('year', String(params.year));
   if (params.quarter != null) query.set('quarter', String(params.quarter));
   if (params.search?.trim()) query.set('search', params.search.trim());
+  setListFilters(query, params);
   const suffix = query.toString();
   const path = `${roleListPath('evaluations', params.scope)}/bucket-counts`;
   return suffix ? `${path}?${suffix}` : path;

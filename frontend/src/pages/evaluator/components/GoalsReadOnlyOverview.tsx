@@ -44,7 +44,7 @@ export function GoalsReadOnlyOverview({
 
       {(evaluation.conversationAt || evaluation.evaluatorComment) && (
         <FormSection title={formatMessage({ id: 'evaluation.conversation' })}>
-          <dl className="employee-card__meta">
+          <dl className="employee-card__meta employee-card__meta--plain">
             {evaluation.conversationAt && (
               <div>
                 <dt>{formatMessage({ id: 'evaluation.conversationDate' })}</dt>

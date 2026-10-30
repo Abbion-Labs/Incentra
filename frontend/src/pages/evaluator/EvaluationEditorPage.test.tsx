@@ -147,7 +147,7 @@ describe('EvaluationEditorPage', () => {
     const comment = await screen.findByLabelText(
       'evaluation.conditionsNotMetCommentLabel',
     );
-    expect(comment.matches(':disabled')).toBe(true);
+    expect(comment.tagName).toBe('P');
     expect(
       screen.getByRole('radio', { name: 'common.no' }).matches(':disabled'),
     ).toBe(true);
@@ -160,11 +160,11 @@ describe('EvaluationEditorPage', () => {
   it('keeps the conditions decision visible after the evaluation is sent', async () => {
     renderEditor({ ...evaluation, status: 'Submitted' });
 
-    const comment = (await screen.findByLabelText(
+    const comment = await screen.findByLabelText(
       'evaluation.conditionsNotMetCommentLabel',
-    )) as HTMLTextAreaElement;
-    expect(comment.value).toBe('Uslovi nisu ispunjeni');
-    expect(comment.disabled).toBe(true);
+    );
+    expect(comment.textContent).toBe('Uslovi nisu ispunjeni');
+    expect(comment.tagName).toBe('P');
     expect(
       screen
         .getByRole('radio', { name: 'common.no' })

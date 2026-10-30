@@ -1224,10 +1224,9 @@ a.btn-secondary:hover {
   }
 }
 
+/* Razdelnik iznad već daje pregled proseka, pa polja nemaju svoj. */
 .controller-decision-fields {
   margin-bottom: var(--space-md);
-  padding-top: var(--space-sm);
-  border-top: 1px solid var(--border);
 }
 
 .form-section__header {
@@ -1933,12 +1932,26 @@ a.btn-secondary:hover {
   font-weight: 500;
 }
 
-.form-row label {
+.form-row label,
+.form-row__label {
   display: block;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--text-secondary);
   margin-bottom: 0.4rem;
+}
+
+/* Vrednost samo za čitanje, umesto onemogućenog polja. */
+.readonly-text {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.readonly-text--empty {
+  color: var(--muted);
 }
 
 .form-row input,
@@ -3587,6 +3600,7 @@ input[type='search']::-webkit-search-cancel-button {
   background: none;
   border: none;
   padding: 0;
+  text-align: left;
   color: var(--primary);
   font: inherit;
   cursor: pointer;
@@ -4032,6 +4046,12 @@ input[type='search']::-webkit-search-cancel-button {
   gap: 0.85rem;
   padding-top: 1rem;
   border-top: 1px solid var(--border);
+}
+
+/* U sekciji forme naslov sekcije već ima razdelnik. */
+.employee-card__meta--plain {
+  padding-top: 0;
+  border-top: none;
 }
 
 .employee-card__meta dt {
@@ -6040,6 +6060,18 @@ input[type='search']::-webkit-search-cancel-button {
   font-weight: 700;
 }
 
+.employee-list-name__flag {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: var(--radius-pill);
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  vertical-align: 0.1em;
+}
+
 .table tbody tr.table-row--new {
   background-color: #f6f9fe;
 }
@@ -6137,9 +6169,17 @@ input[type='search']::-webkit-search-cancel-button {
     flex-wrap: nowrap;
   }
 
+  /* Dovoljno široko da stane i duži placeholder („Ime, prezime ili org.
+     jedinica…“); u uskoj traci se i dalje skuplja. */
   .data-panel__toolbar .filter-bar--compact .filter-bar-search {
-    flex: 0 1 16rem;
+    flex: 0 1 18rem;
     min-width: 8rem;
+  }
+
+  /* Traka uzima širinu iz polja, pa polje mora samo da traži 18rem. */
+  .data-panel__toolbar .filter-bar--compact .filter-bar-search input {
+    width: 18rem;
+    max-width: 100%;
   }
 }
 

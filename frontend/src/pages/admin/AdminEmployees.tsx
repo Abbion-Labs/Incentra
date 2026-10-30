@@ -29,6 +29,7 @@ import {
   FilterChip,
   ToolbarSearch,
 } from '../../components/common/ToolbarSearch';
+import { ActiveBadge } from '../../components/common/ActiveBadge';
 import { TableIconButton } from '../../components/common/TableIconButton';
 import { isEditConflict } from '../../utils/editConflict';
 
@@ -372,22 +373,22 @@ export function AdminEmployees() {
                 <thead>
                   <tr>
                     <th className="col-text">
-                      {formatMessage({ id: 'common.firstName' })}
+                      {formatMessage({ id: 'admin.employees' })}
                     </th>
                     <th className="col-text">
                       {formatMessage({ id: 'evaluation.orgUnitShort' })}
                     </th>
                     <th className="col-text">
-                      {formatMessage({ id: 'common.position' })}
+                      {formatMessage({ id: 'evaluation.jobPosition' })}
                     </th>
                     <th className="col-text">
-                      {formatMessage({ id: 'admin.evaluators' })}
+                      {formatMessage({ id: 'evaluation.evaluator' })}
                     </th>
                     <th className="col-text">
                       {formatMessage({ id: 'common.account' })}
                     </th>
                     <th className="col-meta table-col--compact">
-                      {formatMessage({ id: 'common.active' })}
+                      {formatMessage({ id: 'evaluation.status' })}
                     </th>
                     <th
                       className="col-actions"
@@ -415,7 +416,8 @@ export function AdminEmployees() {
                           }
                         }}
                       >
-                        <td className="cell-primary col-text stack-title">
+                        {/* Ime i radno mesto se ne lome; prostor daje org. jedinica. */}
+                        <td className="cell-primary col-text cell-nowrap stack-title">
                           {employee.fullName}
                         </td>
                         <td
@@ -427,14 +429,18 @@ export function AdminEmployees() {
                           {employee.organizationUnitName}
                         </td>
                         <td
-                          className="col-text"
-                          data-label={formatMessage({ id: 'common.position' })}
+                          className="col-text cell-nowrap"
+                          data-label={formatMessage({
+                            id: 'evaluation.jobPosition',
+                          })}
                         >
                           {employee.jobPositionName}
                         </td>
                         <td
                           className="col-text"
-                          data-label={formatMessage({ id: 'admin.evaluators' })}
+                          data-label={formatMessage({
+                            id: 'evaluation.evaluator',
+                          })}
                         >
                           {employee.evaluatorEmployeeId &&
                           employee.evaluatorFullName ? (
@@ -465,11 +471,11 @@ export function AdminEmployees() {
                         </td>
                         <td
                           className="col-meta table-col--compact"
-                          data-label={formatMessage({ id: 'common.active' })}
+                          data-label={formatMessage({
+                            id: 'evaluation.status',
+                          })}
                         >
-                          {employee.isActive
-                            ? formatMessage({ id: 'common.yes' })
-                            : formatMessage({ id: 'common.no' })}
+                          <ActiveBadge active={employee.isActive} />
                         </td>
                         <td className="col-actions">
                           <TableIconButton

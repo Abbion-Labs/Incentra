@@ -5,7 +5,7 @@ interface PersonNameProps {
   avatarUrl?: string | null;
   /** Sporedna informacija ispod imena, npr. organizaciona jedinica. */
   subtitle?: string | null;
-  /** Diskretna oznaka (tačka na avataru) sa ovim tekstom za čitače ekrana. */
+  /** Oznaka uz ime (tačka na avataru i kratak tekst), npr. „Nova ocena“. */
   highlightLabel?: string;
 }
 
@@ -33,13 +33,17 @@ export function PersonName({
           size="sm"
         />
         {highlightLabel && (
-          <span className="employee-list-name__dot">
-            <span className="sr-only">{highlightLabel}</span>
-          </span>
+          <span className="employee-list-name__dot" aria-hidden />
         )}
       </span>
       <span className="employee-list-name__body">
-        <span className="employee-list-name__text">{fullName}</span>
+        <span className="employee-list-name__text">
+          {fullName}
+          {/* Sama tačka ne govori šta znači, pa uz ime stoji i tekst. */}
+          {highlightLabel && (
+            <span className="employee-list-name__flag">{highlightLabel}</span>
+          )}
+        </span>
         {subtitle && (
           <span className="employee-list-name__subtitle">{subtitle}</span>
         )}

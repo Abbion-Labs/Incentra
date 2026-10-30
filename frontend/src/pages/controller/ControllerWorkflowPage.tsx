@@ -1,6 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import type { EvaluationSummary } from '../../api/types';
+import { api } from '../../api/client';
+import type {
+  ControllerEvaluatorSummary,
+  EvaluationSummary,
+} from '../../api/types';
+import { FilterChip } from '../../components/common/ToolbarSearch';
 import { EvaluationBucketTabs } from '../../components/evaluation/EvaluationBucketTabs';
 import {
   EvaluationSummaryTable,
@@ -34,14 +39,18 @@ export function ControllerWorkflowPage() {
   const [activeTab, setActiveTab] = useState<ControllerBucket>(initialTab);
   const [year, setYear] = useState(currentYear);
   const [quarter, setQuarter] = useState<number | null>(null);
+  const [evaluatorId, setEvaluatorId] = useState<number | null>(null);
+  const [evaluators, setEvaluators] = useState<ControllerEvaluatorSummary[]>(
+    [],
+  );
   const {
     input: searchInput,
     debounced: search,
     setInput: setSearchInput,
   } = useDebouncedSearch();
 
-  const listQueryKey = `${year}|${quarter ?? 'all'}|${activeTab}|${search}`;
-  const countsQueryKey = `${year}|${quarter ?? 'all'}|${search}`;
+  const listQueryKey = `${year}|${quarter ?? 'all'}|${activeTab}|${search}|${evaluatorId ?? 'all'}`;
+  const countsQueryKey = `${year}|${quarter ?? 'all'}|${search}|${evaluatorId ?? 'all'}`;
 
   const {
     items: evaluations,
@@ -59,6 +68,7 @@ export function ControllerWorkflowPage() {
         quarter,
         bucket: activeTab,
         search,
+        evaluatorEmployeeId: evaluatorId,
       }),
   });
 
@@ -67,12 +77,23 @@ export function ControllerWorkflowPage() {
     year,
     quarter,
     search,
+    evaluatorEmployeeId: evaluatorId,
   });
   const tabCounts = useMemo(() => mapControllerBucketCounts(counts), [counts]);
 
   useEffect(() => {
     if (error) toast.error(error);
   }, [error, toast]);
+
+  // Filter po ocenjivaču ima smisla tek kad kontrolor ima više ocenjivača.
+  useEffect(() => {
+    api
+      .get<ControllerEvaluatorSummary[]>(
+        '/api/evaluator-settings/my-evaluators',
+      )
+      .then(setEvaluators)
+      .catch(() => setEvaluators([]));
+  }, []);
 
   useEffect(() => {
     if (tabFromUrl && controllerBucketTabs.includes(tabFromUrl)) {
@@ -106,14 +127,40 @@ export function ControllerWorkflowPage() {
               search={searchInput}
               onSearchChange={setSearchInput}
               canReset={
-                searchInput !== '' || year !== currentYear || quarter !== null
+                searchInput !== '' ||
+                year !== currentYear ||
+                quarter !== null ||
+                evaluatorId !== null
               }
               onReset={() => {
                 setSearchInput('');
                 setYear(currentYear);
                 setQuarter(null);
+                setEvaluatorId(null);
               }}
-            />
+            >
+              {evaluators.length > 1 && (
+                <FilterChip
+                  label={formatMessage({ id: 'evaluation.evaluator' })}
+                  value={evaluatorId == null ? '' : String(evaluatorId)}
+                  onChange={(value) =>
+                    setEvaluatorId(value === '' ? null : Number(value))
+                  }
+                >
+                  <option value="">
+                    {formatMessage({ id: 'common.allShort' })}
+                  </option>
+                  {evaluators.map((evaluator) => (
+                    <option
+                      key={evaluator.employeeId}
+                      value={evaluator.employeeId}
+                    >
+                      {evaluator.employeeFullName}
+                    </option>
+                  ))}
+                </FilterChip>
+              )}
+            </PeriodFilters>
           </>
         }
       >

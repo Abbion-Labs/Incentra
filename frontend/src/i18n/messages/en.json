@@ -5,7 +5,7 @@
     "main": "Main navigation",
     "myAccount": "My account",
     "logout": "Sign out",
-    "evaluatorEmployees": "Employees",
+    "evaluatorEmployees": "My employees",
     "evaluatorGoals": "Goals",
     "workflow": "Evaluation",
     "evaluatorWorkflow": "Evaluation",
@@ -60,7 +60,7 @@
     "organizationUnit": "Organization unit",
     "unexpectedError": "An unexpected error occurred.",
     "filtersNoData": "No results for selected filters. Run calculation on Parameters page first.",
-    "goToParameters": "Go to Parameters",
+    "goToParameters": "Open parameters",
     "yes": "Yes",
     "no": "No",
     "description": "Description",
@@ -180,7 +180,6 @@
     "selectFromQuarterList": "Select an evaluation from quarter list.",
     "employeeNoEvaluations": "Employee has no evaluations yet.",
     "search": "Search",
-    "searchPlaceholder": "Evaluator, employee...",
     "noSearchResults": "No search results",
     "tryDifferentSearch": "Try a different first or last name.",
     "noGoalsSet": "No goals set",
@@ -380,7 +379,8 @@
       "noSettings": "No settings.",
       "editTitle": "Edit evaluator",
       "noController": "No controller (the evaluation is final once submitted)",
-      "noControllerShort": "No controller"
+      "noControllerShort": "No controller",
+      "searchPlaceholder": "Evaluator or controller..."
     },
     "salaries": {
       "loadingEmployees": "Loading employees...",
@@ -410,6 +410,7 @@
     "compensation": {
       "monetaryPool": "Monetary pool",
       "previewTitle": "Variable pay by rating",
+      "previewHint": "An example for one employee. The fields below are not saved and do not affect the calculation.",
       "exponent": "Exponent",
       "dependencyWeight": "Dependency weight (points)",
       "allowNegativeVariable": "Negative variable",
@@ -451,9 +452,9 @@
     }
   },
   "controller": {
-    "commentOptional": "Controller comment (optional on approval)",
-    "revisionCommentRequired": "Revision comment (required when returning)",
-    "revisionCommentPlaceholder": "Explain what the evaluator should correct...",
+    "decisionComment": "Controller comment",
+    "decisionCommentHint": "Optional on approval, required when you return the evaluation for revision.",
+    "decisionCommentPlaceholder": "When returning, explain what the evaluator should correct...",
     "approveEvaluation": "Approve evaluation",
     "returnForRevision": "Return for revision",
     "backToEvaluators": "Back to evaluators",

@@ -11,6 +11,7 @@ import {
   type UserFormValues,
 } from './components/AdminUserForm';
 import { ToolbarSearch } from '../../components/common/ToolbarSearch';
+import { ActiveBadge } from '../../components/common/ActiveBadge';
 import { TableIconButton } from '../../components/common/TableIconButton';
 import { controllerIdFromForm } from './evaluatorController';
 import { roleLabel } from '../../utils/status';
@@ -256,7 +257,7 @@ export function AdminUsers() {
                     {formatMessage({ id: 'admin.users.linkedEmployee' })}
                   </th>
                   <th className="col-meta table-col--compact">
-                    {formatMessage({ id: 'admin.active' })}
+                    {formatMessage({ id: 'evaluation.status' })}
                   </th>
                   <th
                     className="col-actions"
@@ -305,11 +306,9 @@ export function AdminUsers() {
                       </td>
                       <td
                         className="col-meta table-col--compact"
-                        data-label={formatMessage({ id: 'admin.active' })}
+                        data-label={formatMessage({ id: 'evaluation.status' })}
                       >
-                        {user.isActive
-                          ? formatMessage({ id: 'common.yes' })
-                          : formatMessage({ id: 'common.no' })}
+                        <ActiveBadge active={user.isActive} />
                       </td>
                       <td className="col-actions">
                         <TableIconButton

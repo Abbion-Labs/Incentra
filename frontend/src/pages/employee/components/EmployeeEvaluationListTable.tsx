@@ -70,8 +70,12 @@ export function EmployeeEvaluationListTable({
                 <AverageDisplay value={formatSummaryAverage(ev)} />
               </td>
               <td className="col-meta">
+                {/* Dok ocena nije završena, i opisna ocena je „/“ kao prosek. */}
                 <DescriptiveRatingBadge
                   name={summaryDescriptiveRatingName(ev)}
+                  emptyLabel={
+                    formatSummaryAverage(ev) === '/' ? '/' : undefined
+                  }
                 />
               </td>
             </tr>
