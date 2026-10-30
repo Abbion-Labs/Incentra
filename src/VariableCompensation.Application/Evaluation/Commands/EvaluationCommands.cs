@@ -15,6 +15,8 @@ public sealed record CreateEvaluationCommand(long EmployeeId, short Year, byte Q
 
 public sealed class CreateEvaluationCommandHandler : IRequestHandler<CreateEvaluationCommand, Result<EvaluationDetailResponse>>
 {
+    private const short MinYear = 2000;
+
     private readonly IEvaluationRepository evaluationRepository;
     private readonly IEmployeeRepository employeeRepository;
     private readonly ICurrentUserService currentUserService;
@@ -37,6 +39,12 @@ public sealed class CreateEvaluationCommandHandler : IRequestHandler<CreateEvalu
         if (request.Quarter is < 1 or > 4)
         {
             return Result.Failure<EvaluationDetailResponse>(ErrorCodes.QuarterInvalid);
+        }
+
+        // Goals are set ahead of the quarter, so next year is allowed; anything else is a mistyped year.
+        if (request.Year < MinYear || request.Year > DateTime.UtcNow.Year + 1)
+        {
+            return Result.Failure<EvaluationDetailResponse>(ErrorCodes.YearInvalid);
         }
 
         var employee = await this.employeeRepository.FindByIdWithEvaluatorAsync(request.EmployeeId, cancellationToken);

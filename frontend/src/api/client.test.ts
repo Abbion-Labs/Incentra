@@ -33,6 +33,26 @@ describe('api client session handling', () => {
     expect(localStorage.getItem('vn-locale')).toBe('en');
   });
 
+  it('still sends requests when storage is blocked', async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ ok: true }));
+    vi.stubGlobal('fetch', fetchMock);
+    const client = await loadClient();
+    const getItem = vi
+      .spyOn(Storage.prototype, 'getItem')
+      .mockImplementation(() => {
+        throw new DOMException('Storage is blocked', 'SecurityError');
+      });
+
+    try {
+      await expect(client.api.get('/api/health')).resolves.toEqual({
+        ok: true,
+      });
+      expect(fetchMock).toHaveBeenCalledOnce();
+    } finally {
+      getItem.mockRestore();
+    }
+  });
+
   it('keeps the access token out of localStorage', async () => {
     const client = await loadClient();
 

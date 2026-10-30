@@ -54,6 +54,14 @@ export function revokeRefreshToken(): void {
   );
 }
 
+function readStoredLocale(): string | null {
+  try {
+    return localStorage.getItem(LOCALE_KEY);
+  } catch {
+    return null;
+  }
+}
+
 let refreshPromise: Promise<AuthResponse | null> | null = null;
 
 async function requestNewSession(): Promise<AuthResponse | null> {
@@ -108,7 +116,7 @@ export async function apiFetch<T>(
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const locale = localStorage.getItem(LOCALE_KEY);
+  const locale = readStoredLocale();
   if (locale) {
     headers.set('Accept-Language', locale);
   }

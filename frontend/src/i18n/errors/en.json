@@ -120,6 +120,7 @@
     "vn-0123": "The image was not saved. Please try again.",
     "vn-0124": "This action is no longer possible for the evaluation in its current status. Refresh the page.",
     "vn-0125": "Analytics for the selected view are not available.",
-    "vn-0126": "The employee has no salary history."
+    "vn-0126": "The employee has no salary history.",
+    "vn-0127": "The year of the evaluation is not valid. It can be from 2000 to next year."
   }
 }

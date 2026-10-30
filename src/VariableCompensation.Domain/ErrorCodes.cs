@@ -122,4 +122,5 @@ public static class ErrorCodes
     public const string EvaluationActionNotAllowed = "vn-0124";
     public const string CompensationAnalyticsUnavailable = "vn-0125";
     public const string SalaryHistoryNotFound = "vn-0126";
+    public const string YearInvalid = "vn-0127";
 }

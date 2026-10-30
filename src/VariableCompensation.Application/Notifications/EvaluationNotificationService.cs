@@ -35,7 +35,7 @@ public sealed class EvaluationNotificationService : IEvaluationNotificationServi
             bodyBuilder: (evaluation, link) =>
                 $"""
                 <p>Zdravo,</p>
-                <p>Ocenjivač je predao ocenu zaposlenog <strong>{evaluation.Employee.FullName}</strong> za period Q{evaluation.Quarter}/{evaluation.Year} na pregled.</p>
+                <p>Ocenjivač je predao ocenu zaposlenog <strong>{System.Net.WebUtility.HtmlEncode(evaluation.Employee.FullName)}</strong> za period Q{evaluation.Quarter}/{evaluation.Year} na pregled.</p>
                 <p><a href="{link}">Otvorite ocenu u aplikaciji</a></p>
                 """,
             linkPath: id => $"/controller/evaluations/{id}",
@@ -49,7 +49,7 @@ public sealed class EvaluationNotificationService : IEvaluationNotificationServi
             bodyBuilder: (evaluation, link) =>
                 $"""
                 <p>Zdravo,</p>
-                <p>Kontrolor je odobrio vašu ocenu zaposlenog <strong>{evaluation.Employee.FullName}</strong> za period Q{evaluation.Quarter}/{evaluation.Year}.</p>
+                <p>Kontrolor je odobrio vašu ocenu zaposlenog <strong>{System.Net.WebUtility.HtmlEncode(evaluation.Employee.FullName)}</strong> za period Q{evaluation.Quarter}/{evaluation.Year}.</p>
                 <p><a href="{link}">Otvorite ocenu u aplikaciji</a></p>
                 """,
             linkPath: id => $"/evaluator/evaluations/{id}",
@@ -66,7 +66,7 @@ public sealed class EvaluationNotificationService : IEvaluationNotificationServi
             bodyBuilder: (evaluation, link) =>
                 $"""
                 <p>Zdravo,</p>
-                <p>Kontrolor je vratio ocenu zaposlenog <strong>{evaluation.Employee.FullName}</strong> za period Q{evaluation.Quarter}/{evaluation.Year} na doradu.</p>
+                <p>Kontrolor je vratio ocenu zaposlenog <strong>{System.Net.WebUtility.HtmlEncode(evaluation.Employee.FullName)}</strong> za period Q{evaluation.Quarter}/{evaluation.Year} na doradu.</p>
                 <p><strong>Komentar kontrolora:</strong></p>
                 <p>{System.Net.WebUtility.HtmlEncode(revisionComment)}</p>
                 <p><a href="{link}">Otvorite ocenu u aplikaciji</a></p>

@@ -120,6 +120,7 @@
     "vn-0123": "Slika nije sačuvana. Pokušajte ponovo.",
     "vn-0124": "Ova radnja više nije moguća za ocenu u trenutnom statusu. Osvežite stranicu.",
     "vn-0125": "Analitika za izabrani prikaz nije dostupna.",
-    "vn-0126": "Zaposleni nema istoriju plata."
+    "vn-0126": "Zaposleni nema istoriju plata.",
+    "vn-0127": "Godina ocene nije ispravna. Moguća je godina od 2000. do sledeće godine."
   }
 }

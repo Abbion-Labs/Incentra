@@ -86,6 +86,37 @@ public class EvaluationNotificationServiceTests
         emailSender.Sent.Should().BeEmpty();
     }
 
+    [Fact]
+    public async Task EmployeeNames_AreEncodedInTheEmail()
+    {
+        var evaluation = new EvaluationBuilder()
+            .WithId(1)
+            .WithEvaluator(2)
+            .WithController(3)
+            .Build();
+        evaluation.Employee = new Employee { FirstName = "<b>Ana", LastName = "Anić</b>" };
+        var repository = new FakeEvaluationRepository();
+        repository.Seed(evaluation);
+
+        var userRepository = new FakeUserRepository();
+        var controllerUser = new User
+        {
+            Id = 10,
+            Email = "controller@local.dev",
+            Employee = new Employee { Id = 3, UserId = 10 },
+        };
+        controllerUser.SetEmailNotificationsEnabled(true);
+        userRepository.Users[10] = controllerUser;
+
+        var emailSender = new FakeEmailSender();
+        await CreateService(repository, userRepository, emailSender)
+            .NotifySubmittedForReviewAsync(1, CancellationToken.None);
+
+        emailSender.Sent.Should().ContainSingle();
+        emailSender.Sent[0].HtmlBody.Should().Contain("&lt;b&gt;Ana Anić&lt;/b&gt;");
+        emailSender.Sent[0].HtmlBody.Should().NotContain("<b>Ana");
+    }
+
     private static EvaluationNotificationService CreateService(
         FakeEvaluationRepository evaluationRepository,
         FakeUserRepository userRepository,
