@@ -12,7 +12,6 @@ interface GoalsPlanningEmployeeCardProps {
   ratingAside?: ReactNode;
   footer?: ReactNode;
   showEvaluator?: boolean;
-  hidePeriod?: boolean;
   employeeAnalyticsPath?: string;
   showStatusHistory?: boolean;
   /** Jedan red: ime, radno mesto i jedinica, period i dodatne oznake. */
@@ -26,7 +25,6 @@ export function GoalsPlanningEmployeeCard({
   ratingAside,
   footer,
   showEvaluator = false,
-  hidePeriod = false,
   employeeAnalyticsPath,
   showStatusHistory = false,
   compact = false,
@@ -132,17 +130,15 @@ export function GoalsPlanningEmployeeCard({
                 <dd>{evaluation.evaluatorFullName}</dd>
               </div>
             )}
-            {!hidePeriod && (
-              <div className="goals-employee-card__item">
-                <dt>{formatMessage({ id: 'evaluation.period' })}</dt>
-                <dd>
-                  <PeriodPill
-                    quarter={evaluation.quarter}
-                    year={evaluation.year}
-                  />
-                </dd>
-              </div>
-            )}
+            <div className="goals-employee-card__item">
+              <dt>{formatMessage({ id: 'evaluation.period' })}</dt>
+              <dd>
+                <PeriodPill
+                  quarter={evaluation.quarter}
+                  year={evaluation.year}
+                />
+              </dd>
+            </div>
             {asideContent}
           </dl>
         </div>

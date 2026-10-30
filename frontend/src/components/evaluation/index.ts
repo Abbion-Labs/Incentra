@@ -4,7 +4,6 @@ export {
   evaluationBucketTabs,
 } from './EvaluationBucketTabs';
 export { ControllerDecisionPanel } from './ControllerDecisionPanel';
-export { EvaluationHeaderCard } from './EvaluationHeaderCard';
 export {
   EvaluationGoalsTable,
   EvaluationGoalsList,

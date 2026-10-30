@@ -776,20 +776,6 @@ textarea {
   min-width: 0;
 }
 
-.page-header--evaluation {
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-}
-
-.page-header__layout {
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-lg);
-  width: 100%;
-  min-width: 0;
-}
-
 .page-header__main {
   display: flex;
   flex-direction: column;
@@ -825,21 +811,9 @@ textarea {
   font-size: 0.9rem;
 }
 
-.page-header__stats {
-  margin-top: 0.25rem;
-}
-
 .page-header__note {
   margin: 0;
   font-size: 0.95rem;
-}
-
-.page-header__alert {
-  margin: 0;
-}
-
-.meta-sep {
-  color: var(--border);
 }
 
 .period-pill {
@@ -856,22 +830,6 @@ textarea {
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.01em;
   white-space: nowrap;
-}
-
-.stat-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.25rem;
-  padding: 0.35rem 0.75rem;
-  background: var(--surface-muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 0.9rem;
-}
-
-.stat-pill__suffix {
-  color: var(--muted);
-  font-weight: 400;
 }
 
 /* ==========================================================================
@@ -1186,6 +1144,13 @@ a.btn-secondary:hover {
   margin-bottom: var(--space-md);
   padding-bottom: var(--space-md);
   border-bottom: 1px solid var(--border);
+}
+
+/* Ocena samo za čitanje: ispod proseka nema dugmadi, pa ni razdelnika. */
+.evaluation-scores-summary:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
 }
 
 .evaluation-scores-summary__item {
@@ -3783,7 +3748,8 @@ input[type='search']::-webkit-search-cancel-button {
 .goals-employee-card__fields {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
+  /* Kolona nije uža od najduže reči, pa se naziv ne lomi usred reči. */
+  grid-auto-columns: minmax(min-content, 1fr);
   flex: 1;
   width: 100%;
   gap: 0;
@@ -3793,7 +3759,7 @@ input[type='search']::-webkit-search-cancel-button {
 }
 
 .goals-employee-card__item dd {
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .goals-employee-card__item dd .evaluation-status-with-history {
@@ -3823,13 +3789,6 @@ input[type='search']::-webkit-search-cancel-button {
     padding: 0;
     border-left: none;
     max-width: none;
-  }
-}
-
-@media (max-width: 900px) {
-  .page-header__layout {
-    flex-direction: column;
-    align-items: stretch;
   }
 }
 

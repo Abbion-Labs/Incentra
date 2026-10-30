@@ -1,7 +1,7 @@
 import { Link, useParams } from 'react-router-dom';
 import { useCallback, useEffect, useState } from 'react';
 import { api } from '../../api/client';
-import type { Employee, EvaluationDetail } from '../../api/types';
+import type { EvaluationDetail } from '../../api/types';
 import { ConfirmDialog } from '../../components/common/ConfirmDialog';
 import { CardSkeleton } from '../../components/common/LoadingSkeleton';
 import { EvaluationPlanningOverview } from '../../components/evaluation/EvaluationPlanningOverview';
@@ -12,6 +12,7 @@ import { UnsavedChangesIndicator } from '../../components/evaluation/UnsavedChan
 import { AppLayout } from '../../components/AppLayout';
 import { useAuth } from '../../auth/AuthContext';
 import {
+  useEmployee,
   useEvaluation,
   useLookups,
   useToast,
@@ -31,7 +32,7 @@ import {
 } from '../../utils/scoring';
 import { descriptiveRatingNameFromAverage } from '../../utils/descriptiveRating';
 import { isGoalsPlanningComplete } from '../../utils/goalsPlanning';
-import { getMeasureRatingComment } from '../../utils/measureRatingDefaults';
+import { measuresWithRatingComments } from '../../utils/measureRatingDefaults';
 import {
   fetchLatestEvaluation,
   isStaleEvaluationError,
@@ -47,8 +48,8 @@ export function EvaluationEditorPage() {
   const toast = useToast();
   const { ratingLevels, measureTypes, descriptiveRatings } = useLookups();
   const { evaluation, setEvaluation, loading, error } = useEvaluation(id);
+  const employee = useEmployee(evaluation?.employeeId);
 
-  const [employee, setEmployee] = useState<Employee | null>(null);
   const [saving, setSaving] = useState(false);
   const [confirmSubmit, setConfirmSubmit] = useState(false);
   const [measures, setMeasures] = useState<MeasureDraft[]>([]);
@@ -83,49 +84,17 @@ export function EvaluationEditorPage() {
   }, [error, toast]);
 
   useEffect(() => {
-    if (!evaluation?.employeeId) {
-      setEmployee(null);
-      return;
-    }
-
-    let cancelled = false;
-    api
-      .get<Employee>(`/api/employees/${evaluation.employeeId}`)
-      .then((data) => {
-        if (!cancelled) setEmployee(data);
-      })
-      .catch(() => {
-        if (!cancelled) setEmployee(null);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [evaluation?.employeeId]);
-
-  useEffect(() => {
     if (!evaluation) return;
     setIsDirty(false);
 
     const hydratedMeasures: MeasureDraft[] =
       evaluation.measures.length > 0
-        ? evaluation.measures.map((m) => {
-            const mt = measureTypes.find((t) => t.id === m.measureTypeId);
-            const level = ratingLevels.find((rl) => rl.id === m.ratingLevelId);
-            const autoComment =
-              mt && level && level.value > 0
-                ? getMeasureRatingComment(mt.code, level.value, formatMessage)
-                : '';
-
-            return {
-              measureTypeId: m.measureTypeId,
-              ratingComment: m.ratingComment?.trim()
-                ? m.ratingComment
-                : autoComment,
-              ratingLevelId: m.ratingLevelId,
-              sortOrder: m.sortOrder,
-            };
-          })
+        ? measuresWithRatingComments(
+            evaluation.measures,
+            measureTypes,
+            ratingLevels,
+            formatMessage,
+          )
         : measureTypes.map((mt, i) => ({
             measureTypeId: mt.id,
             ratingComment: '',
@@ -455,6 +424,8 @@ export function EvaluationEditorPage() {
         <GoalsPlanningEmployeeCard
           evaluation={evaluation}
           employee={employee}
+          // Ocenjivač je sam autor ocene; admin vidi i ko je ocenjivao.
+          showEvaluator={activeRole !== 'EVALUATOR'}
           employeeAnalyticsPath={`/evaluator/employees/${evaluation.employeeId}`}
           showStatusHistory
           ratingAside={
@@ -484,7 +455,7 @@ export function EvaluationEditorPage() {
             ratingLevels={ratingLevels}
             editable={editable}
             onEvaluationChange={handleEvaluationChange}
-            showConditionsToggle={editable}
+            showConditionsToggle
             conditionsFulfilled={conditionsFulfilled}
             conditionsNotMetComment={conditionsNotMetComment}
             onConditionsFulfilledChange={handleConditionsFulfilledChange}
